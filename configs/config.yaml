@@ -1,0 +1,16 @@
+server:
+  httpPort: "8080"
+  grpcPort: "50051"
+
+firebase:
+  projectId: "your-firebase-project-id" # Replace with actual Project ID or set via ENV: FIREBASE_PROJECTID
+  # serviceAccountKeyPath: "path/to/your/serviceAccountKey.json" # Optional: For local dev if GOOGLE_APPLICATION_CREDENTIALS is not set
+
+openTelemetry:
+  serviceName: "profile-service"
+  exporterEndpoint: "otel-collector:4317" # Example OTLP gRPC endpoint
+  prometheusPort: "9091" # Port for Prometheus to scrape metrics from this app
+  traceHeaderName: "X-Trace-Id" # Header to look for incoming trace IDs
+  sampleRate: 1.0 # Sample all traces
+
+ginMode: "debug" # "debug" or "release" for Gin framework
