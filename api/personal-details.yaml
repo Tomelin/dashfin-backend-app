@@ -1,0 +1,85 @@
+# src/data/profile/personal-details.yaml
+# Define a estrutura de dados para o perfil pessoal do usuário,
+# servindo como contrato para operações de backend (GET, POST, PUT, DELETE).
+
+# Identificador único do perfil pessoal (geralmente associado ao ID do usuário)
+# Usado principalmente em GET (para buscar um perfil específico) e DELETE.
+# Para POST, pode ser gerado pelo backend. Para PUT, é usado para identificar o recurso a ser atualizado.
+# id:
+#   type: string
+#   description: "Identificador único do usuário ou do registro de perfil."
+#   example: "user_123xyz"
+#   required_for: [GET_ONE, PUT, DELETE] # O ID do usuário será obtido do contexto de autenticação no backend para GET_ALL, POST
+
+fullName:
+  type: string
+  description: "Nome completo do usuário."
+  example: "João Maria da Silva"
+  required: true
+  constraints:
+    min_length: 2
+    max_length: 100
+
+email:
+  type: string
+  description: "Endereço de e-mail principal do usuário."
+  example: "joao.silva@example.com"
+  format: email
+  required: true # Geralmente, o email é usado para login e é imutável ou requer verificação para alteração.
+  # read_only_after_creation: true # Considerar se o email pode ser alterado após o cadastro.
+
+phone:
+  type: string
+  description: "Número de telefone do usuário (opcional)."
+  example: "(11) 98765-4321"
+  required: false
+  constraints:
+    pattern: "^\(\d{2}\)\s\d{4,5}-\d{4}$" # Exemplo de padrão para telefone brasileiro
+    max_length: 20
+
+birthDate:
+  type: string
+  description: "Data de nascimento do usuário (opcional)."
+  example: "1990-07-25"
+  format: date # ISO 8601 (YYYY-MM-DD)
+  required: false
+
+# Endereço (opcional, simplificado conforme solicitado)
+cep:
+  type: string
+  description: "Código de Endereçamento Postal (CEP) do usuário (opcional)."
+  example: "01001-000"
+  required: false
+  constraints:
+    pattern: "^\d{5}-?\d{3}$" # Formato XXXXX-XXX ou XXXXXXXX
+    max_length: 9
+
+city:
+  type: string
+  description: "Cidade do usuário (opcional)."
+  example: "São Paulo"
+  required: false
+  constraints:
+    max_length: 100
+
+state:
+  type: string
+  description: "Estado (UF) do usuário (opcional)."
+  example: "SP"
+  required: false
+  constraints:
+    min_length: 2
+    max_length: 2 # Geralmente siglas de 2 caracteres
+
+# Timestamps (geralmente gerenciados pelo backend)
+# createdAt:
+#   type: string
+#   format: date-time
+#   description: "Data e hora de criação do registro."
+#   read_only: true
+#
+# updatedAt:
+#   type: string
+#   format: date-time
+#   description: "Data e hora da última atualização do registro."
+#   read_only: true

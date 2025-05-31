@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package profile;
+
+option go_package = "example.com/profile-service/pkg/grpc/proto"; // Adjust to your module path
+
+// Profile message based on the YAML contract
+message Profile {
+  // UserID is typically the Firebase UID and will be used as the document ID in Firestore.
+  // It's part of request/response where needed but not stored as a field in the Profile message itself if it's the identifier.
+  // However, for returning profile data, it's useful to have.
+  string user_id = 1; // Will be populated from context/path param for requests, and from document ID for responses.
+  string full_name = 2;
+  string email = 3;
+  optional string phone = 4;
+  optional string birth_date = 5; // ISO 8601 date YYYY-MM-DD
+  optional string cep = 6;
+  optional string city = 7;
+  optional string state = 8;
+  // Timestamps like createdAt, updatedAt can be added if needed, often as google.protobuf.Timestamp
+}
+
+// Request to create a profile for the authenticated user.
+// UserID will be taken from authenticated context.
+message CreateProfileRequest {
+  string full_name = 1;
+  string email = 2;
+  optional string phone = 3;
+  optional string birth_date = 4;
+  optional string cep = 5;
+  optional string city = 6;
+  optional string state = 7;
+}
+
+// Response for CreateProfile, returns the created profile.
+message CreateProfileResponse {
+  Profile profile = 1;
+}
+
+// Request to get a profile. UserID is specified in the path.
+message GetProfileRequest {
+  string user_id = 1; // UserID whose profile is being requested
+}
+
+// Response for GetProfile.
+message GetProfileResponse {
+  Profile profile = 1;
+}
+
+// Request to update a profile. UserID is specified in the path.
+// Uses optional fields to allow partial updates.
+message UpdateProfileRequest {
+  string user_id = 1; // UserID whose profile is being updated
+  optional string full_name = 2;
+  // Email is typically not updatable or requires special handling. For now, assume it can be.
+  optional string email = 3;
+  optional string phone = 4;
+  optional string birth_date = 5;
+  optional string cep = 6;
+  optional string city = 7;
+  optional string state = 8;
+
+  // Field masks could also be used for updates (google.protobuf.FieldMask).
+  // This approach with all optional fields is simpler for this case.
+}
+
+// Response for UpdateProfile, returns the updated profile.
+message UpdateProfileResponse {
+  Profile profile = 1;
+}
+
+// Request to delete a profile. UserID is specified in the path.
+message DeleteProfileRequest {
+  string user_id = 1; // UserID whose profile is being deleted
+}
+
+// Response for DeleteProfile (empty).
+message DeleteProfileResponse {}
+
+service ProfileService {
+  // Creates a profile for the authenticated user.
+  rpc CreateProfile(CreateProfileRequest) returns (CreateProfileResponse);
+  // Gets a profile by user_id. Subject to authorization.
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  // Updates a profile by user_id. Subject to authorization.
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  // Deletes a profile by user_id. Subject to authorization.
+  rpc DeleteProfile(DeleteProfileRequest) returns (DeleteProfileResponse);
+}
