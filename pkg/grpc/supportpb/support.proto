@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package supportpb;
+
+option go_package = "github.com/user/supportservice/pkg/grpc/supportpb"; // Adjust to your module path
+
+message SupportRequestMessage {
+    string category = 1;
+    string description = 2;
+}
+
+message CreateSupportRequestRequest {
+    SupportRequestMessage request = 1;
+    // Headers like X-APP, X-USERID would typically be passed as metadata in gRPC
+    // For this example, we can include them in the request message if needed,
+    // or rely on gRPC interceptors to fetch them from metadata.
+    // Let's add them to the message for explicitness in this context.
+    string x_app = 2;
+    string x_userid = 3;
+    // X-AUTHORIZATION (Firebase token) would be sent as per-RPC credentials/metadata
+    // and validated by an interceptor, similar to the HTTP middleware.
+}
+
+message CreateSupportRequestResponse {
+    string status_message = 1;
+    string request_id = 2; // Example: could be an ID from Firestore
+}
+
+service SupportService {
+    rpc CreateSupportRequest(CreateSupportRequestRequest) returns (CreateSupportRequestResponse);
+}
