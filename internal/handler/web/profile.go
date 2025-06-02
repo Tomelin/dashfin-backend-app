@@ -11,6 +11,7 @@ import (
 type HandlerHttpInterface interface {
 	Create(c *gin.Context)
 	Personal(c *gin.Context)
+	PutPersonal(c *gin.Context)
 	// Get(c *gin.Context)
 	// GetById(c *gin.Context)
 	// Update(c *gin.Context)
@@ -42,17 +43,17 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 		middlewareList[i] = mw
 	}
 
-	routerGroup.POST("/profile", append(middlewareList, cat.Create)...)
-	routerGroup.GET("/profile/", append(middlewareList, cat.Create)...)
-	routerGroup.GET("/profile/:id", append(middlewareList, cat.Create)...)
-	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Create)...)
-	routerGroup.PUT("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
+	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
+	routerGroup.GET("/profile/:id", append(middlewareList, cat.Personal)...)
+	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
+	routerGroup.PUT("/profile/personal", append(middlewareList, cat.PutPersonal)...)
 	routerGroup.GET("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
-	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Create)...)
-	routerGroup.GET("/profile/search", append(middlewareList, cat.Create)...)
-	routerGroup.GET("/profile/filter", append(middlewareList, cat.Create)...)
+	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Personal)...)
+	routerGroup.GET("/profile/search", append(middlewareList, cat.Personal)...)
+	routerGroup.GET("/profile/filter", append(middlewareList, cat.Personal)...)
 }
 
 func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
@@ -61,6 +62,30 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	log.Println("get new request")
+
+	var prof entity_profile.Profile
+
+	err := c.ShouldBindJSON(&prof)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println(prof)
+	log.Println("after bind json")
+
+	profile := entity_profile.Profile{
+		FullName:  "name of client",
+		Phone:     "51984104084",
+		BirthDate: "20/05/2025",
+		Email:     "email@teste.com.br",
+	}
+
+	log.Println(profile)
+	c.JSON(http.StatusOK, profile)
+}
+
+func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
+	log.Println("  PutPersonal > new request")
 
 	var prof entity_profile.Profile
 

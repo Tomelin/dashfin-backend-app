@@ -3,9 +3,9 @@ run-name: golang-build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "x-main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "x-main" ]
 
 jobs:
 
