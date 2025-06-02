@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -68,7 +69,7 @@ type Connections struct {
 	PathConfigFile string `mapstructure:"path_config_file"`
 	Paths          *ConfigPath
 	FileConfig     *FileConfig
-	Fields map[string]interface{} 
+	Fields         map[string]interface{}
 	*AppConfigField
 }
 
@@ -81,7 +82,7 @@ func LoadConfig() (*Connections, error) {
 	fc := FileConfig{
 		ConfigPath:     AppConfig.ExternalPath,
 		Extentsion:     "yaml",
-		FileName:       "app-config",
+		FileName:       "config",
 		ConfigFilePath: AppConfig.ExternalPath,
 	}
 
@@ -111,13 +112,12 @@ func LoadConfig() (*Connections, error) {
 	}
 
 	log.Println("Config file loaded successfully")
-	log.Println(viper.AllSettings())
 
 	return &Connections{
 		PathConfigFile: fc.ConfigFilePath,
 		Paths:          &AppConfig,
 		FileConfig:     &fc,
-		Fields: viper.AllSettings(),
+		Fields:         viper.AllSettings(),
 		AppConfigField: &AppConfigField{
 			Fields: viper.AllSettings(),
 			Keys:   viper.AllKeys(),
