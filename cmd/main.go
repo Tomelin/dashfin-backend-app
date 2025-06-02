@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
@@ -11,6 +14,7 @@ import (
 
 func main() {
 
+	demo()
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -43,5 +47,21 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 		return nil, err
 	}
 	return api, nil
+
+}
+
+func demo() {
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "hello, world")
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Handling HTTP requests on %s.", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 
 }

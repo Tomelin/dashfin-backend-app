@@ -1,0 +1,4 @@
+runtime: go
+env: production
+manual_scaling:
+  instances: 1
