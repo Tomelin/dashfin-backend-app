@@ -98,7 +98,7 @@ func (api *RestAPI) CORSConfig(c *gin.Context) {
 	corsConfig = cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000", "https://studio--prosperar-n1en5.us-central1.hosted.app", "https://www.dashfin.com.br", "*"}, // Adicione a origem do seu frontend
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "X-AUTHORIZATION", "X-APP", "X-USERID", "X-TRACE-ID"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-AUTHORIZATION", "X-AUTHORIZATION", "X-APP", "X-USERID", "X-TRACE-ID"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -119,7 +119,7 @@ func (s *RestAPI) CORSMiddleware(c *gin.Context) {
 
 	// Cabeçalhos permitidos
 	// Importante: Adicione todos os cabeçalhos personalizados que seu frontend envia.
-	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-AUTHORIZATION, X-APP, X-USERID, X-TRACE-ID")
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-AUTHORIZATION,X-AUTHORIZATION, X-APP, X-USERID, X-TRACE-ID")
 
 	// Permitir credenciais (se você usar cookies ou autenticação HTTP)
 	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
