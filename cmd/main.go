@@ -43,5 +43,4 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 		return nil, err
 	}
 	return api, nil
-
 }
