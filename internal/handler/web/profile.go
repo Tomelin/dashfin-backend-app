@@ -48,6 +48,7 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.PUT("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Create)...)
 	routerGroup.GET("/profile/search", append(middlewareList, cat.Create)...)
 	routerGroup.GET("/profile/filter", append(middlewareList, cat.Create)...)
