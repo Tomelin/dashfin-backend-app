@@ -61,5 +61,8 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	log.Println("ok")
 
+	log.Println(c.GetHeader("X-USERID"))
+	log.Println(c.GetHeader("X-AUTHORIZATION"))
+
 	c.JSON(http.StatusOK, "ok")
 }

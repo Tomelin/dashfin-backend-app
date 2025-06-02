@@ -1,7 +1,6 @@
 package http_server
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -41,8 +40,7 @@ func (s *RestAPI) Run(handle http.Handler) error {
 
 	s.Route.Use(s.CorsMiddleware())
 	http2.ConfigureServer(&srv, &http2.Server{})
-	s.Route.Use(s.ValidateToken)
-	s.Route.Use(s.MiddlewareHeader)
+	s.Route.Use(s.EmbeddedMiddleware)
 
 	return srv.ListenAndServe()
 }
@@ -60,27 +58,34 @@ func setHeader(c *gin.Context) {
 	c.Next()
 }
 
+func (s *RestAPI) EmbeddedMiddleware(c *gin.Context) {
+
+	if c.Request.Method == "OPTIONS" {
+		c.AbortWithStatus(204)
+		return
+	}
+
+	if c.GetHeader("X-APP") != "DashfinApp" {
+		c.AbortWithStatus(401)
+		return
+	}
+
+	c.Next()
+}
+
 func (s *RestAPI) MiddlewareHeader(c *gin.Context) {
-	const SkipMiddlewareKey = "skipMiddleware"
 
-	if c.GetBool(SkipMiddlewareKey) {
-		c.Next()
+	if c.GetHeader("X-USERID") == "" {
+		c.AbortWithStatus(401)
+		return
+	}
+	if c.GetHeader("X-AUTHORIZATION") == "" {
+		c.AbortWithStatus(401)
 		return
 	}
 
-	if c.GetHeader("Authorization") == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("authorization header is required")})
-		c.Writer.Flush()
-		c.Abort()
-		return
-	}
 	c.Next()
 }
-
-func (s *RestAPI) ValidateToken(c *gin.Context) {
-	c.Next()
-}
-
 func (s *RestAPI) CorsMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
 		AllowAllOrigins:  true,

@@ -21,7 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	web.InicializationProfileHandlerHttp("ok", apiResponse.RouterGroup, apiResponse.CorsMiddleware())
+	web.InicializationProfileHandlerHttp("ok", apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)
