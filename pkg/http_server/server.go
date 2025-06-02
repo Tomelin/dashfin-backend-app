@@ -78,7 +78,6 @@ func (s *RestAPI) MiddlewareHeader(c *gin.Context) {
 }
 
 func (s *RestAPI) ValidateToken(c *gin.Context) {
-
 	c.Next()
 }
 
