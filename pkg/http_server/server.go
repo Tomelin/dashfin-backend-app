@@ -32,6 +32,7 @@ func prometheusHandler() gin.HandlerFunc {
 
 func (s *RestAPI) Run(handle http.Handler) error {
 
+	s.Route.Use(s.CORSMiddleware)
 	srv := http.Server{
 		Addr:    ":" + s.Config.Port,
 		Handler: s.Route.Handler(),
@@ -66,7 +67,7 @@ func (s *RestAPI) MiddlewareHeader(c *gin.Context) {
 	}
 
 	if c.GetHeader("Authorization") == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("Authorization header is required")})
+		c.JSON(http.StatusBadRequest, gin.H{"error": errors.New("authorization header is required")})
 		c.Writer.Flush()
 		c.Abort()
 		return
@@ -77,4 +78,35 @@ func (s *RestAPI) MiddlewareHeader(c *gin.Context) {
 func (s *RestAPI) ValidateToken(c *gin.Context) {
 
 	c.Next()
+}
+
+// CORSMiddleware cria um middleware Gin para lidar com CORS.
+func (s *RestAPI) CORSMiddleware(c *gin.Context) {
+	// Domínios permitidos. Para desenvolvimento, "*" pode ser usado,
+	// mas para produção, especifique o domínio do seu frontend.
+	// Ex: "https://sua-app-frontend.web.app"
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Métodos HTTP permitidos
+	c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
+
+	// Cabeçalhos permitidos
+	// Importante: Adicione todos os cabeçalhos personalizados que seu frontend envia.
+	c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-AUTHORIZATION, X-APP, X-USERID, X-TRACE-ID")
+
+	// Permitir credenciais (se você usar cookies ou autenticação HTTP)
+	c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+	// Cache da preflight request (em segundos)
+	c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 horas
+
+	// Se for uma requisição OPTIONS (preflight), retorne 204 No Content
+	if c.Request.Method == "OPTIONS" {
+		c.AbortWithStatus(http.StatusNoContent) // Ou http.StatusOK se preferir
+		return
+	}
+
+	// Processa a próxima requisição
+	c.Next()
+
 }
