@@ -60,7 +60,7 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 }
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
-	log.Println("ok")
+	log.Println("get new request")
 
 	var prof entity_profile.Profile
 
@@ -70,8 +70,7 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 		return
 	}
 	log.Println(prof)
-	log.Println(c.GetHeader("X-USERID"))
-	log.Println(c.GetHeader("X-AUTHORIZATION"))
+	log.Println("after bind json")
 
 	profile := entity_profile.Profile{
 		FullName:  "name of client",
@@ -80,5 +79,6 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 		Email:     "email@teste.com.br",
 	}
 
+	log.Println(profile)
 	c.JSON(http.StatusOK, profile)
 }
