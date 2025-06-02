@@ -57,7 +57,7 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 }
 
 func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
-	c.JSON(http.StatusOK, "ok")
+	c.JSON(http.StatusOK, "created")
 }
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
