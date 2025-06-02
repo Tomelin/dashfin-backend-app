@@ -91,6 +91,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	err := c.ShouldBindJSON(&prof)
 	if err != nil {
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
