@@ -1,5 +1,6 @@
 name: Go Build
 run-name: golang-build
+
 on:
   push:
     branches: [ "main" ]
