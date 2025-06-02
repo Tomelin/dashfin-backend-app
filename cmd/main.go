@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
