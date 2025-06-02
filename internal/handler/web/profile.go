@@ -8,6 +8,7 @@ import (
 
 type HandlerHttpInterface interface {
 	Create(c *gin.Context)
+	Personal(c *gin.Context)
 	// Get(c *gin.Context)
 	// GetById(c *gin.Context)
 	// Update(c *gin.Context)
@@ -41,11 +42,18 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.GET("/profile/", append(middlewareList, cat.Create)...)
 	routerGroup.GET("/profile/:id", append(middlewareList, cat.Create)...)
 	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Create)...)
+	routerGroup.PUT("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.GET("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Create)...)
 	routerGroup.GET("/profile/search", append(middlewareList, cat.Create)...)
 	routerGroup.GET("/profile/filter", append(middlewareList, cat.Create)...)
 }
 
 func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
+	c.JSON(http.StatusOK, "ok")
+}
+
+func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	c.JSON(http.StatusOK, "ok")
 }
