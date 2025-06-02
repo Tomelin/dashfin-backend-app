@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	"github.com/gin-gonic/gin"
 )
 
@@ -61,8 +62,23 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	log.Println("ok")
 
+	var prof entity_profile.Profile
+
+	err := c.ShouldBindJSON(&prof)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println(prof)
 	log.Println(c.GetHeader("X-USERID"))
 	log.Println(c.GetHeader("X-AUTHORIZATION"))
 
-	c.JSON(http.StatusOK, "ok")
+	profile := entity_profile.Profile{
+		FullName:  "name of client",
+		Phone:     "51984104084",
+		BirthDate: "20/05/2025",
+		Email:     "email@teste.com.br",
+	}
+
+	c.JSON(http.StatusOK, profile)
 }

@@ -1,4 +1,4 @@
-package profile
+package entity_profile
 
 import (
 	"fmt"
@@ -8,13 +8,14 @@ import (
 type Profile struct {
 	FirstName string `json:"first_name" binding:"required"`
 	LastName  string `json:"last_name" binding:"required"`
-	BirthDate string `json:"birth_date" binding:"required"`
-	Sex       string `json:"sex" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
+	FullName   string `json:"fullName" binding:"required"`
+	BirthDate string `json:"birthDate" binding:"required"`
+	Sex       string `json:"sex,omitempty" binding:"required"`
+	Email     string `json:"email,omitempty" binding:"required,email"`
 	Phone     string `json:"phone" binding:"required"`
-	CEP       string `json:"cep" binding:"required"`
-	City      string `json:"city" binding:"required"`
-	State     string `json:"state" binding:"required"`
+	CEP       string `json:"cep,omitempty" binding:"required"`
+	City      string `json:"city,omitempty" binding:"required"`
+	State     string `json:"state,omitempty" binding:"required"`
 }
 
 func NewProfilePerson() {}
