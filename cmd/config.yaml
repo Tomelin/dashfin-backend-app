@@ -1,0 +1,14 @@
+genai:
+  gemini:
+    api_key: teste
+
+database:
+  type: mongo
+  mongo:
+    host: uri
+    user:username
+    password: pass
+
+webserver:
+  port: 8080
+  address: "0.0.0.0"    
