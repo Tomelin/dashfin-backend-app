@@ -21,15 +21,12 @@ var cpuTemp = prometheus.NewGauge(prometheus.GaugeOpts{
 var routerPath *gin.RouterGroup
 
 var corsConfig = cors.Config{
-	AllowOrigins:     []string{"http://localhost:3000", "https://studio--prosperar-n1en5.us-central1.hosted.app", "https://www.dashfin.com.br"}, // Adicione a origem do seu frontend
+	AllowOrigins:     []string{"http://localhost:3000", "https://studio--prosperar-n1en5.us-central1.hosted.app", "https://www.dashfin.com.br", "*"}, // Adicione a origem do seu frontend
 	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "X-AUTHORIZATION", "X-APP", "X-USERID", "X-TRACE-ID"},
 	ExposeHeaders:    []string{"Content-Length"},
 	AllowCredentials: true,
-	// AllowOriginFunc: func(origin string) bool { // Alternativa para lógica de origem mais complexa
-	// 	return origin == "https://github.com"
-	// },
-	MaxAge: 12 * time.Hour,
+	MaxAge:           12 * time.Hour,
 }
 
 func init() {
@@ -48,6 +45,7 @@ func (s *RestAPI) Run(handle http.Handler) error {
 
 	s.Route.Use(s.CORSMiddleware)
 	s.Route.Use(cors.New(corsConfig))
+	s.Route.Use(s.CORSConfig)
 	srv := http.Server{
 		Addr:    ":" + s.Config.Port,
 		Handler: s.Route.Handler(),
@@ -55,6 +53,8 @@ func (s *RestAPI) Run(handle http.Handler) error {
 
 	http2.ConfigureServer(&srv, &http2.Server{})
 	s.Route.Use(s.ValidateToken)
+	s.Route.Use(s.CORSMiddleware)
+	s.Route.Use(s.CORSConfig)
 	s.Route.Use(s.MiddlewareHeader)
 
 	return srv.ListenAndServe()
@@ -94,6 +94,18 @@ func (s *RestAPI) ValidateToken(c *gin.Context) {
 
 	c.Next()
 }
+func (api *RestAPI) CORSConfig(c *gin.Context) {
+	corsConfig = cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "https://studio--prosperar-n1en5.us-central1.hosted.app", "https://www.dashfin.com.br", "*"}, // Adicione a origem do seu frontend
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "X-AUTHORIZATION", "X-APP", "X-USERID", "X-TRACE-ID"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	api.Route.Use(cors.New(corsConfig))
+	c.Next()
+}
 
 // CORSMiddleware cria um middleware Gin para lidar com CORS.
 func (s *RestAPI) CORSMiddleware(c *gin.Context) {
@@ -123,5 +135,4 @@ func (s *RestAPI) CORSMiddleware(c *gin.Context) {
 
 	// Processa a próxima requisição
 	c.Next()
-
 }

@@ -59,5 +59,6 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	log.Println("ok")
+
 	c.JSON(http.StatusOK, "ok")
 }
