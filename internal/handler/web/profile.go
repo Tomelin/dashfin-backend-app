@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +20,14 @@ type HandlerHttpInterface interface {
 
 type ProfileHandlerHttp struct {
 	Service string
+	router  *gin.RouterGroup
 }
 
 func InicializationProfileHandlerHttp(svc string, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
 
 	load := &ProfileHandlerHttp{
 		Service: svc,
+		router:  routerGroup,
 	}
 
 	load.handlers(routerGroup, middleware...)
@@ -55,5 +58,6 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 }
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
+	log.Println("ok")
 	c.JSON(http.StatusOK, "ok")
 }

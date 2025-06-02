@@ -3,7 +3,9 @@ package http_server
 import (
 	"errors"
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/net/http2"
 
@@ -17,6 +19,18 @@ var cpuTemp = prometheus.NewGauge(prometheus.GaugeOpts{
 })
 
 var routerPath *gin.RouterGroup
+
+var corsConfig = cors.Config{
+	AllowOrigins:     []string{"http://localhost:3000", "https://studio--prosperar-n1en5.us-central1.hosted.app", "https://www.dashfin.com.br"}, // Adicione a origem do seu frontend
+	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "X-AUTHORIZATION", "X-APP", "X-USERID", "X-TRACE-ID"},
+	ExposeHeaders:    []string{"Content-Length"},
+	AllowCredentials: true,
+	// AllowOriginFunc: func(origin string) bool { // Alternativa para lógica de origem mais complexa
+	// 	return origin == "https://github.com"
+	// },
+	MaxAge: 12 * time.Hour,
+}
 
 func init() {
 	prometheus.MustRegister(cpuTemp)
@@ -33,6 +47,7 @@ func prometheusHandler() gin.HandlerFunc {
 func (s *RestAPI) Run(handle http.Handler) error {
 
 	s.Route.Use(s.CORSMiddleware)
+	s.Route.Use(cors.New(corsConfig))
 	srv := http.Server{
 		Addr:    ":" + s.Config.Port,
 		Handler: s.Route.Handler(),
