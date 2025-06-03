@@ -121,6 +121,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	profile.FullName = "name of client"
 	profile.Phone = "51984104084"
 	profile.Email = "email@teste.com.br"
+	profile.BirthDate = "2025-05-05"
+	profile.Sex = "Homem"
 
 	log.Println("profile was bind2....", profile)
 	result, err := cryptdata.EncryptPayload(profile)
