@@ -7,10 +7,6 @@ import (
 	"encoding/base64"
 )
 
-type CryptPayload struct {
-	Payload string `json:"payload" binding:"required"`
-}
-
 type CryptDataInterface interface {
 	// Encode(data byte) (string, error)
 	// Decode(data *string) (byte, error)
@@ -39,6 +35,9 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 
 	return data, nil
 
+}
+func (c *CryptData) GetPayload() string {
+	return c.Payload
 }
 
 // func (c *CryptData) Encode(data byte) (string, error) {

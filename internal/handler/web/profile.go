@@ -24,13 +24,15 @@ type HandlerHttpInterface interface {
 type ProfileHandlerHttp struct {
 	Service string
 	router  *gin.RouterGroup
+	encryptData cryptdata.CryptDataInterface
 }
 
-func InicializationProfileHandlerHttp(svc string, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
+func InicializationProfileHandlerHttp(svc string,encryptData cryptdata.CryptDataInterface, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
 
 	load := &ProfileHandlerHttp{
 		Service: svc,
 		router:  routerGroup,
+		encryptData: encryptData,
 	}
 
 	load.handlers(routerGroup, middleware...)
@@ -88,7 +90,7 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	log.Println("  PutPersonal > new request")
 
-	var payload cryptdata.CryptPayload
+	var payload cryptdata.CryptData
 
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
@@ -96,6 +98,9 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	
+
 	log.Println(payload)
 	log.Println("after bind json")
 
