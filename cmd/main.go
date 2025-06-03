@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(cfg.Fields)
+
 	dataEncrypt, err := getEncryptToken(cfg.Fields["encrypttoken"])
 	if err != nil {
 		log.Fatal(err)
@@ -54,15 +54,11 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 
 func getEncryptToken(data interface{}) (cryptdata.CryptDataInterface, error) {
 
-	log.Println(data)
 	if data == nil {
 		return nil, errors.New("token is nil")
 	}
 
 	token, ok := data.(string)
-	log.Println(">>>>>>>>>>>>>>>>>>>")
-	log.Println(ok)
-	log.Println(token)
 	if !ok {
 		return nil, errors.New("token is nil")
 	}
