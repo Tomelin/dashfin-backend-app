@@ -60,7 +60,7 @@ func getEncryptToken(token string) (cryptdata.CryptDataInterface, error) {
 
 	dresult, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return dresult, nil
