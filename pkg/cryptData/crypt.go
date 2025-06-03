@@ -49,6 +49,7 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 
 	log.Println("payload > ", *payload)
 	log.Println("decodedPayload > ", decodedPayload)
+	log.Println("decodedPayload string > ", string(decodedPayload))
 
 	// Assuming the token is the key and IV concatenated.
 	// In a real application, you would parse the key and IV from the token
@@ -63,6 +64,7 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	// This is a simplification for demonstration. Your actual implementation will depend on
 	// how the key and IV are structured in your token. You might need to adjust the slicing based on your AES key size (16, 24, or 32 bytes).
 	if len(keyAndIV) < 32 {
+		log.Println(keyAndIV, len(keyAndIV), "token does not contain sufficient data for key and IV")
 		return nil, errors.New("token does not contain sufficient data for key and IV")
 	}
 	key := keyAndIV[:16]  // Assuming a 16-byte key (AES-128)
