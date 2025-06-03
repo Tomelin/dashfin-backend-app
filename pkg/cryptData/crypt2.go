@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
@@ -24,8 +23,7 @@ func PayloadData(base64Payload string) ([]byte, error) {
 
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
-		log.Fatalf("Decryption failed: %v", err) // Removido o "2" para consistência
-		return nil, err
+		return nil, fmt.Errorf("decryption failed: %v", err)
 	}
 	return decryptedData, err
 }

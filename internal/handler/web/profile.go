@@ -130,9 +130,5 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	res, _ := cryptdata.PayloadData(result)
-
-	log.Println("res...", string(res))
-
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
