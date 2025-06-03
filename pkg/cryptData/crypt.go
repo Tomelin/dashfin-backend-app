@@ -2,19 +2,24 @@ package cryptdata
 
 import (
 	"errors"
+	"fmt"
 
 	"encoding/base64"
 )
 
+type CryptPayload struct {
+	Payload string `json:"payload" binding:"required"`
+}
+
 type CryptDataInterface interface {
-	Encode(data byte) (string, error)
-	Decode(data *string) (byte, error)
+	// Encode(data byte) (string, error)
+	// Decode(data *string) (byte, error)
+	// DecryptPayload(payload string) (string, error)
 }
 
 type CryptData struct {
-	Payload     string `json:"payload" binding:"required"`
-	token       string
-	tokenBase64 string
+	Payload string `json:"payload" binding:"required"`
+	token   *string
 }
 
 func InicializationCryptData(token *string) (CryptDataInterface, error) {
@@ -24,24 +29,67 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 	}
 
 	data := &CryptData{
-		token: *token,
+		token: token,
 	}
 
-	data.tokenEncode()
+	err := data.getStringToken()
+	if err != nil {
+		return nil, err
+	}
 
 	return data, nil
 
 }
 
-func (c *CryptData) Encode(data byte) (string, error) {
+// func (c *CryptData) Encode(data byte) (string, error) {
 
-	return "", nil
+// 	return "", nil
 
-}
+// }
 
-func (c *CryptData) Decode(data *string) (byte, error) {}
+// func (c *CryptData) Decode(data *string) (byte, error) { return 0, nil }
 
-func (c *CryptData) tokenEncode() {
+// func (c *CryptData) DecryptPayload(payload string) (string, error) {
+// 	decodedPayload, err := base64.StdEncoding.DecodeString(payload)
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to decode base64 payload: %w", err)
+// 	}
 
-	c.tokenBase64 = base64.StdEncoding.EncodeToString([]byte(c.token))
+// 	err = c.getStringToken()
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to decode base64 key: %w", err)
+// 	}
+
+// 	block, err := aes.NewCipher([]byte(*c.token))
+// 	if err != nil {
+// 		return "", fmt.Errorf("failed to create AES cipher: %w", err)
+// 	}
+
+// 	if len(decodedPayload)%aes.BlockSize != 0 {
+// 		return "", errors.New("ciphertext is not a multiple of the block size")
+// 	}
+
+// 	decrypted := make([]byte, len(decodedPayload))
+
+// 	for i := range decodedPayload {
+// 		decrypted[i] = decodedPayload[i] ^ decodedKey[i%len(decodedKey)]
+// 	}
+
+// 	return string(decrypted), nil
+// }
+
+func (c *CryptData) getStringToken() error {
+	decodeToken, err := base64.StdEncoding.DecodeString(*c.token)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 key: %w", err)
+	}
+
+	if decodeToken == nil || string(decodeToken) == "" {
+		return errors.New("token is nil")
+	}
+
+	t := string(decodeToken)
+	c.token = &t
+
+	return nil
 }

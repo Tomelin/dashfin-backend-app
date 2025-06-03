@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
+	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/gin-gonic/gin"
 )
 
@@ -87,9 +88,20 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	log.Println("  PutPersonal > new request")
 
+	var payload cryptdata.CryptPayload
+
+	err := c.ShouldBindJSON(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println(payload)
+	log.Println("after bind json")
+
 	var prof entity_profile.Profile
 
-	err := c.ShouldBindJSON(&prof)
+	err = c.ShouldBindJSON(&prof)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
