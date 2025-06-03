@@ -26,18 +26,17 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 		return nil, errors.New("token is nil")
 	}
 
-	data := &CryptData{
-		token: token,
-	}
-
-	err := data.getStringToken()
+	data := &CryptData{}
+	err := data.validateTokenFromString(token)
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	data.token = token
 
+	return data, nil
 }
+
 func (c *CryptData) GetPayload() string {
 	return c.Payload
 }
@@ -85,7 +84,20 @@ func (c *CryptData) GetToken() {
 // 	return string(decrypted), nil
 // }
 
-func (c *CryptData) getStringToken() error {
+func (c *CryptData) validateTokenFromString(token *string) error {
+	decodeToken, err := base64.StdEncoding.DecodeString(*token)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 key: %w", err)
+	}
+
+	if decodeToken == nil || string(decodeToken) == "" {
+		return errors.New("token is nil")
+	}
+
+	return nil
+}
+
+func (c *CryptData) validateToken() error {
 	decodeToken, err := base64.StdEncoding.DecodeString(*c.token)
 	if err != nil {
 		return fmt.Errorf("failed to decode base64 key: %w", err)
@@ -96,4 +108,19 @@ func (c *CryptData) getStringToken() error {
 	}
 
 	return nil
+}
+
+func (c *CryptData) getTokenToString() (*string, error) {
+	decodeToken, err := base64.StdEncoding.DecodeString(*c.token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode base64 key: %w", err)
+	}
+
+	if decodeToken == nil || string(decodeToken) == "" {
+		return nil, errors.New("token is nil")
+	}
+
+	t := string(decodeToken)
+
+	return &t, nil
 }
