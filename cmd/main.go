@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dataEncrypt, err := getEncryptToken(cfg.Fields["token"].(string))
+	dataEncrypt, err := getEncryptToken(cfg.Fields["token"])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,9 +52,14 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 	return api, nil
 }
 
-func getEncryptToken(token string) (cryptdata.CryptDataInterface, error) {
+func getEncryptToken(data interface{}) (cryptdata.CryptDataInterface, error) {
+	
+	if data == nil {
+		return nil, errors.New("token is nil")
+	}
 
-	if token == "" {
+	token, ok := data.(string)
+	if !ok {
 		return nil, errors.New("token is nil")
 	}
 
