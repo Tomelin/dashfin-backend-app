@@ -85,11 +85,14 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create AES cipher: %w", err)
 	}
 
+	log.Println("block", block)
+
 	// Use CBC mode for decryption with the provided IV.
 	// You will need to handle unpadding after decryption based on the padding scheme used during encryption.
 	mode := cipher.NewCBCDecrypter(block, iv)
 	decrypted := make([]byte, len(decodedPayload))
 	mode.CryptBlocks(decrypted, decodedPayload)
+	log.Println(string(decrypted))
 	log.Println(string(decrypted))
 	// In a real application, you would unpad the decryptedPayload here.
 	return decrypted, nil
