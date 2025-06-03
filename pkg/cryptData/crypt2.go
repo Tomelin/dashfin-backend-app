@@ -21,8 +21,6 @@ func PayloadData(base64Payload string) ([]byte, error) {
 		log.Fatalf("Decryption failed: %v", err) // Removido o "2" para consistência
 		return nil, err
 	}
-
-	fmt.Printf("Decrypted data: %s\n", string(decryptedData))
 	return decryptedData, err
 }
 
@@ -42,13 +40,6 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 		// Este erro é crucial e geralmente indica chave errada ou dados corrompidos.
 		return nil, errors.New("pkcs7Unpad: invalid padding length (possible wrong key or corrupted data)")
 	}
-
-	// Opcional: verificar se todos os bytes de padding são iguais a paddingLen.
-	// for i := 0; i < paddingLen; i++ {
-	//    if data[len(data)-1-i] != byte(paddingLen) {
-	//        return nil, errors.New("pkcs7Unpad: invalid padding bytes")
-	//    }
-	// }
 
 	return data[:len(data)-paddingLen], nil
 }
