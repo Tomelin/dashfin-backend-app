@@ -10,7 +10,7 @@ type Profile struct {
 	LastName  string `json:"last_name,omitempty"`
 	FullName  string `json:"fullName" binding:"required"`
 	BirthDate string `json:"birthDate" binding:"required"`
-	Sex       string `json:"sex,omitempty" `
+	Sex       string `json:"sexo,omitempty" `
 	Email     string `json:"email,omitempty" binding:"required,email"`
 	Phone     string `json:"phone" binding:"required"`
 	CEP       string `json:"cep,omitempty" `
