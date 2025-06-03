@@ -99,6 +99,9 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, payload.Payload)
+	return
+
 	cat.encryptData.GetToken()
 
 	cat.encryptData.DecodePayload(&payload.Payload)
