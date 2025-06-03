@@ -100,7 +100,7 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	mode.CryptBlocks(decrypted, ciphertext)
 
 	// 7. Unpad the decrypted data (PKCS7)
-	unpadded, err := pkcs7Unpad(decrypted, aes.BlockSize)
+	unpadded, err := pkcs7Unpad2(decrypted, aes.BlockSize)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpad decrypted data: %w", err)
 	}
@@ -109,7 +109,7 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 }
 
 // pkcs7Unpad removes PKCS7 padding from data
-func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
+func pkcs7Unpad2(data []byte, blockSize int) ([]byte, error) {
 	if blockSize <= 0 {
 		return nil, errors.New("invalid block size")
 	}

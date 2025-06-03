@@ -99,7 +99,9 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("pyload was bind....", payload.Payload)
 
+	cryptdata.PayloadData(payload.Payload)
 	cat.encryptData.GetToken()
 
 	data, err := cat.encryptData.DecodePayload(&payload.Payload)
