@@ -23,12 +23,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dataEncrypt,err := getEncryptToken(cfg.Fields["token"].(string))
+	dataEncrypt, err := getEncryptToken(cfg.Fields["token"].(string))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	web.InicializationProfileHandlerHttp("ok", cryptdata.CryptDataInterface,apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web.InicializationProfileHandlerHttp("ok", dataEncrypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)
@@ -52,19 +52,16 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 	return api, nil
 }
 
-
 func getEncryptToken(token string) (cryptdata.CryptDataInterface, error) {
 
 	if token == "" {
-		return nil,errors.New("token is nil")
+		return nil, errors.New("token is nil")
 	}
 
-	dresult, err :=cryptdata.InicializationCryptData(&token)
+	dresult, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
 		return "", err
 	}
-
-	
 
 	return dresult, nil
 }
