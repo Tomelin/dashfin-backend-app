@@ -6,16 +6,14 @@ import (
 )
 
 type Profile struct {
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	FullName  string `json:"fullName" binding:"required"`
-	BirthDate string `json:"birthDate" binding:"required"`
-	Sex       string `json:"sexo,omitempty" `
-	Email     string `json:"email,omitempty" binding:"required,email"`
-	Phone     string `json:"phone" binding:"required"`
-	CEP       string `json:"cep,omitempty" `
+	FullName  string `json:"fullName"` // Correto!
+	Email     string `json:"email"`    // Correto!
+	Phone     string `json:"phone,omitempty"`
+	BirthDate string `json:"birthDate,omitempty"`
+	Sexo      string `json:"sexo"` // Correto!
+	Cep       string `json:"cep,omitempty"`
 	City      string `json:"city,omitempty"`
-	State     string `json:"state,omitempty" `
+	State     string `json:"state,omitempty"`
 }
 
 func NewProfilePerson() {}
