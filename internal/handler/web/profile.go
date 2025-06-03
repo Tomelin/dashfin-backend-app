@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -101,10 +102,25 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	cat.encryptData.GetToken()
 
-	cat.encryptData.DecodePayload(&payload.Payload)
+	data, err := cat.encryptData.DecodePayload(&payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	log.Println("after bind json")
 
 	var prof entity_profile.Profile
+
+	err = json.Unmarshal(data, &prof)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println(prof)
 
 	err = c.ShouldBindJSON(&prof)
 	if err != nil {
