@@ -141,7 +141,7 @@ func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 // EncryptPayload criptografa os dados fornecidos (que serão primeiro convertidos para JSON)
 // usando AES-CBC. O output é uma string Base64 no formato: Base64(IVhex + CiphertextHex).
 // A chave (base64Key) também é fornecida em Base64.
-func EncryptPayload(dataToEncrypt interface{}, base64Key string) (string, error) {
+func EncryptPayload(dataToEncrypt interface{}) (string, error) {
 	if base64Key == "" {
 		return "", errors.New("encrypt: base64 key is empty")
 	}
