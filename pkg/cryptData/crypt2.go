@@ -18,9 +18,7 @@ const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
 // Exemplo de como usar (não faz parte do package, apenas para demonstração):
 // Esta função agora pode ser usada para testar.
 func PayloadData(base64Payload string) ([]byte, error) {
-	// Usar a mesma chave que foi usada para criptografar este payload específico.
-	// A chave "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo=" é "ThisIsA16ByteKeyThisIsA16ByteIV" (32 bytes)
-
+	
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %v", err)
