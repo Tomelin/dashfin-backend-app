@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println(cfg.Fields)
-	dataEncrypt, err := getEncryptToken(cfg.Fields["encryptToken"])
+	dataEncrypt, err := getEncryptToken(cfg.Fields["encrypttoken"])
 	if err != nil {
 		log.Fatal(err)
 	}
