@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64" // Ainda pode ser útil para debugging ou outras funções, mas não diretamente neste fluxo.
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -138,8 +139,9 @@ func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 }
 
 // EncryptPayload criptografa os dados fornecidos (que serão primeiro convertidos para JSON)
-// usando AES-CBC, e formata o output como IV + Ciphertext, codificado em Base64.
-func EncryptPayload(dataToEncrypt interface{}) (string, error) {
+// usando AES-CBC. O output é uma string Base64 no formato: Base64(IVhex + CiphertextHex).
+// A chave (base64Key) também é fornecida em Base64.
+func EncryptPayload(dataToEncrypt interface{}, base64Key string) (string, error) {
 	if base64Key == "" {
 		return "", errors.New("encrypt: base64 key is empty")
 	}
@@ -165,38 +167,41 @@ func EncryptPayload(dataToEncrypt interface{}) (string, error) {
 	}
 
 	// 3. Aplicar Padding PKCS7 aos dados JSON
+	// O modo CBC já lida com padding se o tamanho dos dados não for múltiplo do bloco,
+	// mas é uma boa prática ser explícito com PKCS7, pois CryptoJS faz isso.
 	paddedData, err := pkcs7Pad(jsonDataBytes, aes.BlockSize)
 	if err != nil {
-		// O erro de pkcs7Pad é por blockSize inválido, que não deve ocorrer com aes.BlockSize
 		return "", fmt.Errorf("encrypt: failed to apply PKCS7 padding: %w", err)
 	}
 
 	// 4. Criar o cipher AES
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
-		// Redundante se a validação de tamanho da chave acima for mantida, mas seguro ter.
 		return "", fmt.Errorf("encrypt: failed to create AES cipher: %w", err)
 	}
 
 	// 5. Gerar um IV aleatório
-	// O IV deve ter o mesmo tamanho do bloco da cifra (aes.BlockSize == 16 bytes)
-	iv := make([]byte, aes.BlockSize)
+	iv := make([]byte, aes.BlockSize) // aes.BlockSize é 16 bytes
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return "", fmt.Errorf("encrypt: failed to generate IV: %w", err)
 	}
 
 	// 6. Criptografar os dados usando o modo CBC
-	// O slice do ciphertext deve ter o mesmo tamanho dos dados "padded".
 	ciphertext := make([]byte, len(paddedData))
-
 	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext, paddedData) // Criptografa paddedData e armazena em ciphertext
+	mode.CryptBlocks(ciphertext, paddedData)
 
-	// 7. Combinar IV e Ciphertext (IV primeiro)
-	encryptedBytes := append(iv, ciphertext...)
+	// 7. Converter IV e Ciphertext para strings hexadecimais
+	ivHex := hex.EncodeToString(iv)
+	ciphertextHex := hex.EncodeToString(ciphertext)
 
-	// 8. Codificar o resultado combinado para Base64
-	base64EncryptedPayload := base64.StdEncoding.EncodeToString(encryptedBytes)
+	// 8. Concatenar IVhex e CiphertextHex
+	combinedHex := ivHex + ciphertextHex
+
+	// 9. Codificar a string hexadecimal combinada para Base64
+	// O frontend espera Base64(HexToString(IV) + HexToString(Ciphertext))
+	// Então, convertemos a string `combinedHex` para bytes antes de codificar para Base64.
+	base64EncryptedPayload := base64.StdEncoding.EncodeToString([]byte(combinedHex))
 
 	return base64EncryptedPayload, nil
 }
