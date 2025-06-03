@@ -130,5 +130,14 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	res, err := cryptdata.PayloadData(result)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("res...", string(res))
+
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
