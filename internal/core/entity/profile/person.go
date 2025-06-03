@@ -6,8 +6,8 @@ import (
 )
 
 type Profile struct {
-	FirstName string `json:"first_name" `
-	LastName  string `json:"last_name" `
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
 	FullName  string `json:"fullName" binding:"required"`
 	BirthDate string `json:"birthDate" binding:"required"`
 	Sex       string `json:"sex,omitempty" `
