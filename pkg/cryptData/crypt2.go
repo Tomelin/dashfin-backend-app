@@ -1,20 +1,25 @@
 package cryptdata
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64" // Ainda pode ser útil para debugging ou outras funções, mas não diretamente neste fluxo.
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 )
+
+const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
 
 // Exemplo de como usar (não faz parte do package, apenas para demonstração):
 // Esta função agora pode ser usada para testar.
 func PayloadData(base64Payload string) ([]byte, error) {
 	// Usar a mesma chave que foi usada para criptografar este payload específico.
 	// A chave "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo=" é "ThisIsA16ByteKeyThisIsA16ByteIV" (32 bytes)
-	const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
 
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
@@ -120,4 +125,78 @@ func DecryptPayload(base64Payload string, base64Key string) ([]byte, error) {
 	}
 
 	return unpaddedData, nil
+}
+
+// pkcs7Pad adiciona padding PKCS7 aos dados.
+func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
+	if blockSize <= 0 || blockSize > 255 {
+		return nil, fmt.Errorf("pkcs7Pad: invalid block size %d", blockSize)
+	}
+	padding := blockSize - (len(data) % blockSize)
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(data, padtext...), nil
+}
+
+// EncryptPayload criptografa os dados fornecidos (que serão primeiro convertidos para JSON)
+// usando AES-CBC, e formata o output como IV + Ciphertext, codificado em Base64.
+func EncryptPayload(dataToEncrypt interface{}) (string, error) {
+	if base64Key == "" {
+		return "", errors.New("encrypt: base64 key is empty")
+	}
+
+	// 1. Decodificar a chave de Base64 para bytes
+	keyBytes, err := base64.StdEncoding.DecodeString(base64Key)
+	if err != nil {
+		return "", fmt.Errorf("encrypt: failed to decode base64 key: %w", err)
+	}
+
+	// Validar o tamanho da chave (AES-128, AES-192, ou AES-256)
+	switch len(keyBytes) {
+	case 16, 24, 32:
+		// Tamanho de chave válido
+	default:
+		return "", fmt.Errorf("encrypt: invalid AES key size: %d bytes (must be 16, 24, or 32)", len(keyBytes))
+	}
+
+	// 2. Converter os dados para JSON
+	jsonDataBytes, err := json.Marshal(dataToEncrypt)
+	if err != nil {
+		return "", fmt.Errorf("encrypt: failed to marshal data to JSON: %w", err)
+	}
+
+	// 3. Aplicar Padding PKCS7 aos dados JSON
+	paddedData, err := pkcs7Pad(jsonDataBytes, aes.BlockSize)
+	if err != nil {
+		// O erro de pkcs7Pad é por blockSize inválido, que não deve ocorrer com aes.BlockSize
+		return "", fmt.Errorf("encrypt: failed to apply PKCS7 padding: %w", err)
+	}
+
+	// 4. Criar o cipher AES
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		// Redundante se a validação de tamanho da chave acima for mantida, mas seguro ter.
+		return "", fmt.Errorf("encrypt: failed to create AES cipher: %w", err)
+	}
+
+	// 5. Gerar um IV aleatório
+	// O IV deve ter o mesmo tamanho do bloco da cifra (aes.BlockSize == 16 bytes)
+	iv := make([]byte, aes.BlockSize)
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return "", fmt.Errorf("encrypt: failed to generate IV: %w", err)
+	}
+
+	// 6. Criptografar os dados usando o modo CBC
+	// O slice do ciphertext deve ter o mesmo tamanho dos dados "padded".
+	ciphertext := make([]byte, len(paddedData))
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext, paddedData) // Criptografa paddedData e armazena em ciphertext
+
+	// 7. Combinar IV e Ciphertext (IV primeiro)
+	encryptedBytes := append(iv, ciphertext...)
+
+	// 8. Codificar o resultado combinado para Base64
+	base64EncryptedPayload := base64.StdEncoding.EncodeToString(encryptedBytes)
+
+	return base64EncryptedPayload, nil
 }
