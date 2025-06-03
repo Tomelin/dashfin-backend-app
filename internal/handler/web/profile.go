@@ -100,6 +100,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	}
 
 	cat.encryptData.GetToken()
+	
 	cat.encryptData.DecodePayload(&payload.Payload)
 	log.Println("after bind json")
 

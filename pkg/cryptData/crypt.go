@@ -90,7 +90,7 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	mode := cipher.NewCBCDecrypter(block, iv)
 	decrypted := make([]byte, len(decodedPayload))
 	mode.CryptBlocks(decrypted, decodedPayload)
-
+	log.Println(string(decrypted))
 	// In a real application, you would unpad the decryptedPayload here.
 	return decrypted, nil
 }
