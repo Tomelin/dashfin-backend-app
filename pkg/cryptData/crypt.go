@@ -1,6 +1,8 @@
 package cryptdata
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"errors"
 	"fmt"
 	"log"
@@ -36,7 +38,61 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 }
 
 func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
-	return nil, nil
+	// Simple example of how to decode a payload using AES.
+	// This assumes the token is the key and IV combined.
+
+	decodedPayload, err := base64.StdEncoding.DecodeString(*payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to base64 decode payload: %w", err)
+	}
+
+	// Assuming the token is the key and IV concatenated.
+	// In a real application, you would parse the key and IV from the token
+	// based on your token format.
+	keyAndIV, err := base64.StdEncoding.DecodeString(*c.token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to base64 decode token for key/IV: %w", err)
+	}
+
+	// In this example, we'll assume the key is the first 16 bytes and the IV is the next 16 bytes.
+	// This is a simplification for demonstration. Your actual implementation will depend on
+	// how the key and IV are structured in your token. You might need to adjust the slicing based on your AES key size (16, 24, or 32 bytes).
+	if len(keyAndIV) < 32 {
+		return nil, errors.New("token does not contain sufficient data for key and IV")
+	}
+	key := keyAndIV[:16]  // Assuming a 16-byte key (AES-128)
+	iv := keyAndIV[16:32] // Assuming a 16-byte IV
+
+	stringToken, err := c.getTokenToString()
+	if err != nil {
+		return nil, err
+	}
+
+	if payload == nil || *payload == "" {
+		return nil, errors.New("payload is nil")
+	}
+
+	if stringToken == nil || *stringToken == "" {
+		return nil, errors.New("token is nil")
+	}
+
+	if err := c.validateToken(); err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AES cipher: %w", err)
+	}
+
+	// Use CBC mode for decryption with the provided IV.
+	// You will need to handle unpadding after decryption based on the padding scheme used during encryption.
+	mode := cipher.NewCBCDecrypter(block, iv)
+	decrypted := make([]byte, len(decodedPayload))
+	mode.CryptBlocks(decrypted, decodedPayload)
+
+	// In a real application, you would unpad the decryptedPayload here.
+	return decrypted, nil
 }
 
 func (c *CryptData) GetPayload() string {
