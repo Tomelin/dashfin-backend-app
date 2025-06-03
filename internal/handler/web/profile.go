@@ -107,7 +107,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("data was bind....", string(data))
 
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
@@ -119,5 +118,5 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	log.Println("profile was bind....", profile)
 
-	c.JSON(http.StatusOK, payload.Payload)
+	c.JSON(http.StatusOK, gin.H{"payload": payload.Payload})
 }
