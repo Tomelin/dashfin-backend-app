@@ -100,7 +100,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	}
 
 	cat.encryptData.GetToken()
-	
+
 	cat.encryptData.DecodePayload(&payload.Payload)
 	log.Println("after bind json")
 
@@ -115,13 +115,12 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	log.Println(prof)
 	log.Println("after bind json")
 
-	profile := entity_profile.Profile{
-		FullName:  "name of client",
-		Phone:     "51984104084",
-		BirthDate: "20/05/2025",
-		Email:     "email@teste.com.br",
-	}
+	// profile := entity_profile.Profile{
+	// 	FullName:  "name of client",
+	// 	Phone:     "51984104084",
+	// 	BirthDate: "20/05/2025",
+	// 	Email:     "email@teste.com.br",
+	// }
 
-	log.Println(profile)
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusOK, payload.Payload)
 }

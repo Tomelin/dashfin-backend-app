@@ -38,8 +38,6 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 }
 
 func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
-	// Simple example of how to decode a payload using AES.
-	// This assumes the token is the key and IV combined.
 
 	decodedPayload, err := base64.StdEncoding.DecodeString(*payload)
 	if err != nil {
@@ -53,9 +51,8 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to base64 decode token for key/IV: %w", err)
 	}
-	log.Println("keyAndIV > ", string(keyAndIV))
+
 	if len(keyAndIV) < 32 {
-		log.Println(keyAndIV, len(keyAndIV), "token does not contain sufficient data for key and IV")
 		return nil, errors.New("token does not contain sufficient data for key and IV")
 	}
 	key := keyAndIV[:16]  // Assuming a 16-byte key (AES-128)
