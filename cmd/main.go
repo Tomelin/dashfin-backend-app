@@ -23,7 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dataEncrypt, err := getEncryptToken(cfg.Fields["token"])
+	dataEncrypt, err := getEncryptToken(cfg.Fields["encryptToken"])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,6 +59,7 @@ func getEncryptToken(data interface{}) (cryptdata.CryptDataInterface, error) {
 	}
 
 	token, ok := data.(string)
+	log.Println(">>>>>>>>>>>>>>>>>>>")
 	log.Println(ok)
 	log.Println(token)
 	if !ok {
