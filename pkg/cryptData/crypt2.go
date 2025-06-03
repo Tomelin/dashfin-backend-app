@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/base64" // Ainda pode ser útil para debugging ou outras funções, mas não diretamente neste fluxo.
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -18,7 +17,7 @@ const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
 // Exemplo de como usar (não faz parte do package, apenas para demonstração):
 // Esta função agora pode ser usada para testar.
 func PayloadData(base64Payload string) ([]byte, error) {
-	
+
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %v", err)
@@ -137,7 +136,8 @@ func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 // EncryptPayload criptografa os dados fornecidos (que serão primeiro convertidos para JSON)
 // usando AES-CBC. O output é uma string Base64 no formato: Base64(IVhex + CiphertextHex).
 // A chave (base64Key) também é fornecida em Base64.
-func EncryptPayload(dataToEncrypt interface{}) (string, error) {
+func EncryptPayload(jsonDataBytes []byte) (string, error) {
+	// func EncryptPayload(dataToEncrypt interface{}) (string, error) {
 	if base64Key == "" {
 		return "", errors.New("encrypt: base64 key is empty")
 	}
@@ -157,10 +157,10 @@ func EncryptPayload(dataToEncrypt interface{}) (string, error) {
 	}
 
 	// 2. Converter os dados para JSON
-	jsonDataBytes, err := json.Marshal(dataToEncrypt)
-	if err != nil {
-		return "", fmt.Errorf("encrypt: failed to marshal data to JSON: %w", err)
-	}
+	// jsonDataBytes, err := json.Marshal(dataToEncrypt)
+	// if err != nil {
+	// 	return "", fmt.Errorf("encrypt: failed to marshal data to JSON: %w", err)
+	// }
 
 	// 3. Aplicar Padding PKCS7 aos dados JSON
 	// O modo CBC já lida com padding se o tamanho dos dados não for múltiplo do bloco,
