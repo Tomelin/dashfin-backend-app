@@ -93,6 +93,10 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	decrypted := make([]byte, len(decodedPayload))
 	mode.CryptBlocks(decrypted, decodedPayload)
 
+	log.Println("payload", decrypted)
+	log.Println("payload string", string(decrypted))
+	log.Println("decodedPayload", decodedPayload)
+	log.Println("decodedPayload string", string(decodedPayload))
 	// In a real application, you would unpad the decryptedPayload here.
 	return decrypted, nil
 }
