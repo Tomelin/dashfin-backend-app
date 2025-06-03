@@ -42,7 +42,7 @@ func PayloadData(base64Payload string) {
 
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
-		log.Fatalf("Decryption failed: %v", err)
+		log.Fatalf("Decryption failed2: %v", err)
 	}
 
 	fmt.Printf("Decrypted data: %s\n", string(decryptedData)) // Esperado: {"data":"test"}
