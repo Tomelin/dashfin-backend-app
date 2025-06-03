@@ -22,16 +22,16 @@ type HandlerHttpInterface interface {
 }
 
 type ProfileHandlerHttp struct {
-	Service string
-	router  *gin.RouterGroup
+	Service     string
+	router      *gin.RouterGroup
 	encryptData cryptdata.CryptDataInterface
 }
 
-func InicializationProfileHandlerHttp(svc string,encryptData cryptdata.CryptDataInterface, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
+func InicializationProfileHandlerHttp(svc string, encryptData cryptdata.CryptDataInterface, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
 
 	load := &ProfileHandlerHttp{
-		Service: svc,
-		router:  routerGroup,
+		Service:     svc,
+		router:      routerGroup,
 		encryptData: encryptData,
 	}
 
@@ -99,9 +99,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	
-
-	log.Println(payload)
+	cat.encryptData.GetToken()
 	log.Println("after bind json")
 
 	var prof entity_profile.Profile

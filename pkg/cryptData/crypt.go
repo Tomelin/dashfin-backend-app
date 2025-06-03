@@ -3,6 +3,7 @@ package cryptdata
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"encoding/base64"
 )
@@ -11,6 +12,7 @@ type CryptDataInterface interface {
 	// Encode(data byte) (string, error)
 	// Decode(data *string) (byte, error)
 	// DecryptPayload(payload string) (string, error)
+	GetToken()
 }
 
 type CryptData struct {
@@ -38,6 +40,11 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 }
 func (c *CryptData) GetPayload() string {
 	return c.Payload
+}
+
+func (c *CryptData) GetToken() {
+	log.Println("token is....")
+	log.Println(c.token)
 }
 
 // func (c *CryptData) Encode(data byte) (string, error) {
