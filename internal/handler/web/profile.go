@@ -115,12 +115,13 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("profile was bind1....", profile)
 
 	profile.FullName = "name of client"
 	profile.Phone = "51984104084"
 	profile.Email = "email@teste.com.br"
 
-	log.Println("profile was bind....", profile)
+	log.Println("profile was bind2....", profile)
 	result, err := cryptdata.EncryptPayload(profile)
 	if err != nil {
 		log.Println(err.Error())
