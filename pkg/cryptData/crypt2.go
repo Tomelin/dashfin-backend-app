@@ -11,7 +11,7 @@ import (
 
 // Exemplo de como usar (não faz parte do package, apenas para demonstração):
 // Esta função agora pode ser usada para testar.
-func PayloadData(base64Payload string) {
+func PayloadData(base64Payload string) ([]byte, error) {
 	// Usar a mesma chave que foi usada para criptografar este payload específico.
 	// A chave "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo=" é "ThisIsA16ByteKeyThisIsA16ByteIV" (32 bytes)
 	const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
@@ -19,9 +19,11 @@ func PayloadData(base64Payload string) {
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
 		log.Fatalf("Decryption failed: %v", err) // Removido o "2" para consistência
+		return nil, err
 	}
 
 	fmt.Printf("Decrypted data: %s\n", string(decryptedData))
+	return decryptedData, err
 }
 
 // pkcs7Unpad remove o padding PKCS7 dos dados.

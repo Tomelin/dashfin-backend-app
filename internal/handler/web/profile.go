@@ -1,7 +1,6 @@
 package web
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -101,44 +100,13 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	}
 	log.Println("pyload was bind....", payload.Payload)
 
-	cryptdata.PayloadData(payload.Payload)
-	cat.encryptData.GetToken()
-
-	data, err := cat.encryptData.DecodePayload(&payload.Payload)
+	data, err := cryptdata.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	log.Println("after bind json")
-
-	var prof entity_profile.Profile
-
-	err = json.Unmarshal(data, &prof)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	log.Println(prof)
-
-	err = c.ShouldBindJSON(&prof)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Println(prof)
-	log.Println("after bind json")
-
-	// profile := entity_profile.Profile{
-	// 	FullName:  "name of client",
-	// 	Phone:     "51984104084",
-	// 	BirthDate: "20/05/2025",
-	// 	Email:     "email@teste.com.br",
-	// }
+	log.Println("data was bind....", string(data))
 
 	c.JSON(http.StatusOK, payload.Payload)
 }
