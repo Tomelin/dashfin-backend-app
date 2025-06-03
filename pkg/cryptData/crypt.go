@@ -95,8 +95,5 @@ func (c *CryptData) getStringToken() error {
 		return errors.New("token is nil")
 	}
 
-	t := string(decodeToken)
-	c.token = &t
-
 	return nil
 }
