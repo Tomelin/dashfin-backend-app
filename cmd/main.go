@@ -54,6 +54,7 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 
 func getEncryptToken(data interface{}) (cryptdata.CryptDataInterface, error) {
 
+	log.Println(data)
 	if data == nil {
 		return nil, errors.New("token is nil")
 	}
