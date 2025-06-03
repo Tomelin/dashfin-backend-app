@@ -45,6 +45,7 @@ func (c *CryptData) GetPayload() string {
 func (c *CryptData) GetToken() {
 	log.Println("token is....")
 	log.Println(c.token)
+	log.Println(*c.token)
 }
 
 // func (c *CryptData) Encode(data byte) (string, error) {
