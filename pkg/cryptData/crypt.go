@@ -42,18 +42,23 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	// This assumes the token is the key and IV combined.
 
 	decodedPayload, err := base64.StdEncoding.DecodeString(*payload)
+	log.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("failed to base64 decode payload: %w", err)
 	}
+
+	log.Println("payload > ", *payload)
+	log.Println("decodedPayload > ", decodedPayload)
 
 	// Assuming the token is the key and IV concatenated.
 	// In a real application, you would parse the key and IV from the token
 	// based on your token format.
 	keyAndIV, err := base64.StdEncoding.DecodeString(*c.token)
+	log.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("failed to base64 decode token for key/IV: %w", err)
 	}
-
+	log.Println("keyAndIV > ", string(keyAndIV))
 	// In this example, we'll assume the key is the first 16 bytes and the IV is the next 16 bytes.
 	// This is a simplification for demonstration. Your actual implementation will depend on
 	// how the key and IV are structured in your token. You might need to adjust the slicing based on your AES key size (16, 24, or 32 bytes).
@@ -64,23 +69,28 @@ func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
 	iv := keyAndIV[16:32] // Assuming a 16-byte IV
 
 	stringToken, err := c.getTokenToString()
+	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
 
 	if payload == nil || *payload == "" {
+		log.Println(err)
 		return nil, errors.New("payload is nil")
 	}
 
 	if stringToken == nil || *stringToken == "" {
+		log.Println(err)
 		return nil, errors.New("token is nil")
 	}
 
 	if err := c.validateToken(); err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
 	block, err := aes.NewCipher(key)
+	log.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create AES cipher: %w", err)
 	}
