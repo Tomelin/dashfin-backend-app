@@ -9,6 +9,7 @@ import (
 )
 
 type CryptDataInterface interface {
+	DecodePayload(payload *string) ([]byte, error)
 	GetToken()
 }
 
@@ -32,6 +33,10 @@ func InicializationCryptData(token *string) (CryptDataInterface, error) {
 	data.token = token
 
 	return data, nil
+}
+
+func (c *CryptData) DecodePayload(payload *string) ([]byte, error) {
+	return nil, nil
 }
 
 func (c *CryptData) GetPayload() string {
