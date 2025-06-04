@@ -1,0 +1,21 @@
+package web
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func getRequiredHeaders(r *http.Request) (userID string, authorization string, err error) {
+	userID = r.Header.Get("X-Userid")
+	authorization = r.Header.Get("X-Authorization")
+
+	if userID == "" || authorization == "" {
+		return "", "", fmt.Errorf("X-Userid and X-Authorization headers are required")
+	}
+
+	if len(authorization) > 7 && authorization[:7] == "Bearer " {
+		authorization = authorization[7:]
+	}
+
+	return userID, authorization, nil
+}
