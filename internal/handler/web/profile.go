@@ -53,6 +53,7 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
 	routerGroup.PUT("/profile/personal", append(middlewareList, cat.PutPersonal)...)
 	routerGroup.GET("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.POST("/profile/updateLogin", append(middlewareList, cat.UpdateLogin)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Personal)...)
@@ -142,4 +143,29 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	log.Println("data received", string(data))
 	log.Println("result encript", string(b))
 	c.JSON(http.StatusOK, gin.H{"payload": result})
+}
+
+func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
+	var payload cryptdata.CryptData
+
+	// dados recebidos e realizado o bind para CrypstData
+	// Essa parte está funcionando 100%
+	err := c.ShouldBindJSON(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("received payload", payload)
+
+	data, err := cryptdata.PayloadData(payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Println("received data", data)
+	log.Println("received data string", string(data))
+	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }
