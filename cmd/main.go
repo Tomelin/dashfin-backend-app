@@ -23,12 +23,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dataEncrypt, err := getEncryptToken(cfg.Fields["encrypttoken"])
+	token := "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
+	crypt, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	web.InicializationProfileHandlerHttp("ok", dataEncrypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	// dataEncrypt, err := getEncryptToken(cfg.Fields["encrypttoken"])
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	web.InicializationProfileHandlerHttp("ok", crypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)

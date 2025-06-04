@@ -14,11 +14,44 @@ import (
 	"io"
 )
 
-const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
+type CryptData struct {
+	Payload string `json:"payload" binding:"required"`
+	token   *string
+}
+
+func InicializationCryptData(token *string) (CryptDataInterface, error) {
+
+	if token == nil || *token == "" {
+		return nil, errors.New("token is nil")
+	}
+
+	data := &CryptData{}
+	err := data.validateTokenFromString(token)
+	if err != nil {
+		return nil, err
+	}
+
+	data.token = token
+
+	return data, nil
+}
+
+func (c *CryptData) validateTokenFromString(token *string) error {
+	decodeToken, err := base64.StdEncoding.DecodeString(*token)
+	if err != nil {
+		return fmt.Errorf("failed to decode base64 key: %w", err)
+	}
+
+	if decodeToken == nil || string(decodeToken) == "" {
+		return errors.New("token is nil")
+	}
+
+	return nil
+}
 
 // PayloadData é uma função wrapper que descriptografa usando a chave global do pacote.
-func PayloadData(base64Payload string) ([]byte, error) {
-	decryptedData, err := DecryptPayload(base64Payload, base64Key)
+func (c *CryptData) PayloadData(base64Payload string) ([]byte, error) {
+	decryptedData, err := c.DecryptPayload(base64Payload, base64Key)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %w", err) // Usar %w para wrapping de erro
 	}
@@ -26,7 +59,7 @@ func PayloadData(base64Payload string) ([]byte, error) {
 }
 
 // pkcs7Unpad remove o padding PKCS7 dos dados.
-func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
+func (c *CryptData) pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, errors.New("pkcs7Unpad: input data is empty")
 	}
@@ -49,7 +82,7 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 
 // DecryptPayload descriptografa um payload que foi criptografado usando AES-CBC.
 // Espera-se que base64Payload seja Base64(bytes_crus_IV + bytes_crus_Ciphertext).
-func DecryptPayload(base64Payload string, base64KeyInput string) ([]byte, error) { // Renomeado parâmetro para evitar confusão com a constante
+func (c *CryptData) DecryptPayload(base64Payload string, base64KeyInput string) ([]byte, error) { // Renomeado parâmetro para evitar confusão com a constante
 	if base64Payload == "" {
 		return nil, errors.New("decrypt: base64 payload is empty")
 	}
@@ -95,7 +128,7 @@ func DecryptPayload(base64Payload string, base64KeyInput string) ([]byte, error)
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(ciphertext, ciphertext) // Descriptografa in-place
 
-	unpaddedData, err := pkcs7Unpad(ciphertext, aes.BlockSize)
+	unpaddedData, err := c.pkcs7Unpad(ciphertext, aes.BlockSize)
 	if err != nil {
 		return nil, fmt.Errorf("decrypt: failed to unpad data: %w", err)
 	}
@@ -104,7 +137,7 @@ func DecryptPayload(base64Payload string, base64KeyInput string) ([]byte, error)
 }
 
 // pkcs7Pad adiciona padding PKCS7 aos dados.
-func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
+func (c *CryptData)  pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 	if blockSize <= 0 || blockSize > 255 { // blockSize > 255 porque o byte de padding não pode exceder 255
 		return nil, fmt.Errorf("pkcs7Pad: invalid block size %d (must be > 0 and <= 255)", blockSize)
 	}
@@ -116,7 +149,7 @@ func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 // EncryptPayload criptografa os jsonDataBytes fornecidos (que devem ser dados JSON já serializados)
 // usando AES-CBC. O output é uma string Base64 no formato: Base64(bytes_crus_IV + bytes_crus_Ciphertext).
 // Utiliza a chave global 'base64Key' definida no pacote.
-func EncryptPayload(jsonDataBytes []byte) (string, error) {
+func (c *CryptData)  EncryptPayload(jsonDataBytes []byte) (string, error) {
 	if base64Key == "" { // Verifica a constante global
 		return "", errors.New("encrypt: package key (base64Key) is empty")
 	}
@@ -139,7 +172,7 @@ func EncryptPayload(jsonDataBytes []byte) (string, error) {
 	// 2. Os jsonDataBytes já são fornecidos, não precisamos fazer json.Marshal aqui.
 
 	// 3. Aplicar Padding PKCS7 aos dados JSON
-	paddedData, err := pkcs7Pad(jsonDataBytes, aes.BlockSize)
+	paddedData, err := c.pkcs7Pad(jsonDataBytes, aes.BlockSize)
 	if err != nil {
 		return "", fmt.Errorf("encrypt: failed to apply PKCS7 padding: %w", err)
 	}

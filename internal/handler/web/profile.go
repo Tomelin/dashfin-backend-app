@@ -76,8 +76,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	var payload cryptdata.CryptData
 
-	// dados recebidos e realizado o bind para CrypstData
-	// Essa parte está funcionando 100%
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
 		log.Println(err.Error())
@@ -85,18 +83,14 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	// payloadData recebe o valor de payload, como string para fazer o Decript
-	// Essa parte está funcionando 100%
-	data, err := cryptdata.PayloadData(payload.Payload)
+	// data, err := cryptdata.PayloadData(payload.Payload)
+	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("data received...", string(data))
-	// Executa o bind o []byte recebido, para a struct Profile
-	// Essa parte está funcionando 100%
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
 	if err != nil {
@@ -105,8 +99,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	profile.FirstName = "Alterado"
-
 	b, err := json.Marshal(profile)
 	if err != nil {
 		log.Println(err.Error())
@@ -114,17 +106,13 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	// Executa o encript do payload
-	// Essa parte está funcionando 100%
-	result, err := cryptdata.EncryptPayload(b)
+	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("data received", string(data))
-	log.Println("result encript", string(b))
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
@@ -142,7 +130,7 @@ func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
 
 	log.Println("received payload", payload)
 
-	data, err := cryptdata.PayloadData(payload.Payload)
+	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
