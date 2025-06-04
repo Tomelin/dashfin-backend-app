@@ -115,7 +115,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("profile was bind1....", profile)
 
 	profile.FullName = "name of client"
 	profile.Phone = "51984104084"
@@ -123,15 +122,12 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	profile.BirthDate = "2025-05-05"
 	profile.Sexo = "Homem"
 
-	log.Println("profile was bind2....", profile)
-
 	b, err := json.Marshal(profile)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("profile was bind3....", string(b))
 
 	result, err := cryptdata.EncryptPayload(b)
 	if err != nil {
@@ -140,7 +136,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	data, err = cryptdata.PayloadData(payload.Payload)
+	data, err = cryptdata.PayloadData(result)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -149,5 +145,5 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	log.Println("data hanlder...", string(data))
 
-	c.JSON(http.StatusOK, gin.H{"payload": result})
+	c.JSON(http.StatusOK, gin.H{"payload": payload.Payload})
 }
