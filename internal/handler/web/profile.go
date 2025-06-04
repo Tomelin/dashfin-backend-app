@@ -121,6 +121,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	profile.FullName = "Alterado"
+
 	b, err := json.Marshal(profile)
 	if err != nil {
 		log.Println(err.Error())
@@ -136,20 +138,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Executa o Decript do result, para validar se o frontend irá conseguir fazer o mesmo
-	// Retorna esse error:  decryption failed: decrypt: failed to unpad data: pkcs7Unpad: invalid padding length (possible wrong key or corrupted data)
-	// Mas como retorna erro, se nós que estamos gerando com a mesma chave do Encrypt
-	data, err = cryptdata.PayloadData(result)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Printa os dados do valor recebido pelo payload e pelo o profile que geramos
-	// Não estamos chegando essa etapa
-	log.Println("data hanlder...", string(data))
 
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
