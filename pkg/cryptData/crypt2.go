@@ -5,8 +5,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64" // Ainda pode ser útil para debugging ou outras funções, mas não diretamente neste fluxo.
-	"encoding/hex"
+	"encoding/base64" // Usado para codificar/decodificar a chave e o payload.
+
+	// "encoding/hex" // Não é mais necessário com a correção em EncryptPayload.
+	// "encoding/json" // Não é mais necessário pois EncryptPayload agora recebe []byte.
 	"errors"
 	"fmt"
 	"io"
@@ -14,15 +16,13 @@ import (
 
 const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
 
-// Exemplo de como usar (não faz parte do package, apenas para demonstração):
-// Esta função agora pode ser usada para testar.
+// PayloadData é uma função wrapper que descriptografa usando a chave global do pacote.
 func PayloadData(base64Payload string) ([]byte, error) {
-
 	decryptedData, err := DecryptPayload(base64Payload, base64Key)
 	if err != nil {
-		return nil, fmt.Errorf("decryption failed: %v", err)
+		return nil, fmt.Errorf("decryption failed: %w", err) // Usar %w para wrapping de erro
 	}
-	return decryptedData, err
+	return decryptedData, nil // Retornar nil para o erro em caso de sucesso
 }
 
 // pkcs7Unpad remove o padding PKCS7 dos dados.
@@ -30,58 +30,49 @@ func pkcs7Unpad(data []byte, blockSize int) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, errors.New("pkcs7Unpad: input data is empty")
 	}
-	// A verificação de len(data)%blockSize != 0 pode ser muito rigorosa aqui,
-	// pois a descriptografia CBC já garante isso. Se os dados não fossem múltiplos,
-	// a etapa de CryptBlocks provavelmente já teria problemas ou o padding seria o bloco inteiro.
-	// No entanto, mantê-la não prejudica, mas pode ser redundante.
 
 	paddingLen := int(data[len(data)-1])
 
 	if paddingLen == 0 || paddingLen > blockSize || paddingLen > len(data) {
-		// Este erro é crucial e geralmente indica chave errada ou dados corrompidos.
 		return nil, errors.New("pkcs7Unpad: invalid padding length (possible wrong key or corrupted data)")
 	}
+
+	// Opcional: Validar se todos os bytes de padding são iguais a paddingLen
+	// for i := 0; i < paddingLen; i++ {
+	//    if data[len(data)-1-i] != byte(paddingLen) {
+	//        return nil, errors.New("pkcs7Unpad: invalid padding bytes")
+	//    }
+	// }
 
 	return data[:len(data)-paddingLen], nil
 }
 
-// DecryptPayload descriptografa um payload que foi criptografado usando AES-CBC
-func DecryptPayload(base64Payload string, base64Key string) ([]byte, error) {
+// DecryptPayload descriptografa um payload que foi criptografado usando AES-CBC.
+// Espera-se que base64Payload seja Base64(bytes_crus_IV + bytes_crus_Ciphertext).
+func DecryptPayload(base64Payload string, base64KeyInput string) ([]byte, error) { // Renomeado parâmetro para evitar confusão com a constante
 	if base64Payload == "" {
 		return nil, errors.New("decrypt: base64 payload is empty")
 	}
-	if base64Key == "" {
+	if base64KeyInput == "" {
 		return nil, errors.New("decrypt: base64 key is empty")
 	}
 
-	// 1. Decodificar a chave de Base64 para bytes
-	keyBytes, err := base64.StdEncoding.DecodeString(base64Key)
+	keyBytes, err := base64.StdEncoding.DecodeString(base64KeyInput)
 	if err != nil {
 		return nil, fmt.Errorf("decrypt: failed to decode base64 key: %w", err)
 	}
 
-	// Validar o tamanho da chave (AES-128, AES-192, ou AES-256)
 	switch len(keyBytes) {
 	case 16, 24, 32:
-		// Tamanho de chave válido
 	default:
 		return nil, fmt.Errorf("decrypt: invalid AES key size: %d bytes (must be 16, 24, or 32)", len(keyBytes))
 	}
 
-	// 2. Decodificar o payload de Base64 para obter os bytes combinados (IV + Ciphertext)
-	// O resultado de DecodeString já são os bytes crus que representam IV + Ciphertext.
 	combinedBytes, err := base64.StdEncoding.DecodeString(base64Payload)
 	if err != nil {
-		// Este erro ocorreria se base64Payload não fosse Base64 válido.
-		// O erro que você viu (encoding/hex) acontecia na etapa seguinte.
 		return nil, fmt.Errorf("decrypt: failed to decode base64 payload: %w", err)
 	}
 
-	// A ETAPA 3 ANTERIOR (hex.DecodeString(string(hexPayloadBytes))) FOI REMOVIDA
-	// PORQUE combinedBytes JÁ SÃO OS BYTES CORRETOS.
-
-	// 4. Separação do IV e Ciphertext
-	// aes.BlockSize é uma constante igual a 16.
 	if len(combinedBytes) < aes.BlockSize {
 		return nil, fmt.Errorf("decrypt: combined payload too short to contain IV (got %d bytes, expected at least %d)", len(combinedBytes), aes.BlockSize)
 	}
@@ -92,31 +83,20 @@ func DecryptPayload(base64Payload string, base64Key string) ([]byte, error) {
 	if len(ciphertext) == 0 {
 		return nil, errors.New("decrypt: ciphertext is empty after IV extraction")
 	}
-	// O ciphertext para CBC deve ter um comprimento que seja múltiplo do tamanho do bloco.
 	if len(ciphertext)%aes.BlockSize != 0 {
 		return nil, fmt.Errorf("decrypt: ciphertext length (%d) is not a multiple of AES block size (%d)", len(ciphertext), aes.BlockSize)
 	}
 
-	// 5. Criação do Cipher AES
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
-		// Redundante se a validação de tamanho da chave acima for mantida, mas seguro ter.
 		return nil, fmt.Errorf("decrypt: failed to create AES cipher: %w", err)
 	}
 
-	// 6. Descriptografia CBC
-	// NewCBCDecrypter retorna um BlockMode.
 	mode := cipher.NewCBCDecrypter(block, iv)
+	mode.CryptBlocks(ciphertext, ciphertext) // Descriptografa in-place
 
-	// CryptBlocks descriptografa no local (in-place).
-	// O slice 'ciphertext' será modificado para conter os dados descriptografados com padding.
-	mode.CryptBlocks(ciphertext, ciphertext)
-	decryptedWithPadding := ciphertext // Apenas para clareza do nome da variável
-
-	// 7. Remoção do Padding PKCS7
-	unpaddedData, err := pkcs7Unpad(decryptedWithPadding, aes.BlockSize)
+	unpaddedData, err := pkcs7Unpad(ciphertext, aes.BlockSize)
 	if err != nil {
-		// Um erro aqui frequentemente significa que a chave estava incorreta ou os dados foram corrompidos.
 		return nil, fmt.Errorf("decrypt: failed to unpad data: %w", err)
 	}
 
@@ -125,46 +105,40 @@ func DecryptPayload(base64Payload string, base64Key string) ([]byte, error) {
 
 // pkcs7Pad adiciona padding PKCS7 aos dados.
 func pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
-	if blockSize <= 0 || blockSize > 255 {
-		return nil, fmt.Errorf("pkcs7Pad: invalid block size %d", blockSize)
+	if blockSize <= 0 || blockSize > 255 { // blockSize > 255 porque o byte de padding não pode exceder 255
+		return nil, fmt.Errorf("pkcs7Pad: invalid block size %d (must be > 0 and <= 255)", blockSize)
 	}
 	padding := blockSize - (len(data) % blockSize)
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(data, padtext...), nil
 }
 
-// EncryptPayload criptografa os dados fornecidos (que serão primeiro convertidos para JSON)
-// usando AES-CBC. O output é uma string Base64 no formato: Base64(IVhex + CiphertextHex).
-// A chave (base64Key) também é fornecida em Base64.
+// EncryptPayload criptografa os jsonDataBytes fornecidos (que devem ser dados JSON já serializados)
+// usando AES-CBC. O output é uma string Base64 no formato: Base64(bytes_crus_IV + bytes_crus_Ciphertext).
+// Utiliza a chave global 'base64Key' definida no pacote.
 func EncryptPayload(jsonDataBytes []byte) (string, error) {
-	// func EncryptPayload(dataToEncrypt interface{}) (string, error) {
-	if base64Key == "" {
-		return "", errors.New("encrypt: base64 key is empty")
+	if base64Key == "" { // Verifica a constante global
+		return "", errors.New("encrypt: package key (base64Key) is empty")
 	}
 
-	// 1. Decodificar a chave de Base64 para bytes
+	// 1. Decodificar a chave de Base64 para bytes (usando a constante do pacote)
 	keyBytes, err := base64.StdEncoding.DecodeString(base64Key)
 	if err != nil {
-		return "", fmt.Errorf("encrypt: failed to decode base64 key: %w", err)
+		// Este erro seria inesperado se a constante base64Key for válida
+		return "", fmt.Errorf("encrypt: failed to decode package base64 key: %w", err)
 	}
 
-	// Validar o tamanho da chave (AES-128, AES-192, ou AES-256)
+	// Validar o tamanho da chave
 	switch len(keyBytes) {
 	case 16, 24, 32:
-		// Tamanho de chave válido
 	default:
-		return "", fmt.Errorf("encrypt: invalid AES key size: %d bytes (must be 16, 24, or 32)", len(keyBytes))
+		// Este erro seria inesperado se a constante base64Key for válida
+		return "", fmt.Errorf("encrypt: invalid package AES key size: %d bytes (must be 16, 24, or 32)", len(keyBytes))
 	}
 
-	// 2. Converter os dados para JSON
-	// jsonDataBytes, err := json.Marshal(dataToEncrypt)
-	// if err != nil {
-	// 	return "", fmt.Errorf("encrypt: failed to marshal data to JSON: %w", err)
-	// }
+	// 2. Os jsonDataBytes já são fornecidos, não precisamos fazer json.Marshal aqui.
 
 	// 3. Aplicar Padding PKCS7 aos dados JSON
-	// O modo CBC já lida com padding se o tamanho dos dados não for múltiplo do bloco,
-	// mas é uma boa prática ser explícito com PKCS7, pois CryptoJS faz isso.
 	paddedData, err := pkcs7Pad(jsonDataBytes, aes.BlockSize)
 	if err != nil {
 		return "", fmt.Errorf("encrypt: failed to apply PKCS7 padding: %w", err)
@@ -187,17 +161,15 @@ func EncryptPayload(jsonDataBytes []byte) (string, error) {
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext, paddedData)
 
-	// 7. Converter IV e Ciphertext para strings hexadecimais
-	ivHex := hex.EncodeToString(iv)
-	ciphertextHex := hex.EncodeToString(ciphertext)
+	// --- INÍCIO DAS ALTERAÇÕES CRÍTICAS ---
+	// 7. Combinar IV (bytes crus) e Ciphertext (bytes crus)
+	combinedRawBytes := append(iv, ciphertext...)
 
-	// 8. Concatenar IVhex e CiphertextHex
-	combinedHex := ivHex + ciphertextHex
-
-	// 9. Codificar a string hexadecimal combinada para Base64
-	// O frontend espera Base64(HexToString(IV) + HexToString(Ciphertext))
-	// Então, convertemos a string `combinedHex` para bytes antes de codificar para Base64.
-	base64EncryptedPayload := base64.StdEncoding.EncodeToString([]byte(combinedHex))
+	// 8. Codificar os bytes combinados para Base64
+	// Este formato é Base64(bytes_crus_IV + bytes_crus_Ciphertext),
+	// que é o que DecryptPayload espera e o que o frontend (CryptoJS) originalmente produzia.
+	base64EncryptedPayload := base64.StdEncoding.EncodeToString(combinedRawBytes)
+	// --- FIM DAS ALTERAÇÕES CRÍTICAS ---
 
 	return base64EncryptedPayload, nil
 }
