@@ -143,7 +143,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	data, err = cryptdata.PayloadData(result)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusOK, gin.H{"payload": payload.Payload})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -151,5 +151,5 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	// Não estamos chegando essa etapa
 	log.Println("data hanlder...", string(data))
 
-	c.JSON(http.StatusOK, gin.H{"payload": payload.Payload})
+	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
