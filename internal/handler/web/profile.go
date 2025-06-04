@@ -78,7 +78,7 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	log.Println("after bind json")
 
 	profile := entity_profile.Profile{
-		FullName:  "name of client",
+		FirstName: "name of client",
 		Phone:     "51984104084",
 		BirthDate: "20/05/2025",
 		Email:     "email@teste.com.br",
