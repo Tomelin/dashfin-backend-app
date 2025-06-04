@@ -99,7 +99,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("pyload was bind....", payload.Payload)
 
 	data, err := cryptdata.PayloadData(payload.Payload)
 	if err != nil {
@@ -108,7 +107,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	log.Println("data...", string(data))
+	log.Println("data received...", string(data))
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
 	if err != nil {
@@ -140,6 +139,15 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	data, err = cryptdata.PayloadData(payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("data hanlder...", string(data))
 
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
