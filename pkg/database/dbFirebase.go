@@ -1,0 +1,145 @@
+package database
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"cloud.google.com/go/firestore"
+	"google.golang.org/api/option"
+)
+
+// FirebaseDB implements the DatabaseService interface for Firebase Firestore.
+type FirebaseDB struct {
+	client *firestore.Client
+	ctx    context.Context
+}
+
+// InitializeFirebaseDB creates and initializes a new FirebaseDB instance.
+// It doesn't connect immediately; connection happens in the Connect method.
+func InitializeFirebaseDB() (*FirebaseDB, error) {
+	return &FirebaseDB{
+		ctx: context.Background(),
+	}, nil
+}
+
+// Connect establishes a connection to Firebase Firestore.
+// config is expected to be a FirebaseConfig struct.
+func (db *FirebaseDB) Connect(config interface{}) error {
+	cfg, ok := config.(FirebaseConfig)
+	if !ok {
+		return fmt.Errorf("invalid config type for Firebase: expected FirebaseConfig")
+	}
+
+	if cfg.ProjectID == "" {
+		return fmt.Errorf("ProjectID is required for Firebase connection")
+	}
+
+	var opt option.ClientOption
+	if cfg.CredentialsFile != "" {
+		opt = option.WithCredentialsFile(cfg.CredentialsFile)
+	} else {
+		// If no credentials file is provided, Firestore client will try to use
+		// Application Default Credentials (ADC) if available.
+		log.Println("Firebase CredentialsFile not provided, attempting to use Application Default Credentials.")
+	}
+
+	client, err := firestore.NewClient(db.ctx, cfg.ProjectID, opt)
+	if err != nil {
+		return fmt.Errorf("firebase.NewClient: %w", err)
+	}
+	db.client = client
+	log.Println("Successfully connected to Firebase Firestore.")
+	return nil
+}
+
+// Get retrieves a single document by its ID from a default collection.
+// Note: Firestore is schemaless, but often a default collection is used.
+// This implementation assumes a collection name might be needed or configured elsewhere.
+// For this example, let's assume Get needs a collection name.
+// This highlights a potential mismatch with the generic interface if not handled carefully.
+// We might need to adjust the interface or how collection names are passed.
+// For now, this is a placeholder.
+func (db *FirebaseDB) Get(id string) (interface{}, error) {
+	// Placeholder: A real implementation would specify the collection.
+	// For example: doc, err := db.client.Collection("your_collection_name").Doc(id).Get(db.ctx)
+	if db.client == nil {
+		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+	}
+	return nil, fmt.Errorf("Get not fully implemented for Firebase: collection name needed")
+}
+
+// Create adds a new document to a default collection.
+// Placeholder: Collection name needed.
+func (db *FirebaseDB) Create(data interface{}) (interface{}, error) {
+	if db.client == nil {
+		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+	}
+	// Placeholder: colRef := db.client.Collection("your_collection_name")
+	// docRef, _, err := colRef.Add(db.ctx, data)
+	// return docRef.ID, err
+	return nil, fmt.Errorf("Create not fully implemented for Firebase: collection name needed")
+}
+
+// Update modifies an existing document in a default collection.
+// Placeholder: Collection name needed.
+func (db *FirebaseDB) Update(id string, data interface{}) (interface{}, error) {
+	if db.client == nil {
+		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+	}
+	// Placeholder: _, err := db.client.Collection("your_collection_name").Doc(id).Set(db.ctx, data, firestore.MergeAll)
+	// return data, err
+	return nil, fmt.Errorf("Update not fully implemented for Firebase: collection name needed")
+}
+
+// Delete removes a document from a default collection by its ID.
+// Placeholder: Collection name needed.
+func (db *FirebaseDB) Delete(id string) error {
+	if db.client == nil {
+		return fmt.Errorf("Firestore client not initialized. Call Connect first.")
+	}
+	// Placeholder: _, err := db.client.Collection("your_collection_name").Doc(id).Delete(db.ctx)
+	// return err
+	return fmt.Errorf("Delete not fully implemented for Firebase: collection name needed")
+}
+
+// GetByFilter retrieves multiple documents based on a set of filters from a default collection.
+// Placeholder: Collection name needed.
+func (db *FirebaseDB) GetByFilter(filters map[string]interface{}) ([]interface{}, error) {
+	if db.client == nil {
+		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+	}
+	// Placeholder: query := db.client.Collection("your_collection_name").Query
+	// for key, value := range filters {
+	//	 query = query.Where(key, "==", value)
+	// }
+	// iter := query.Documents(db.ctx)
+	// defer iter.Stop()
+	// var results []interface{}
+	// for {
+	//	 doc, err := iter.Next()
+	//	 if err == iterator.Done {
+	//		 break
+	//	 }
+	//	 if err != nil {
+	//		 return nil, err
+	//	 }
+	//	 results = append(results, doc.Data())
+	// }
+	// return results, nil
+	return nil, fmt.Errorf("GetByFilter not fully implemented for Firebase: collection name needed")
+}
+
+// Close terminates the Firebase connection.
+func (db *FirebaseDB) Close() error {
+	if db.client != nil {
+		err := db.client.Close()
+		if err != nil {
+			return fmt.Errorf("error closing Firestore client: %w", err)
+		}
+		db.client = nil
+		log.Println("Firebase Firestore connection closed.")
+		return nil
+	}
+	return fmt.Errorf("Firestore client not initialized or already closed")
+}
