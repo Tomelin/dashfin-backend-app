@@ -6,11 +6,12 @@ import (
 )
 
 type Profile struct {
-	FullName  string `json:"fullName"` 
-	Email     string `json:"email"`    
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
 	Phone     string `json:"phone,omitempty"`
 	BirthDate string `json:"birthDate,omitempty"`
-	Sexo      string `json:"sexo"` // Correto!
+	Sexo      string `json:"sexo"`
 	Cep       string `json:"cep,omitempty"`
 	City      string `json:"city,omitempty"`
 	State     string `json:"state,omitempty"`

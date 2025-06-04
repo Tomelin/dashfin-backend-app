@@ -121,7 +121,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	profile.FullName = "Alterado"
+	profile.FirstName = "Alterado"
 
 	b, err := json.Marshal(profile)
 	if err != nil {
@@ -139,5 +139,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	log.Println("data received", string(data))
+	log.Println("result encript", string(b))
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
