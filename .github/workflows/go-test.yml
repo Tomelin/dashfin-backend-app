@@ -1,0 +1,42 @@
+name: Go CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22' # Specify Go 1.22
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
+        # It's good practice to pin to a specific version of golangci-lint
+
+      - name: Run linters
+        run: $(go env GOPATH)/bin/golangci-lint run ./... --timeout=5m
+        # Or simply `golangci-lint run ./...` if the GOBIN is in PATH,
+        # which setup-go might handle. Using explicit path for safety.
+
+      - name: Run tests with coverage
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          if-no-files-found: error # Optional: fail if coverage.out is not found
