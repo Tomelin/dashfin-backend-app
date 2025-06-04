@@ -66,14 +66,8 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 }
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
-	userID, authorization, err := getRequiredHeaders(c.Request)
-	if err != nil {
-		log.Println("Missing required headers:", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing required headers"})
-		return
-	}
 
-	log.Printf("Received headers: X-Userid=%s, X-Authorization=%s", userID, authorization)
+	log.Println(c.Request.Header)
 
 	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }

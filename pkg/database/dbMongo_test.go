@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -8,8 +9,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
@@ -65,8 +64,8 @@ func TestMongoDBConnect(t *testing.T) {
 		t.Errorf("Connect() with empty ConnectionString, expected error, got nil")
 	}
 
-	cfg, আছে := getTestMongoConfig()
-	if !আছে {
+	cfg, ok := getTestMongoConfig()
+	if !ok {
 		t.Skip("MONGO_CONNECTION_STRING, MONGO_DATABASE_NAME, or MONGO_COLLECTION_NAME not set, skipping real connection test for MongoDB.")
 	}
 
@@ -83,8 +82,8 @@ func TestMongoDBConnect(t *testing.T) {
 // TestMongoDBOperations is a placeholder for CRUD tests.
 // It requires a running MongoDB instance.
 func TestMongoDBOperations(t *testing.T) {
-	cfg, আছে := getTestMongoConfig()
-	if !আছে {
+	cfg, ok := getTestMongoConfig()
+	if !ok {
 		t.Skip("MongoDB environment variables not set, skipping CRUD tests.")
 	}
 
@@ -151,7 +150,6 @@ func TestMongoDBOperations(t *testing.T) {
 	}
 	t.Logf("Update() successful.")
 
-
 	// --- Test GetByFilter ---
 	filter := map[string]interface{}{"name": itemToCreate.Name}
 	filteredItems, err := db.GetByFilter(filter)
@@ -163,7 +161,6 @@ func TestMongoDBOperations(t *testing.T) {
 	}
 	t.Logf("GetByFilter() successful, found %d item(s).", len(filteredItems))
 
-
 	// --- Test Delete ---
 	err = db.Delete(docID.Hex())
 	if err != nil {
@@ -174,11 +171,10 @@ func TestMongoDBOperations(t *testing.T) {
 	if err == nil {
 		t.Errorf("Get() after Delete() should have failed, but it succeeded.")
 	} else if !strings.Contains(err.Error(), "document not found") { // check specific error if possible
-        t.Errorf("Get() after Delete() failed with unexpected error: %v", err)
-    }
+		t.Errorf("Get() after Delete() failed with unexpected error: %v", err)
+	}
 	t.Log("Delete() successful.")
 }
-
 
 func TestMongoDBClose(t *testing.T) {
 	db, _ := InitializeMongoDB()
@@ -189,9 +185,8 @@ func TestMongoDBClose(t *testing.T) {
 		t.Errorf("Close() on non-connected client returned unexpected error: %v", err)
 	}
 
-
-	cfg, আছে := getTestMongoConfig()
-	if !আছে {
+	cfg, ok := getTestMongoConfig()
+	if !ok {
 		t.Skip("MongoDB environment variables not set, skipping connected Close() test.")
 	}
 
@@ -202,7 +197,6 @@ func TestMongoDBClose(t *testing.T) {
 			db.Close()
 		}
 	}()
-
 
 	if errConnect := db.Connect(cfg); errConnect == nil {
 		errClose := db.Close()
