@@ -66,27 +66,10 @@ func (cat *ProfileHandlerHttp) Create(c *gin.Context) {
 }
 
 func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
-	log.Println("get new request")
 
-	var prof entity_profile.Profile
+	log.Println(c.Request.Header)
 
-	err := c.ShouldBindJSON(&prof)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	log.Println(prof)
-	log.Println("after bind json")
-
-	profile := entity_profile.Profile{
-		FirstName: "name of client",
-		Phone:     "51984104084",
-		BirthDate: "20/05/2025",
-		Email:     "email@teste.com.br",
-	}
-
-	log.Println(profile)
-	c.JSON(http.StatusOK, profile)
+	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }
 
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
