@@ -3,80 +3,125 @@ package auth
 import (
 	"context"
 	"errors"
-	"log" // Added for logging potential issues during app init
+	"log"
+	"time"
 
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
-	// "google.golang.org/api/option" // Would be needed for initialization with service account
+	// "google.golang.org/api/option"
 )
 
-// ValidateToken validates the given Firebase userID and authToken.
-// It returns the token claims if valid, or an error otherwise.
-func ValidateToken(ctx context.Context, userID string, authToken string) (map[string]interface{}, error) {
-	if userID == "" {
-		return nil, errors.New("userID cannot be empty")
-	}
+// Authenticator defines the interface for authentication operations.
+type Authenticator interface {
+	ValidateToken(ctx context.Context, userID string, authToken string) (map[string]interface{}, error)
+	IsExpired(ctx context.Context, authToken string) (bool, error)
+	IsValid(ctx context.Context, authToken string) (bool, error)
+}
 
-	// Firebase app initialization:
-	// Option 1: Initialize default app (if not already done)
+// firebaseAuthenticator implements the Authenticator interface using Firebase.
+type firebaseAuthenticator struct {
+	client *auth.Client
+}
+
+// InitializeAuth initializes the Firebase application and returns an Authenticator.
+func InitializeAuth(ctx context.Context) (Authenticator, error) {
+	// ... (implementation as before)
 	app, err := firebase.NewApp(context.Background(), nil)
 	if err != nil {
-		// If error is "firebase app already exists", try to get the existing default app
-		// This specific error string might vary, adjust if necessary based on SDK behavior
-		if _, ok := err.(*firebase.DefaultAppExistsError); ok || (err != nil && err.Error() == "firebase: app already exists") {
-			app, err = firebase.GetApp("") // Get default app
+		if _, ok := err.(*firebase.DefaultAppExistsError); ok {
+			log.Println("Default Firebase app already exists, attempting to get it.")
+			app, err = firebase.GetApp("")
 			if err != nil {
 				log.Printf("Error getting existing Firebase app: %v\n", err)
-				return nil, errors.New("error getting Firebase app: " + err.Error())
+				return nil, errors.New("error getting existing Firebase app: " + err.Error())
 			}
 		} else {
 			log.Printf("Error initializing new Firebase app: %v\n", err)
-			return nil, errors.New("error initializing Firebase app: " + err.Error())
+			return nil, errors.New("error initializing new Firebase app: " + err.Error())
 		}
 	}
-	// Option 2: If you initialize with a specific config:
-	// opt := option.WithCredentialsFile("path/to/serviceAccountKey.json")
-	// config := &firebase.Config{ProjectID: "my-project-id"}
-	// app, err := firebase.NewApp(context.Background(), config, opt) // Or firebase.NewApp(ctx, nil, opt) for default app with options
-	// if err != nil {
-	//     log.Fatalf("error initializing app: %v
-", err)
-	// }
-
 
 	client, err := app.Auth(ctx)
 	if err != nil {
+		log.Printf("Error getting Auth client: %v\n", err)
 		return nil, errors.New("error getting Auth client: " + err.Error())
 	}
 
-	verifiedToken, err := client.VerifyIDToken(ctx, authToken)
+	return &firebaseAuthenticator{client: client}, nil
+}
+
+// ValidateToken method ... (as before)
+func (fa *firebaseAuthenticator) ValidateToken(ctx context.Context, userID string, authToken string) (map[string]interface{}, error) {
+	// ... (implementation as before)
+	if userID == "" {
+		return nil, errors.New("userID cannot be empty")
+	}
+	if fa.client == nil {
+		return nil, errors.New("auth client not initialized")
+	}
+
+	verifiedToken, err := fa.client.VerifyIDToken(ctx, authToken)
 	if err != nil {
 		return nil, errors.New("error verifying ID token: " + err.Error())
 	}
 
-	// Extract claims
 	claims := verifiedToken.Claims
 	if claims == nil {
-		return nil, errors.New("token contained no claims")
+		return nil, errors.New("verified token contained no claims")
 	}
 
-	// Validate User ID against token UID
-	tokenUID, ok := claims["user_id"].(string) // Firebase typically uses "user_id" or "uid" in standard claims.
-                                                // If custom claims are used, this key might be different.
-                                                // Also, Firebase populates verifiedToken.UID directly.
-	if !ok {
-        // Fallback to check verifiedToken.UID if "user_id" is not in claims map directly
-        if verifiedToken.UID == "" {
-             return nil, errors.New("user_id not found in token claims or token UID is empty")
-        }
-        tokenUID = verifiedToken.UID
+	tokenUID := verifiedToken.UID
+	if tokenUID == "" {
+		uidFromClaims, ok := claims["user_id"].(string)
+		if ok && uidFromClaims != "" {
+			tokenUID = uidFromClaims
+		} else {
+			return nil, errors.New("UID not found in verified token or its claims")
+		}
 	}
-
 
 	if tokenUID != userID {
-		return nil, errors.New("userID mismatch: token UID does not match provided userID")
+		return nil, errors.New("userID mismatch: token UID (" + tokenUID + ") does not match provided userID (" + userID + ")")
 	}
 
-	// Return all claims from the token
 	return claims, nil
+}
+
+// IsExpired checks if the given Firebase authToken is expired.
+func (fa *firebaseAuthenticator) IsExpired(ctx context.Context, authToken string) (bool, error) {
+	if fa.client == nil {
+		return true, errors.New("auth client not initialized")
+	}
+
+	_, err := fa.client.VerifyIDToken(ctx, authToken) // We only need to check the error for expiry
+	if err != nil {
+		// Check if the error is specifically due to token expiry.
+		// The Firebase Admin SDK for Go might wrap errors or have specific error types/codes.
+		// For example, auth.ErrIDTokenExpired exists in firebase.google.com/go/v4/auth
+		// Using errors.As to check for the specific error type is more robust.
+		var idTokenExpiredError *auth.IDTokenExpired
+		if errors.As(err, &idTokenExpiredError) {
+			return true, nil // Token is confirmed expired
+		}
+		// For other verification errors, it's invalid but not necessarily because it's "expired".
+		return false, errors.New("token verification failed, not necessarily due to expiry: " + err.Error())
+	}
+	// If VerifyIDToken is successful, the token is not expired.
+	return false, nil
+}
+
+// IsValid checks if the given Firebase authToken is valid (not expired, correctly signed, etc.).
+func (fa *firebaseAuthenticator) IsValid(ctx context.Context, authToken string) (bool, error) {
+	if fa.client == nil {
+		return false, errors.New("auth client not initialized")
+	}
+
+	_, err := fa.client.VerifyIDToken(ctx, authToken)
+	if err != nil {
+		// Any error from VerifyIDToken means the token is not valid.
+		// We return false and the original error so the caller can inspect it.
+		return false, err
+	}
+	// If no error, the token is valid.
+	return true, nil
 }
