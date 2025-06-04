@@ -89,10 +89,11 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 }
 
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
-	log.Println("  PutPersonal > new request")
 
 	var payload cryptdata.CryptData
 
+	// dados recebidos e realizado o bind para CrypstData
+	// Essa parte está funcionando 100%
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
 		log.Println(err.Error())
@@ -100,6 +101,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	// payloadData recebe o valor de payload, como string para fazer o Decript
+	// Essa parte está funcionando 100%
 	data, err := cryptdata.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
@@ -108,6 +111,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 	}
 
 	log.Println("data received...", string(data))
+	// Executa o bind o []byte recebido, para a struct Profile
+	// Essa parte está funcionando 100%
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
 	if err != nil {
@@ -116,12 +121,6 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	profile.FullName = "name of client"
-	profile.Phone = "51984104084"
-	profile.Email = "email@teste.com.br"
-	profile.BirthDate = "2025-05-05"
-	profile.Sexo = "Homem"
-
 	b, err := json.Marshal(profile)
 	if err != nil {
 		log.Println(err.Error())
@@ -129,6 +128,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	// Executa o encript do payload
+	// Essa parte está funcionando 100%
 	result, err := cryptdata.EncryptPayload(b)
 	if err != nil {
 		log.Println(err.Error())
@@ -136,6 +137,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	// Executa o Decript do result, para validar se o frontend irá conseguir fazer o mesmo
+	// Essa parte está funcionando 100%
 	data, err = cryptdata.PayloadData(result)
 	if err != nil {
 		log.Println(err.Error())
@@ -143,6 +146,8 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	// Printa os dados do valor recebido pelo payload e pelo o profile que geramos
+	// Essa parte está funcionando 100%
 	log.Println("data hanlder...", string(data))
 
 	c.JSON(http.StatusOK, gin.H{"payload": payload.Payload})
