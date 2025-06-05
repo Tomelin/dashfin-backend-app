@@ -47,9 +47,8 @@ func main() {
 		MessagingSenderID: fConfig.MessagingSenderID,
 		StorageBucket:     fConfig.StorageBucket,
 	})
-	
 
-	web.InicializationProfileHandlerHttp("ok", crypt, apiResponse.RouterGroup,authClient, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web.InicializationProfileHandlerHttp("ok", crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)
