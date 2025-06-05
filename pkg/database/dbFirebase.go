@@ -2,11 +2,11 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
-	"github.com/gin-gonic/gin/internal/json"
 	"google.golang.org/api/option"
 )
 
