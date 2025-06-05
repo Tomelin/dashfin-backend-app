@@ -13,4 +13,4 @@ type CryptDataInterface interface {
 	CryptDataInternalInterface
 }
 
-const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
+// const base64Key = "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="

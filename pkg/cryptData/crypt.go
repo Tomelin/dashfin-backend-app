@@ -51,7 +51,7 @@ func (c *CryptData) validateTokenFromString(token *string) error {
 
 // PayloadData é uma função wrapper que descriptografa usando a chave global do pacote.
 func (c *CryptData) PayloadData(base64Payload string) ([]byte, error) {
-	decryptedData, err := c.DecryptPayload(base64Payload, base64Key)
+	decryptedData, err := c.DecryptPayload(base64Payload, *c.token)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %w", err) // Usar %w para wrapping de erro
 	}
@@ -137,7 +137,7 @@ func (c *CryptData) DecryptPayload(base64Payload string, base64KeyInput string) 
 }
 
 // pkcs7Pad adiciona padding PKCS7 aos dados.
-func (c *CryptData)  pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
+func (c *CryptData) pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 	if blockSize <= 0 || blockSize > 255 { // blockSize > 255 porque o byte de padding não pode exceder 255
 		return nil, fmt.Errorf("pkcs7Pad: invalid block size %d (must be > 0 and <= 255)", blockSize)
 	}
@@ -149,13 +149,13 @@ func (c *CryptData)  pkcs7Pad(data []byte, blockSize int) ([]byte, error) {
 // EncryptPayload criptografa os jsonDataBytes fornecidos (que devem ser dados JSON já serializados)
 // usando AES-CBC. O output é uma string Base64 no formato: Base64(bytes_crus_IV + bytes_crus_Ciphertext).
 // Utiliza a chave global 'base64Key' definida no pacote.
-func (c *CryptData)  EncryptPayload(jsonDataBytes []byte) (string, error) {
-	if base64Key == "" { // Verifica a constante global
+func (c *CryptData) EncryptPayload(jsonDataBytes []byte) (string, error) {
+	if *c.token == "" { // Verifica a constante global
 		return "", errors.New("encrypt: package key (base64Key) is empty")
 	}
 
 	// 1. Decodificar a chave de Base64 para bytes (usando a constante do pacote)
-	keyBytes, err := base64.StdEncoding.DecodeString(base64Key)
+	keyBytes, err := base64.StdEncoding.DecodeString(*c.token)
 	if err != nil {
 		// Este erro seria inesperado se a constante base64Key for válida
 		return "", fmt.Errorf("encrypt: failed to decode package base64 key: %w", err)
