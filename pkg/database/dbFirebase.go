@@ -47,8 +47,9 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 		// Application Default Credentials (ADC) if available.
 		log.Println("Firebase CredentialsFile not provided, attempting to use Application Default Credentials.")
 	}
-
-	client, err := firestore.NewClient(db.ctx, cfg.ProjectID, opt)
+	// Firestore doesn't have a concept of a "database name" like traditional RDBMS.
+	// Connections are made to the project ID, and then you interact with collections and documents within that project.
+	client, err := firestore.NewClientWithDatabase(db.ctx, cfg.ProjectID, cfg.DatabaseURL, opt)
 	if err != nil {
 		return fmt.Errorf("firebase.NewClient: %w", err)
 	}
