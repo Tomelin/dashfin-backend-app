@@ -60,7 +60,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 		return nil, errors.New("data is nil")
 	}
 
-	result, err := r.DB.Create(ctx, data, r.collection)
+	result, err := r.DB.Update(ctx, data.ID, data, r.collection)
 	if err != nil {
 		return nil, err
 	}

@@ -111,6 +111,20 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 		return nil, errors.New("data is nil")
 	}
 
+	results, err := s.GetByFilter(ctx, map[string]interface{}{
+		"Email": data.Email,
+	})
+	if err != nil {
+		if err.Error() != "profile not found" {
+			return nil, err
+		}
+	}
+
+	if len(results) == 0 {
+		return nil, errors.New("profile not found")
+	}
+	data.ID = results[0].ID
+
 	result, err := s.Repo.UpdateProfile(ctx, data)
 	if result == nil {
 		return nil, errors.New("profile not found")

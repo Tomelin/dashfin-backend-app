@@ -156,6 +156,7 @@ func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, c
 	if err != nil {
 		return nil, err
 	}
+	log.Println("-------result------")
 	log.Println("result", result)
 	b, err := json.Marshal(result)
 	if err != nil {
@@ -199,6 +200,7 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 	defer iter.Stop()
 	var results []interface{}
 	for {
+		log.Println("-------iter------")
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			break
@@ -206,6 +208,8 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 		if err != nil {
 			return nil, err
 		}
+		log.Println("-------doc------")
+		log.Println("doc", doc.Ref.ID, doc.Data())
 		results = append(results, doc.Data())
 	}
 
