@@ -115,7 +115,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	// create Profile
 	// , user.TokenAuth
-	ctx := context.WithValue(context.Background(), "Authorization", token)
+	ctx := context.Background()
 	user, err := cat.service.CreateProfile(ctx, &profile)
 	if err != nil {
 		log.Println(err.Error())
