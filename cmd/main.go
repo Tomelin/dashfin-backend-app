@@ -37,8 +37,6 @@ func main() {
 	b, _ := json.Marshal(cfg.Fields["firebase"])
 	json.Unmarshal(b, &fConfig)
 
-	log.Println(fConfig)
-
 	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
 		ProjectID:         fConfig.ProjectID,
 		APIKey:            fConfig.APIKey,
@@ -47,6 +45,9 @@ func main() {
 		MessagingSenderID: fConfig.MessagingSenderID,
 		StorageBucket:     fConfig.StorageBucket,
 	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	web.InicializationProfileHandlerHttp("ok", crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())

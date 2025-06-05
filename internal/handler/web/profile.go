@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -85,19 +84,11 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	log.Println("user", user)
-	log.Println("auth", auth)
-	valToken, err := cat.authClient.ValidateToken(context.TODO(), user, auth)
-	log.Println("valToken", valToken)
-	log.Println("err", err)
-	ok, err := cat.authClient.IsExpired(context.Background(), auth)
-	log.Println("IsExpired", ok)
-	log.Println("err", err)
-	ok, err = cat.authClient.IsValid(context.Background(), auth)
-	log.Println("IsValid", ok)
-	log.Println("err", err)
-
-	log.Println(c.Request.Header)
+	if err = validAuth(cat.authClient, &user, &auth); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var payload cryptdata.CryptData
 

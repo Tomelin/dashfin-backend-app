@@ -1,8 +1,11 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 )
 
 func getRequiredHeaders(r *http.Request) (userID string, authorization string, err error) {
@@ -18,4 +21,11 @@ func getRequiredHeaders(r *http.Request) (userID string, authorization string, e
 	}
 
 	return userID, authorization, nil
+}
+
+func validAuth(authClient authenticatior.Authenticator, user, auth *string) error {
+
+	_, err := authClient.ValidateToken(context.TODO(), *user, *auth)
+	return err
+
 }
