@@ -1,11 +1,13 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
+	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/gin-gonic/gin"
 )
@@ -26,14 +28,16 @@ type ProfileHandlerHttp struct {
 	Service     string
 	router      *gin.RouterGroup
 	encryptData cryptdata.CryptDataInterface
+	authClient  authenticatior.Authenticator
 }
 
-func InicializationProfileHandlerHttp(svc string, encryptData cryptdata.CryptDataInterface, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
+func InicializationProfileHandlerHttp(svc string, encryptData cryptdata.CryptDataInterface, authClient authenticatior.Authenticator, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
 
 	load := &ProfileHandlerHttp{
 		Service:     svc,
 		router:      routerGroup,
 		encryptData: encryptData,
+		authClient:  authClient,
 	}
 
 	load.handlers(routerGroup, middleware...)
@@ -83,6 +87,17 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	log.Println("user", user)
 	log.Println("auth", auth)
+	valToken, err := cat.authClient.ValidateToken(context.TODO(), user, auth)
+	log.Println("valToken", valToken)
+	log.Println("err", err)
+	ok, err := cat.authClient.IsExpired(context.Background(), auth)
+	log.Println("IsExpired", ok)
+	log.Println("err", err)
+	ok, err = cat.authClient.IsValid(context.Background(), auth)
+	log.Println("IsValid", ok)
+	log.Println("err", err)
+
+	log.Println(c.Request.Header)
 
 	var payload cryptdata.CryptData
 
