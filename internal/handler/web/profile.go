@@ -1,11 +1,13 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
+	service "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/gin-gonic/gin"
@@ -24,16 +26,16 @@ type HandlerHttpInterface interface {
 }
 
 type ProfileHandlerHttp struct {
-	Service     string
+	service     service.ProfileServiceInterface
 	router      *gin.RouterGroup
 	encryptData cryptdata.CryptDataInterface
 	authClient  authenticatior.Authenticator
 }
 
-func InicializationProfileHandlerHttp(svc string, encryptData cryptdata.CryptDataInterface, authClient authenticatior.Authenticator, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
+func InicializationProfileHandlerHttp(svc service.ProfileServiceInterface, encryptData cryptdata.CryptDataInterface, authClient authenticatior.Authenticator, routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) HandlerHttpInterface {
 
 	load := &ProfileHandlerHttp{
-		Service:     svc,
+		service:     svc,
 		router:      routerGroup,
 		encryptData: encryptData,
 		authClient:  authClient,
@@ -77,13 +79,15 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
-	_, _, err := getRequiredHeaders(cat.authClient, c.Request)
+	// Valida o header
+	_, token, err := getRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// bind crypt payload
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
@@ -92,7 +96,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	// data, err := cryptdata.PayloadData(payload.Payload)
+	//decrypt payload
 	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
@@ -100,6 +104,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
+	// bind profile
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
 	if err != nil {
@@ -107,6 +112,18 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	// create Profile
+	// , user.TokenAuth
+	ctx := context.WithValue(context.Background(), "Authorization", token)
+	user, err := cat.service.CreateProfile(ctx, &profile)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Println("user", user)
 
 	b, err := json.Marshal(profile)
 	if err != nil {

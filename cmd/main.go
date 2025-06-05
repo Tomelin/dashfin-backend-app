@@ -7,6 +7,8 @@ import (
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
+	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
+	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
@@ -27,7 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	token := "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
+	token := cfg.Fields["encryptToken"].(string)
 	crypt, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
 		log.Fatal(err)
@@ -61,10 +63,23 @@ func main() {
 		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
 	})
 
-	db.Get("id")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	log.Println(db, err)
-	web.InicializationProfileHandlerHttp("ok", crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	repoProfile, err := repository_profile.InicializeProfileRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+
+svcProfile, err := service_profile.InicializeProfileService(repoProfile)
+if err != nil {
+	log.Fatal(err)
+}
+
+
+	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)

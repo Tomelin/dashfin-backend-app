@@ -9,19 +9,23 @@ import (
 	"google.golang.org/api/option"
 )
 
+type FirebaseDBInterface interface {
+	Get(ctx context.Context, id string) (interface{}, error)
+	Create(ctx context.Context, data interface{}, collection string) (interface{}, error)
+	Update(id string, data interface{}) (interface{}, error)
+	Delete(id string) error
+}
+
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
 type FirebaseDB struct {
 	client *firestore.Client
-	ctx    context.Context
 }
 
 // InitializeFirebaseDB creates and initializes a new FirebaseDB instance.
 // It doesn't connect immediately; connection happens in the Connect method.
-func InitializeFirebaseDB(config FirebaseConfig) (*FirebaseDB, error) {
+func InitializeFirebaseDB(config FirebaseConfig) (FirebaseDBInterface, error) {
 
-	fdb := &FirebaseDB{
-		ctx: context.Background(),
-	}
+	fdb := &FirebaseDB{}
 
 	err := fdb.connect(config)
 	if err != nil {
@@ -49,12 +53,22 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 	}
 	// Firestore doesn't have a concept of a "database name" like traditional RDBMS.
 	// Connections are made to the project ID, and then you interact with collections and documents within that project.
-	client, err := firestore.NewClientWithDatabase(db.ctx, cfg.ProjectID, cfg.DatabaseURL, opt)
+	client, err := firestore.NewClientWithDatabase(context.Background(), cfg.ProjectID, cfg.DatabaseURL, opt)
 	if err != nil {
 		return fmt.Errorf("firebase.NewClient: %w", err)
 	}
 	db.client = client
 	log.Println("Successfully connected to Firebase Firestore.")
+
+	// app, err := firebase.NewApp(context.Background(), &firebase.Config{
+	// 	ProjectID:     cfg.ProjectID,
+	// 	StorageBucket: cfg.StorageBucket,
+	// 	DatabaseURL:   cfg.DatabaseURL,
+	// })
+	// if err != nil {
+	// 	return fmt.Errorf("firebase.NewClient: %w", err)
+	// }
+
 	return nil
 }
 
@@ -65,9 +79,9 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 // This highlights a potential mismatch with the generic interface if not handled carefully.
 // We might need to adjust the interface or how collection names are passed.
 // For now, this is a placeholder.
-func (db *FirebaseDB) Get(id string) (interface{}, error) {
+func (db *FirebaseDB) Get(ctx context.Context, id string) (interface{}, error) {
 	// Placeholder: A real implementation would specify the collection.
-	doc, err := db.client.Collection("your_collection_name").Doc(id).Get(db.ctx)
+	doc, err := db.client.Collection("your_collection_name").Doc(id).Get(ctx)
 	if db.client == nil {
 		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
 	}
@@ -77,14 +91,16 @@ func (db *FirebaseDB) Get(id string) (interface{}, error) {
 
 // Create adds a new document to a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) Create(data interface{}) (interface{}, error) {
+func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) (interface{}, error) {
 	if db.client == nil {
 		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
 	}
-	// Placeholder: colRef := db.client.Collection("your_collection_name")
-	// docRef, _, err := colRef.Add(db.ctx, data)
-	// return docRef.ID, err
-	return nil, fmt.Errorf("Create not fully implemented for Firebase: collection name needed")
+
+	// Placeholder:
+	colRef := db.client.Collection("your_collection_name")
+	docRef, _, err := colRef.Add(ctx, data)
+	return docRef.ID, err
+	// return nil, fmt.Errorf("Create not fully implemented for Firebase: collection name needed")
 }
 
 // Update modifies an existing document in a default collection.
