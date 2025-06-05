@@ -95,20 +95,9 @@ func (db *FirebaseDB) Get(ctx context.Context, id string) (interface{}, error) {
 // Create adds a new document to a default collection.
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) (interface{}, error) {
-	if db.client == nil {
-		return nil, fmt.Errorf("firestore client not initialized. Call Connect first.")
-	}
-
-	if data == nil {
-		return nil, fmt.Errorf("data is nil")
-	}
-
-	if collection == "" {
-		return nil, fmt.Errorf("collection is empty")
-	}
-
-	if ctx.Value("Authorization") == "" {
-		return nil, fmt.Errorf("authorization token is nil")
+	
+	if err := db.validateWithData(ctx, data, collection); err != nil {
+		return nil, err
 	}
 
 	colRef := db.client.Collection(collection)
@@ -177,4 +166,40 @@ func (db *FirebaseDB) Close() error {
 		return nil
 	}
 	return fmt.Errorf("Firestore client not initialized or already closed")
+}
+
+// validateWithData
+func (db *FirebaseDB) validateWithData(ctx context.Context, data interface{}, collection string) error {
+	if db.client == nil {
+		return fmt.Errorf("firestore client not initialized. Call Connect first.")
+	}
+
+	if data == nil {
+		return fmt.Errorf("data is nil")
+	}
+
+	if collection == "" {
+		return fmt.Errorf("collection is empty")
+	}
+
+	if ctx.Value("Authorization") == "" {
+		return fmt.Errorf("authorization token is nil")
+	}
+	return nil
+}
+
+// validateWithoutData
+func (db *FirebaseDB) validateWithoutData(ctx context.Context, collection string) error {
+	if db.client == nil {
+		return fmt.Errorf("firestore client not initialized. Call Connect first.")
+	}
+
+	if collection == "" {
+		return fmt.Errorf("collection is empty")
+	}
+
+	if ctx.Value("Authorization") == "" {
+		return fmt.Errorf("authorization token is nil")
+	}
+	return nil
 }
