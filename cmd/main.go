@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/http_server"
 	"github.com/go-viper/mapstructure/v2"
@@ -29,10 +31,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// dataEncrypt, err := getEncryptToken(cfg.Fields["encrypttoken"])
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	firebaseConfig, ok := cfg.Fields["webserver"].(map[string]string)
+	if !ok {
+		log.Fatal("firebaseConfig is nil")
+	}
+
+	log.Println(firebaseConfig)
+
+	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
+		ProjectID: firebaseConfig["projectId"],
+		APIKey: firebaseConfig["apiKey"],
+		AuthDomain: firebaseConfig["authDomain"],
+		AppID: firebaseConfig["appId"],
+		MessagingSenderID: firebaseConfig["messagingSenderId"],
+		StorageBucket: firebaseConfig["storageBucket"],
+	})
+	log.Println(authClient, err)
 
 	web.InicializationProfileHandlerHttp("ok", crypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())

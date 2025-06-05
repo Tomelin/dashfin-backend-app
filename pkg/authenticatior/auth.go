@@ -1,4 +1,4 @@
-package auth
+package authenticatior
 
 import (
 	"context"
@@ -39,9 +39,15 @@ type FirebaseConfig struct {
 	// Path to the service account key file
 	ServiceAccountKeyPath string
 	// Project ID (optional if using service account key)
-	ProjectID string
+	ProjectID string `json:"projectId" yaml:"projectId"`
 	// Database URL (optional, for Realtime Database)
 	DatabaseURL string
+
+	APIKey            string `json:"apiKey" yaml:"apiKey"`
+	AuthDomain        string `json:"authDomain" yaml:"authDomain"`
+	StorageBucket     string `json:"storageBucket" yaml:"storageBucket"`
+	MessagingSenderID string `json:"messagingSenderId" yaml:"messagingSenderId"`
+	AppID             string `json:"appId" yaml:"appId"`
 }
 
 // InitializeAuth initializes the Firebase application and returns an Authenticator.
@@ -55,9 +61,10 @@ func InitializeAuth(ctx context.Context, config *FirebaseConfig) (Authenticator,
 
 	// Option 1: Using service account key file
 	if config.ServiceAccountKeyPath != "" {
-		opt := option.WithCredentialsFile(config.ServiceAccountKeyPath)
+		opt := option.WithAPIKey(config.APIKey)
 		conf := &firebase.Config{
-			ProjectID: config.ProjectID,
+			ProjectID:     config.ProjectID,
+			StorageBucket: config.StorageBucket,
 		}
 		if config.DatabaseURL != "" {
 			conf.DatabaseURL = config.DatabaseURL
@@ -154,12 +161,12 @@ func (fa *firebaseAuthenticator) isTokenExpiredError(err error) bool {
 	if err == nil {
 		return false
 	}
-	
+
 	// Check common error messages that indicate token expiry
 	errStr := strings.ToLower(err.Error())
-	return strings.Contains(errStr, "expired") || 
-		   strings.Contains(errStr, "token has expired") ||
-		   strings.Contains(errStr, "id token has expired")
+	return strings.Contains(errStr, "expired") ||
+		strings.Contains(errStr, "token has expired") ||
+		strings.Contains(errStr, "id token has expired")
 }
 
 // IsExpired checks if the given Firebase authToken is expired.
