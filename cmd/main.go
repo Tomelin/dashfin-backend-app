@@ -31,6 +31,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println(cfg.Fields)
+	log.Println(cfg.Fields["firebase"])
 	firebaseConfig, ok := cfg.Fields["firebase"].(map[string]string)
 	if !ok {
 		log.Fatal("firebaseConfig is nil")
