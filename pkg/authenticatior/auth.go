@@ -60,7 +60,7 @@ func InitializeAuth(ctx context.Context, config *FirebaseConfig) (Authenticator,
 	var err error
 
 	// Option 1: Using service account key file
-	if config.ServiceAccountKeyPath != "" {
+	if config.APIKey != "" {
 		opt := option.WithAPIKey(config.APIKey)
 		conf := &firebase.Config{
 			ProjectID:     config.ProjectID,
