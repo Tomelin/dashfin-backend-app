@@ -96,17 +96,24 @@ func (db *FirebaseDB) Get(ctx context.Context, id string) (interface{}, error) {
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) (interface{}, error) {
 	if db.client == nil {
-		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+		return nil, fmt.Errorf("firestore client not initialized. Call Connect first.")
 	}
 
-	// Placeholder:
+	if data == nil {
+		return nil, fmt.Errorf("data is nil")
+	}
+
+	if collection == "" {
+		return nil, fmt.Errorf("collection is empty")
+	}
+
+	if ctx.Value("Authorization") == "" {
+		return nil, fmt.Errorf("authorization token is nil")
+	}
+
 	colRef := db.client.Collection(collection)
-	log.Println("collection", colRef)
-	log.Println("data", data)
 	docRef, _, err := colRef.Add(ctx, data)
-	log.Println("collecolRef.Addction", err, docRef)
 	return docRef.ID, err
-	// return nil, fmt.Errorf("Create not fully implemented for Firebase: collection name needed")
 }
 
 // Update modifies an existing document in a default collection.
