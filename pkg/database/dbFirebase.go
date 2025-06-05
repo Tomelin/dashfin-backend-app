@@ -206,7 +206,6 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 	iter := query.Documents(ctx)
 	defer iter.Stop()
 	for {
-		log.Println("-------iter------")
 		doc, err := iter.Next()
 		if err == iterator.Done {
 			break
