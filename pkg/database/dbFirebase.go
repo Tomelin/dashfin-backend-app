@@ -97,8 +97,11 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 	}
 
 	// Placeholder:
-	colRef := db.client.Collection("your_collection_name")
+	colRef := db.client.Collection(collection)
+	log.Println("collection", colRef)
+	log.Println("data", data)
 	docRef, _, err := colRef.Add(ctx, data)
+	log.Println("collecolRef.Addction", err, docRef)
 	return docRef.ID, err
 	// return nil, fmt.Errorf("Create not fully implemented for Firebase: collection name needed")
 }
