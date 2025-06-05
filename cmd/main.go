@@ -33,7 +33,9 @@ func main() {
 	}
 
 	var fConfig authenticatior.FirebaseConfig
-	json.Unmarshal([]byte(cfg.Fields["firebase"].(string)), &fConfig)
+
+	b, _ := json.Marshal(cfg.Fields["firebase"])
+	json.Unmarshal(b, &fConfig)
 
 	log.Println(fConfig)
 
