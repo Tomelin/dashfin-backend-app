@@ -156,7 +156,7 @@ func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, c
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("result", result)
 	b, err := json.Marshal(result)
 	if err != nil {
 		return nil, err
