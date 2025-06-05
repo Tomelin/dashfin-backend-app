@@ -38,8 +38,9 @@ func (r *ProfileRepository) CreateProfile(ctx context.Context, data *entity_prof
 	}
 
 	query := map[string]interface{}{
-		"email": data.Email,
+		"Email": data.Email,
 	}
+
 	results, err := r.GetByFilter(ctx, query)
 	if err != nil {
 		return nil, err
