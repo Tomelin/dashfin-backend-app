@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"cloud.google.com/go/firestore"
+	"github.com/gin-gonic/gin/internal/json"
 	"google.golang.org/api/option"
 )
 
@@ -43,9 +44,10 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 		return fmt.Errorf("ProjectID is required for Firebase connection")
 	}
 
+	b, _ := json.Marshal(cfg)
 	var opt option.ClientOption
 	if cfg.APIKey != "" {
-		opt = option.WithAPIKey(cfg.APIKey)
+		opt = option.WithCredentialsJSON(b)
 	} else {
 		// If no credentials file is provided, Firestore client will try to use
 		// Application Default Credentials (ADC) if available.

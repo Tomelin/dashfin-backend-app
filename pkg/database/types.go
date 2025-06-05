@@ -2,7 +2,7 @@ package database
 
 // FirebaseConfig holds the configuration for Firebase connection
 type FirebaseConfig struct {
-	ProjectID string `json:"project_id"`
+	ProjectID string `json:"project_id" yaml:"projectId"`
 
 	// Path to the service account key file
 	ServiceAccountKeyPath string
