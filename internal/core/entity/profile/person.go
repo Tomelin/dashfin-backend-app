@@ -6,6 +6,7 @@ import (
 )
 
 type Profile struct {
+	ID        string `json:"id,omitempty"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
@@ -15,6 +16,7 @@ type Profile struct {
 	Cep       string `json:"cep,omitempty"`
 	City      string `json:"city,omitempty"`
 	State     string `json:"state,omitempty"`
+	UserID    string `json:"userId,omitempty"`
 }
 
 func NewProfilePerson() {}

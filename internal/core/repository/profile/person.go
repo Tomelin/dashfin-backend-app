@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
@@ -9,9 +10,11 @@ import (
 )
 
 type ProfileRepositoryInterface interface {
-	CreateProfile(ctx context.Context, data *entity_profile.Profile) (interface{}, error)
-	GetProfile(id string) (interface{}, error)
-	GetByFilter(ctx context.Context, data map[string]interface{}) ([]interface{}, error)
+	CreateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error)
+	GetProfileByID(ctx context.Context, id string) (*entity_profile.Profile, error)
+	GetProfile(ctx context.Context) ([]entity_profile.Profile, error)
+	GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity_profile.Profile, error)
+	UpdateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error)
 }
 
 type ProfileRepository struct {
@@ -31,37 +34,74 @@ func InicializeProfileRepository(db database.FirebaseDBInterface) (ProfileReposi
 	}, nil
 }
 
-func (r *ProfileRepository) CreateProfile(ctx context.Context, data *entity_profile.Profile) (interface{}, error) {
+func (r *ProfileRepository) CreateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error) {
 
 	if data == nil {
 		return nil, errors.New("data is nil")
-	}
-
-	query := map[string]interface{}{
-		"Email": data.Email,
-	}
-
-	results, err := r.GetByFilter(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(results) > 0 {
-		return nil, errors.New("user already exists")
 	}
 
 	result, err := r.DB.Create(ctx, data, r.collection)
 	if err != nil {
 		return nil, err
 	}
-	return result, err
+
+	var profile entity_profile.Profile
+	err = json.Unmarshal(result, &profile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile, err
 }
 
-func (r *ProfileRepository) GetProfile(id string) (interface{}, error) {
-	return nil, nil
+func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	result, err := r.DB.Create(ctx, data, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var profile entity_profile.Profile
+	err = json.Unmarshal(result, &profile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &profile, err
 }
 
-func (r *ProfileRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]interface{}, error) {
+func (r *ProfileRepository) GetProfileByID(ctx context.Context, id string) (*entity_profile.Profile, error) {
+
+	if id == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	query := map[string]interface{}{
+		"UserID": id,
+	}
+
+	results, err := r.DB.GetByFilter(ctx, query, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) > 0 {
+		var profile []entity_profile.Profile
+		err = json.Unmarshal(results, &profile)
+		if err != nil {
+			return nil, err
+		}
+		return &profile[0], nil
+	}
+
+	return nil, errors.New("user not found")
+}
+
+func (r *ProfileRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity_profile.Profile, error) {
 
 	if data == nil {
 		return nil, errors.New("data is nil")
@@ -72,5 +112,25 @@ func (r *ProfileRepository) GetByFilter(ctx context.Context, data map[string]int
 		return nil, err
 	}
 
-	return results, err
+	var profile []entity_profile.Profile
+	err = json.Unmarshal(results, &profile)
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
+func (r *ProfileRepository) GetProfile(ctx context.Context) ([]entity_profile.Profile, error) {
+
+	results, err := r.DB.Get(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var profile []entity_profile.Profile
+	err = json.Unmarshal(results, &profile)
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
 }

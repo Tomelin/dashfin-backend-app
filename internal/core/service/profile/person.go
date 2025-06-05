@@ -9,8 +9,11 @@ import (
 )
 
 type ProfileServiceInterface interface {
-	GetProfile(id string) (interface{}, error)
-	CreateProfile(ctx context.Context, profile *entity.Profile) (interface{}, error)
+	CreateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
+	GetProfileByID(ctx context.Context, id string) (*entity.Profile, error)
+	GetProfile(ctx context.Context) ([]entity.Profile, error)
+	GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.Profile, error)
+	UpdateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
 }
 
 type ProfileService struct {
@@ -28,15 +31,89 @@ func InicializeProfileService(repo repository.ProfileRepositoryInterface) (Profi
 	}, nil
 }
 
-func (s *ProfileService) GetProfile(id string) (interface{}, error) {
-	return s.Repo.GetProfile(id)
-}
+func (s *ProfileService) CreateProfile(ctx context.Context, profile *entity.Profile) (*entity.Profile, error) {
 
-func (s *ProfileService) CreateProfile(ctx context.Context, profile *entity.Profile) (interface{}, error) {
+	if profile == nil {
+		return nil, errors.New("profile is nil")
+	}
+
+	query := map[string]interface{}{
+		"Email": profile.Email,
+	}
+
+	results, err := s.GetByFilter(ctx, query)
+	if err != nil {
+		if err.Error() != "profile not found" {
+			return nil, err
+		}
+	}
+
+	if len(results) > 0 {
+		return nil, errors.New("user already exists")
+	}
+
 	result, err := s.Repo.CreateProfile(ctx, profile)
 
 	if err != nil {
 		return nil, err
+	}
+
+	return result, err
+}
+
+func (s *ProfileService) GetProfileByID(ctx context.Context, id string) (*entity.Profile, error) {
+
+	if id == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	result, err := s.Repo.GetProfileByID(ctx, id)
+
+	return result, err
+}
+
+func (s *ProfileService) GetProfile(ctx context.Context) ([]entity.Profile, error) {
+
+	result, err := s.Repo.GetProfile(ctx)
+	if result == nil {
+		return nil, errors.New("profile not found")
+	}
+
+	if len(result) == 0 {
+		return nil, errors.New("profile not found")
+	}
+
+	return result, err
+
+}
+
+func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.Profile, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	result, err := s.Repo.GetByFilter(ctx, data)
+	if result == nil {
+		return nil, errors.New("profile not found")
+	}
+
+	if len(result) == 0 {
+		return nil, errors.New("profile not found")
+	}
+
+	return result, err
+}
+
+func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	result, err := s.Repo.UpdateProfile(ctx, data)
+	if result == nil {
+		return nil, errors.New("profile not found")
 	}
 
 	return result, err

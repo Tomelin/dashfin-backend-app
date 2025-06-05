@@ -2,20 +2,23 @@ package database
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
 	"cloud.google.com/go/firestore"
+
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
 type FirebaseDBInterface interface {
-	Get(ctx context.Context, id string) (interface{}, error)
-	Create(ctx context.Context, data interface{}, collection string) (interface{}, error)
-	Update(id string, data interface{}) (interface{}, error)
-	Delete(id string) error
-	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]interface{}, error)
+	Get(ctx context.Context, collection string) ([]byte, error)
+	Create(ctx context.Context, data interface{}, collection string) ([]byte, error)
+	Update(ctx context.Context, id string, data interface{}, collection string) ([]byte, error)
+	Delete(ctx context.Context, id, collection string) error
+	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error)
 }
 
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
@@ -84,19 +87,37 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 // This highlights a potential mismatch with the generic interface if not handled carefully.
 // We might need to adjust the interface or how collection names are passed.
 // For now, this is a placeholder.
-func (db *FirebaseDB) Get(ctx context.Context, id string) (interface{}, error) {
+func (db *FirebaseDB) Get(ctx context.Context, collection string) ([]byte, error) {
 	// Placeholder: A real implementation would specify the collection.
-	doc, err := db.client.Collection("your_collection_name").Doc(id).Get(ctx)
 	if db.client == nil {
-		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+		return nil, errors.New("firestore client not initialized. Call Connect first")
 	}
-	log.Println(doc, err)
-	return nil, fmt.Errorf("Get not fully implemented for Firebase: collection name needed")
+
+	if err := db.validateWithoutData(ctx, collection); err != nil {
+		return nil, err
+	}
+
+	doc, err := db.client.Collection(collection).Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []interface{}
+	for _, d := range doc {
+		results = append(results, d.Data())
+	}
+
+	b, err := json.Marshal(results)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 // Create adds a new document to a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) (interface{}, error) {
+func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) ([]byte, error) {
 
 	if err := db.validateWithData(ctx, data, collection); err != nil {
 		return nil, err
@@ -104,34 +125,68 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 
 	colRef := db.client.Collection(collection)
 	docRef, _, err := colRef.Add(ctx, data)
-	return docRef.ID, err
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := json.Marshal(docRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, err
 }
 
 // Update modifies an existing document in a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) Update(id string, data interface{}) (interface{}, error) {
+func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, collection string) ([]byte, error) {
 	if db.client == nil {
-		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+		return nil, fmt.Errorf("firestore client not initialized. Call Connect first")
 	}
-	// Placeholder: _, err := db.client.Collection("your_collection_name").Doc(id).Set(db.ctx, data, firestore.MergeAll)
-	// return data, err
-	return nil, fmt.Errorf("Update not fully implemented for Firebase: collection name needed")
+
+	if id == "" {
+		return nil, fmt.Errorf("id is empty")
+	}
+
+	if err := db.validateWithData(ctx, data, collection); err != nil {
+		return nil, err
+	}
+
+	result, err := db.client.Collection(collection).Doc(id).Set(ctx, data, firestore.MergeAll)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := json.Marshal(result)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }
 
 // Delete removes a document from a default collection by its ID.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) Delete(id string) error {
+func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 	if db.client == nil {
-		return fmt.Errorf("Firestore client not initialized. Call Connect first.")
+		return fmt.Errorf("firestore client not initialized. Call Connect first")
 	}
-	// Placeholder: _, err := db.client.Collection("your_collection_name").Doc(id).Delete(db.ctx)
-	// return err
-	return fmt.Errorf("Delete not fully implemented for Firebase: collection name needed")
+	if id == "" {
+		return fmt.Errorf("id is empty")
+	}
+
+	if err := db.validateWithoutData(ctx, collection); err != nil {
+		return err
+	}
+
+	_, err := db.client.Collection(collection).Doc(id).Delete(ctx)
+
+	return err
 }
 
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]interface{}, error) {
+func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error) {
 	if err := db.validateWithData(ctx, filters, collection); err != nil {
 		return nil, err
 	}
@@ -153,7 +208,12 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 		}
 		results = append(results, doc.Data())
 	}
-	return results, nil
+
+	b, err := json.Marshal(results)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // Close terminates the Firebase connection.
@@ -167,25 +227,25 @@ func (db *FirebaseDB) Close() error {
 		log.Println("Firebase Firestore connection closed.")
 		return nil
 	}
-	return fmt.Errorf("Firestore client not initialized or already closed")
+	return errors.New("firestore client not initialized or already closed")
 }
 
 // validateWithData
 func (db *FirebaseDB) validateWithData(ctx context.Context, data interface{}, collection string) error {
 	if db.client == nil {
-		return fmt.Errorf("firestore client not initialized. Call Connect first.")
+		return errors.New("firestore client not initialized. Call Connect first")
 	}
 
 	if data == nil {
-		return fmt.Errorf("data is nil")
+		return errors.New("data is nil")
 	}
 
 	if collection == "" {
-		return fmt.Errorf("collection is empty")
+		return errors.New("collection is empty")
 	}
 
 	if ctx.Value("Authorization") == "" {
-		return fmt.Errorf("authorization token is nil")
+		return errors.New("authorization token is nil")
 	}
 	return nil
 }
@@ -193,15 +253,15 @@ func (db *FirebaseDB) validateWithData(ctx context.Context, data interface{}, co
 // validateWithoutData
 func (db *FirebaseDB) validateWithoutData(ctx context.Context, collection string) error {
 	if db.client == nil {
-		return fmt.Errorf("firestore client not initialized. Call Connect first.")
+		return errors.New("firestore client not initialized. Call Connect first")
 	}
 
 	if collection == "" {
-		return fmt.Errorf("collection is empty")
+		return errors.New("collection is empty")
 	}
 
 	if ctx.Value("Authorization") == "" {
-		return fmt.Errorf("authorization token is nil")
+		return errors.New("authorization token is nil")
 	}
 	return nil
 }

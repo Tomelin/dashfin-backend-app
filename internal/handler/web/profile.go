@@ -16,7 +16,7 @@ import (
 type HandlerHttpInterface interface {
 	Create(c *gin.Context)
 	Personal(c *gin.Context)
-	PutPersonal(c *gin.Context)
+	UpdateProfile(c *gin.Context)
 	// Get(c *gin.Context)
 	// GetById(c *gin.Context)
 	// Update(c *gin.Context)
@@ -56,7 +56,7 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/:id", append(middlewareList, cat.Personal)...)
 	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
-	routerGroup.PUT("/profile/personal", append(middlewareList, cat.PutPersonal)...)
+	routerGroup.PUT("/profile/personal", append(middlewareList, cat.UpdateProfile)...)
 	routerGroup.GET("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.POST("/profile/updateLogin", append(middlewareList, cat.UpdateLogin)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
@@ -77,10 +77,10 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }
 
-func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
+func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 
 	// Valida o header
-	_, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -113,19 +113,18 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 		return
 	}
 
-	// create Profile
-	// , user.TokenAuth
+	profile.UserID = userId
+
+	// update Profile
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
-	user, err := cat.service.CreateProfile(ctx, &profile)
+	user, err := cat.service.UpdateProfile(ctx, &profile)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("user", user)
-
-	b, err := json.Marshal(profile)
+	b, err := json.Marshal(user)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
