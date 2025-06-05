@@ -97,11 +97,11 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 	result, err := s.Repo.GetByFilter(ctx, data)
 	log.Println("Service GetByFilter", len(result), result, err)
 	if result == nil {
-		return nil, errors.New("profile not found")
+		return nil, errors.New("profile not found 1")
 	}
 
 	if len(result) == 0 {
-		return nil, errors.New("profile not found")
+		return nil, errors.New("profile not found 2")
 	}
 
 	return result, err
