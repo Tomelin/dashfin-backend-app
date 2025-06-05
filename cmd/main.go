@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
@@ -29,8 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// token := fmt.Sprintf("%v", cfg.Fields["encryptToken"])
-	token := "VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo="
+	token := fmt.Sprintf("%v", cfg.Fields["encrypt"])
 	crypt, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
 		log.Fatal(err)

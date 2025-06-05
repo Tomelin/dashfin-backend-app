@@ -1,4 +1,4 @@
-encryptToken: VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo= 
+encrypt: VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo= 
 genai:
   gemini:
     api_key: teste
