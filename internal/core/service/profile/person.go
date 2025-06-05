@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
@@ -94,6 +95,7 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 	}
 
 	result, err := s.Repo.GetByFilter(ctx, data)
+	log.Println("Service GetByFilter", result, err)
 	if result == nil {
 		return nil, errors.New("profile not found")
 	}

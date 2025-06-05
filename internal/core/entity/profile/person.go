@@ -6,17 +6,17 @@ import (
 )
 
 type Profile struct {
-	ID        string `json:"id,omitempty"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone,omitempty"`
-	BirthDate string `json:"birthDate,omitempty"`
-	Sexo      string `json:"sexo"`
-	Cep       string `json:"cep,omitempty"`
-	City      string `json:"city,omitempty"`
-	State     string `json:"state,omitempty"`
-	UserID    string `json:"userId,omitempty"`
+	ID             string `json:"id,omitempty"`
+	FirstName      string `json:"firstName"`
+	LastName       string `json:"lastName"`
+	Email          string `json:"email"`
+	Phone          string `json:"phone,omitempty"`
+	BirthDate      string `json:"birthDate,omitempty"`
+	Sexo           string `json:"sexo"`
+	Cep            string `json:"cep,omitempty"`
+	City           string `json:"city,omitempty"`
+	State          string `json:"state,omitempty"`
+	UserProviderID string `json:"userProviderID,omitempty"`
 }
 
 func NewProfilePerson() {}

@@ -113,7 +113,7 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	profile.UserID = userId
+	profile.UserProviderID = userId
 
 	// update Profile
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
