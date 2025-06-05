@@ -5,7 +5,7 @@ type FirebaseConfig struct {
 	ProjectID string `json:"project_id" yaml:"projectId"`
 
 	// Path to the service account key file
-	ServiceAccountKeyPath string
+	ServiceAccountKeyPath string `json:"serviceAccountKeyPath" yaml:"serviceAccountKeyPath"`
 	// Project ID (optional if using service account key)
 
 	// Database URL (optional, for Realtime Database)

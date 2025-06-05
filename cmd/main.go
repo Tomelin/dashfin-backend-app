@@ -42,12 +42,13 @@ func main() {
 	json.Unmarshal(b, &fConfig)
 
 	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
-		ProjectID:         fConfig.ProjectID,
-		APIKey:            fConfig.APIKey,
-		AuthDomain:        fConfig.AuthDomain,
-		AppID:             fConfig.AppID,
-		MessagingSenderID: fConfig.MessagingSenderID,
-		StorageBucket:     fConfig.StorageBucket,
+		ProjectID:             fConfig.ProjectID,
+		APIKey:                fConfig.APIKey,
+		AuthDomain:            fConfig.AuthDomain,
+		AppID:                 fConfig.AppID,
+		MessagingSenderID:     fConfig.MessagingSenderID,
+		StorageBucket:         fConfig.StorageBucket,
+		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
 	})
 	if err != nil {
 		log.Fatal(err)

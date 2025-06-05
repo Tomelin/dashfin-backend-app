@@ -80,7 +80,7 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	// Valida o header
-	_, _, err := getRequiredHeaders(cat.authClient, c.Request)
+	_, token, err := getRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -115,7 +115,7 @@ func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
 	// create Profile
 	// , user.TokenAuth
-	ctx := context.Background()
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	user, err := cat.service.CreateProfile(ctx, &profile)
 	if err != nil {
 		log.Println(err.Error())

@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -44,32 +43,34 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 		return fmt.Errorf("ProjectID is required for Firebase connection")
 	}
 
-	b, _ := json.Marshal(cfg)
 	var opt option.ClientOption
-	if cfg.APIKey != "" {
-		opt = option.WithCredentialsJSON(b)
+	if cfg.ServiceAccountKeyPath != "" {
+		opt = option.WithCredentialsFile(cfg.ServiceAccountKeyPath)
 	} else {
 		// If no credentials file is provided, Firestore client will try to use
 		// Application Default Credentials (ADC) if available.
 		log.Println("Firebase CredentialsFile not provided, attempting to use Application Default Credentials.")
 	}
+
+	databaseName := "default"
+	if cfg.DatabaseURL != "" {
+		databaseName = cfg.DatabaseURL
+	}
+
 	// Firestore doesn't have a concept of a "database name" like traditional RDBMS.
 	// Connections are made to the project ID, and then you interact with collections and documents within that project.
-	client, err := firestore.NewClientWithDatabase(context.Background(), cfg.ProjectID, cfg.DatabaseURL, opt)
+	client, err := firestore.NewClientWithDatabase(
+		context.Background(),
+		cfg.ProjectID,
+		databaseName,
+		opt,
+	)
 	if err != nil {
-		return fmt.Errorf("firebase.NewClient: %w", err)
+		return fmt.Errorf("firestore.NewClientWithDatabase: %w", err)
 	}
-	db.client = client
-	log.Println("Successfully connected to Firebase Firestore.")
 
-	// app, err := firebase.NewApp(context.Background(), &firebase.Config{
-	// 	ProjectID:     cfg.ProjectID,
-	// 	StorageBucket: cfg.StorageBucket,
-	// 	DatabaseURL:   cfg.DatabaseURL,
-	// })
-	// if err != nil {
-	// 	return fmt.Errorf("firebase.NewClient: %w", err)
-	// }
+	db.client = client
+	log.Printf("Successfully connected to Firestore database: %s in project: %s", databaseName, cfg.ProjectID)
 
 	return nil
 }

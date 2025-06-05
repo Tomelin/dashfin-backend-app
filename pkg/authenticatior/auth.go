@@ -37,7 +37,7 @@ var (
 // FirebaseConfig holds the configuration for Firebase initialization
 type FirebaseConfig struct {
 	// Path to the service account key file
-	ServiceAccountKeyPath string
+	ServiceAccountKeyPath string `json:"serviceAccountKeyPath" yaml:"serviceAccountKeyPath"`
 	// Project ID (optional if using service account key)
 	ProjectID string `json:"projectId" yaml:"projectId"`
 	// Database URL (optional, for Realtime Database)
