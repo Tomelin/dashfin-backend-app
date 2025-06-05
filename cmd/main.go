@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
-	"reflect"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
@@ -32,24 +32,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println(cfg.Fields)
-	log.Println(cfg.Fields["firebase"])
-	log.Println(reflect.TypeOf(cfg.Fields["firebase"]))
-	log.Println(cfg.Fields["firebase"].(map[string]interface{}))
-	firebaseConfig, ok := cfg.Fields["firebase"].(map[string]interface{})
-	if !ok {
-		log.Fatal("firebaseConfig is nil")
-	}
+	var fConfig authenticatior.FirebaseConfig
+	json.Unmarshal([]byte(cfg.Fields["firebase"].(string)), &fConfig)
 
-	log.Println(firebaseConfig)
+	log.Println(fConfig)
 
 	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
-		ProjectID:         firebaseConfig["projectId"].(string),
-		APIKey:            firebaseConfig["apiKey"].(string),
-		AuthDomain:        firebaseConfig["authDomain"].(string),
-		AppID:             firebaseConfig["appId"].(string),
-		MessagingSenderID: firebaseConfig["messagingSenderId"].(string),
-		StorageBucket:     firebaseConfig["storageBucket"].(string),
+		ProjectID:         fConfig.ProjectID,
+		APIKey:            fConfig.APIKey,
+		AuthDomain:        fConfig.AuthDomain,
+		AppID:             fConfig.AppID,
+		MessagingSenderID: fConfig.MessagingSenderID,
+		StorageBucket:     fConfig.StorageBucket,
 	})
 	log.Println(authClient, err)
 
