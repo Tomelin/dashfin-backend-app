@@ -124,6 +124,8 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 		return
 	}
 
+	log.Println(user)
+
 	b, err := json.Marshal(user)
 	if err != nil {
 		log.Println(err.Error())
