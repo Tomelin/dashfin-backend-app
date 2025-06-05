@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"reflect"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
@@ -33,6 +34,8 @@ func main() {
 
 	log.Println(cfg.Fields)
 	log.Println(cfg.Fields["firebase"])
+	log.Println(reflect.TypeOf(cfg.Fields["firebase"]))
+	log.Println(cfg.Fields["firebase"].(map[string]string))
 	firebaseConfig, ok := cfg.Fields["firebase"].(map[string]string)
 	if !ok {
 		log.Fatal("firebaseConfig is nil")
