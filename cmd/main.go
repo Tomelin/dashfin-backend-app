@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
@@ -29,7 +30,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	token := cfg.Fields["encryptToken"].(string)
+	token := fmt.Sprintf("%v", cfg.Fields["encryptToken"])
 	crypt, err := cryptdata.InicializationCryptData(&token)
 	if err != nil {
 		log.Fatal(err)
@@ -72,12 +73,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-
-svcProfile, err := service_profile.InicializeProfileService(repoProfile)
-if err != nil {
-	log.Fatal(err)
-}
-
+	svcProfile, err := service_profile.InicializeProfileService(repoProfile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())

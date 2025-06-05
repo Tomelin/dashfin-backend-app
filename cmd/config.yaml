@@ -1,3 +1,4 @@
+encryptToken: VGhpc0lzQTE2Qnl0ZUtleVRoaXNJc0ExNkJ5dGVJVgo= 
 genai:
   gemini:
     api_key: teste
@@ -7,11 +8,9 @@ database:
     host: uri
     user: username
     password: pass
-  firestore:
-    name: df-production
 webserver:
   port: "8080"
-  host: "0.0.0.0"    
+  host: "0.0.0.0"   
 firebase:
   apiKey: "AIzaSyBoYp0yAty8ocZc_3Dqi13c24KnQLZozpc"
   authDomain: "prosperar-n1en5.firebaseapp.com"
@@ -19,4 +18,4 @@ firebase:
   storageBucket: "prosperar-n1en5.firebasestorage.app"
   messagingSenderId: "184363131164"
   appId: "1:184363131164:web:11da6aac9b048c91121ad9"
-  database: df-production
+  database: "production"
