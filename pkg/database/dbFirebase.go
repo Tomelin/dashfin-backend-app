@@ -17,27 +17,31 @@ type FirebaseDB struct {
 
 // InitializeFirebaseDB creates and initializes a new FirebaseDB instance.
 // It doesn't connect immediately; connection happens in the Connect method.
-func InitializeFirebaseDB() (*FirebaseDB, error) {
-	return &FirebaseDB{
+func InitializeFirebaseDB(config FirebaseConfig) (*FirebaseDB, error) {
+
+	fdb := &FirebaseDB{
 		ctx: context.Background(),
-	}, nil
+	}
+
+	err := fdb.connect(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return fdb, nil
 }
 
 // Connect establishes a connection to Firebase Firestore.
 // config is expected to be a FirebaseConfig struct.
-func (db *FirebaseDB) Connect(config interface{}) error {
-	cfg, ok := config.(FirebaseConfig)
-	if !ok {
-		return fmt.Errorf("invalid config type for Firebase: expected FirebaseConfig")
-	}
+func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 
 	if cfg.ProjectID == "" {
 		return fmt.Errorf("ProjectID is required for Firebase connection")
 	}
 
 	var opt option.ClientOption
-	if cfg.CredentialsFile != "" {
-		opt = option.WithCredentialsFile(cfg.CredentialsFile)
+	if cfg.APIKey != "" {
+		opt = option.WithAPIKey(cfg.APIKey)
 	} else {
 		// If no credentials file is provided, Firestore client will try to use
 		// Application Default Credentials (ADC) if available.

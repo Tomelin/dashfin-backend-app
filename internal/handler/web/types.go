@@ -8,7 +8,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 )
 
-func getRequiredHeaders(r *http.Request) (userID string, authorization string, err error) {
+func getRequiredHeaders(authClient authenticatior.Authenticator, r *http.Request) (userID string, authorization string, err error) {
 	userID = r.Header.Get("X-Userid")
 	authorization = r.Header.Get("X-Authorization")
 
@@ -18,6 +18,11 @@ func getRequiredHeaders(r *http.Request) (userID string, authorization string, e
 
 	if len(authorization) > 7 && authorization[:7] == "Bearer " {
 		authorization = authorization[7:]
+	}
+
+	err = validAuth(authClient, &userID, &authorization)
+	if err != nil {
+		return "", "", err
 	}
 
 	return userID, authorization, nil

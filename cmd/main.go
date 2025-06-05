@@ -10,6 +10,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
+	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/http_server"
 	"github.com/go-viper/mapstructure/v2"
 )
@@ -49,6 +50,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	db, err := database.InitializeFirebaseDB(database.FirebaseConfig{
+		ProjectID:             fConfig.ProjectID,
+		APIKey:                fConfig.APIKey,
+		DatabaseURL:           fConfig.DatabaseURL,
+		StorageBucket:         fConfig.StorageBucket,
+		AppID:                 fConfig.AppID,
+		AuthDomain:            fConfig.AuthDomain,
+		MessagingSenderID:     fConfig.MessagingSenderID,
+		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
+	})
+
+	log.Println(db, err)
 	web.InicializationProfileHandlerHttp("ok", crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {

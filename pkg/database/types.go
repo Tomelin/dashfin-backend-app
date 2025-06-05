@@ -2,8 +2,20 @@ package database
 
 // FirebaseConfig holds the configuration for Firebase connection
 type FirebaseConfig struct {
-	ProjectID      string `json:"project_id"`
-	CredentialsFile string `json:"credentials_file"` // Path to the service account key file
+	ProjectID string `json:"project_id"`
+
+	// Path to the service account key file
+	ServiceAccountKeyPath string
+	// Project ID (optional if using service account key)
+
+	// Database URL (optional, for Realtime Database)
+	DatabaseURL string
+
+	APIKey            string `json:"apiKey" yaml:"apiKey"`
+	AuthDomain        string `json:"authDomain" yaml:"authDomain"`
+	StorageBucket     string `json:"storageBucket" yaml:"storageBucket"`
+	MessagingSenderID string `json:"messagingSenderId" yaml:"messagingSenderId"`
+	AppID             string `json:"appId" yaml:"appId"`
 }
 
 // MongoConfig holds the configuration for MongoDB connection
@@ -38,8 +50,8 @@ type DatabaseService interface {
 	// Filters is a map where keys are field names and values are the criteria.
 	GetByFilter(filters map[string]interface{}) ([]interface{}, error)
 
-    // Close terminates the database connection and cleans up resources.
-    Close() error
+	// Close terminates the database connection and cleans up resources.
+	Close() error
 }
 
 // General validation logic (if any) related to the interface can be added here.

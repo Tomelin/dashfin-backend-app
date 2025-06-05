@@ -7,6 +7,8 @@ database:
     host: uri
     user: username
     password: pass
+  firestore:
+    name: df-production
 webserver:
   port: "8080"
   host: "0.0.0.0"    
@@ -17,3 +19,4 @@ firebase:
   storageBucket: "prosperar-n1en5.firebasestorage.app"
   messagingSenderId: "184363131164"
   appId: "1:184363131164:web:11da6aac9b048c91121ad9"
+  database: df-production

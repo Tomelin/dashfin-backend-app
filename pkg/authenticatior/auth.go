@@ -41,7 +41,7 @@ type FirebaseConfig struct {
 	// Project ID (optional if using service account key)
 	ProjectID string `json:"projectId" yaml:"projectId"`
 	// Database URL (optional, for Realtime Database)
-	DatabaseURL string
+	DatabaseURL string `json:"database" yaml:"database"`
 
 	APIKey            string `json:"apiKey" yaml:"apiKey"`
 	AuthDomain        string `json:"authDomain" yaml:"authDomain"`

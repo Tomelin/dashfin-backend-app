@@ -77,21 +77,14 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 
 func (cat *ProfileHandlerHttp) PutPersonal(c *gin.Context) {
 
-	user, auth, err := getRequiredHeaders(c.Request)
+	_, _, err := getRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err = validAuth(cat.authClient, &user, &auth); err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	var payload cryptdata.CryptData
-
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
 		log.Println(err.Error())
