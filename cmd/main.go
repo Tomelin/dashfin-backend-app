@@ -61,6 +61,8 @@ func main() {
 		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
 	})
 
+	db.Get("id")
+
 	log.Println(db, err)
 	web.InicializationProfileHandlerHttp("ok", crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	err = apiResponse.Run(apiResponse.Route.Handler())

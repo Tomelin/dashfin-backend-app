@@ -67,10 +67,11 @@ func (db *FirebaseDB) connect(cfg FirebaseConfig) error {
 // For now, this is a placeholder.
 func (db *FirebaseDB) Get(id string) (interface{}, error) {
 	// Placeholder: A real implementation would specify the collection.
-	// For example: doc, err := db.client.Collection("your_collection_name").Doc(id).Get(db.ctx)
+	doc, err := db.client.Collection("your_collection_name").Doc(id).Get(db.ctx)
 	if db.client == nil {
 		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
 	}
+	log.Println(doc, err)
 	return nil, fmt.Errorf("Get not fully implemented for Firebase: collection name needed")
 }
 
