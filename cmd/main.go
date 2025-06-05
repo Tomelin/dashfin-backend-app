@@ -35,8 +35,8 @@ func main() {
 	log.Println(cfg.Fields)
 	log.Println(cfg.Fields["firebase"])
 	log.Println(reflect.TypeOf(cfg.Fields["firebase"]))
-	log.Println(cfg.Fields["firebase"].(map[string]string))
-	firebaseConfig, ok := cfg.Fields["firebase"].(map[string]string)
+	log.Println(cfg.Fields["firebase"].(map[string]interface{}))
+	firebaseConfig, ok := cfg.Fields["firebase"].(map[string]interface{})
 	if !ok {
 		log.Fatal("firebaseConfig is nil")
 	}
@@ -44,12 +44,12 @@ func main() {
 	log.Println(firebaseConfig)
 
 	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
-		ProjectID:         firebaseConfig["projectId"],
-		APIKey:            firebaseConfig["apiKey"],
-		AuthDomain:        firebaseConfig["authDomain"],
-		AppID:             firebaseConfig["appId"],
-		MessagingSenderID: firebaseConfig["messagingSenderId"],
-		StorageBucket:     firebaseConfig["storageBucket"],
+		ProjectID:         firebaseConfig["projectId"].(string),
+		APIKey:            firebaseConfig["apiKey"].(string),
+		AuthDomain:        firebaseConfig["authDomain"].(string),
+		AppID:             firebaseConfig["appId"].(string),
+		MessagingSenderID: firebaseConfig["messagingSenderId"].(string),
+		StorageBucket:     firebaseConfig["storageBucket"].(string),
 	})
 	log.Println(authClient, err)
 
