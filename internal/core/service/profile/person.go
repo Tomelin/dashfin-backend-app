@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
@@ -34,9 +33,8 @@ func (s *ProfileService) GetProfile(id string) (interface{}, error) {
 }
 
 func (s *ProfileService) CreateProfile(ctx context.Context, profile *entity.Profile) (interface{}, error) {
-	result, err := s.Repo.CreateProfile(ctx, *profile)
-	log.Println("Service result")
-	log.Println(result, err)
+	result, err := s.Repo.CreateProfile(ctx, profile)
+
 	if err != nil {
 		return nil, err
 	}

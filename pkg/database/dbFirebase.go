@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"cloud.google.com/go/firestore"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -14,6 +15,7 @@ type FirebaseDBInterface interface {
 	Create(ctx context.Context, data interface{}, collection string) (interface{}, error)
 	Update(id string, data interface{}) (interface{}, error)
 	Delete(id string) error
+	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]interface{}, error)
 }
 
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
@@ -95,7 +97,7 @@ func (db *FirebaseDB) Get(ctx context.Context, id string) (interface{}, error) {
 // Create adds a new document to a default collection.
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection string) (interface{}, error) {
-	
+
 	if err := db.validateWithData(ctx, data, collection); err != nil {
 		return nil, err
 	}
@@ -129,29 +131,29 @@ func (db *FirebaseDB) Delete(id string) error {
 
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) GetByFilter(filters map[string]interface{}) ([]interface{}, error) {
-	if db.client == nil {
-		return nil, fmt.Errorf("Firestore client not initialized. Call Connect first.")
+func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]interface{}, error) {
+	if err := db.validateWithData(ctx, filters, collection); err != nil {
+		return nil, err
 	}
-	// Placeholder: query := db.client.Collection("your_collection_name").Query
-	// for key, value := range filters {
-	//	 query = query.Where(key, "==", value)
-	// }
-	// iter := query.Documents(db.ctx)
-	// defer iter.Stop()
-	// var results []interface{}
-	// for {
-	//	 doc, err := iter.Next()
-	//	 if err == iterator.Done {
-	//		 break
-	//	 }
-	//	 if err != nil {
-	//		 return nil, err
-	//	 }
-	//	 results = append(results, doc.Data())
-	// }
-	// return results, nil
-	return nil, fmt.Errorf("GetByFilter not fully implemented for Firebase: collection name needed")
+
+	query := db.client.Collection(collection).Query
+	for key, value := range filters {
+		query = query.Where(key, "==", value)
+	}
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+	var results []interface{}
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, doc.Data())
+	}
+	return results, nil
 }
 
 // Close terminates the Firebase connection.
