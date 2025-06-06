@@ -18,10 +18,10 @@ type ProfileProfessionServiceInterface interface {
 
 type ProfileProfessionService struct {
 	Repo    repository.ProfileRepositoryInterface
-	Profile ProfileServiceInterface
+	Profile ProfilePersonServiceInterface
 }
 
-func InicializeProfileProfessionService(repo repository.ProfileRepositoryInterface, profile ProfileServiceInterface) (ProfileProfessionServiceInterface, error) {
+func InicializeProfileProfessionService(repo repository.ProfileRepositoryInterface, profile ProfilePersonServiceInterface) (ProfileProfessionServiceInterface, error) {
 
 	if repo == nil {
 		return nil, errors.New("repo is nil")
