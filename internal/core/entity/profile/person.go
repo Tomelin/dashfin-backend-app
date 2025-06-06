@@ -24,20 +24,16 @@ type ProfileProfession struct {
 }
 
 type Goals struct {
-	Name         string    `json:"name" binding:"required"`
-	TargetDate   string    `json:"targetDate,omitempty"`
-	Description  string    `json:"description,omitempty"`
-	TargetAmount float64   `json:"targetAmount,omitempty"`
-	CreatedAt    time.Time `json:"createdAt,omitempty"`
-	UpdatedAt    time.Time `json:"updatedAt,omitempty"`
+	Name         string  `json:"name" binding:"required"`
+	TargetDate   string  `json:"targetDate,omitempty"`
+	Description  string  `json:"description,omitempty"`
+	TargetAmount float64 `json:"targetAmount,omitempty"`
 }
 
 type ProfileGoals struct {
-	Goals2Years  []Goals   `json:"goals2Years" `
-	Goals5Years  []Goals   `json:"goals5Years" `
-	Goals10Years []Goals   `json:"goals10Years" `
-	CreatedAt    time.Time `json:"createdAt,omitempty"`
-	UpdatedAt    time.Time `json:"updatedAt,omitempty"`
+	Goals2Years  []Goals `json:"goals2Years" `
+	Goals5Years  []Goals `json:"goals5Years" `
+	Goals10Years []Goals `json:"goals10Years" `
 }
 
 type Profile struct {

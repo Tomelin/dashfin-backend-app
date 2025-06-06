@@ -126,7 +126,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 	results, err := s.GetByFilter(ctx, map[string]interface{}{
 		"userProviderID": data.UserProviderID, // campo correto
 	})
-	log.Println("GetByFilter", results, err)
+
 	if err != nil && err.Error() != "profile not found" {
 		return nil, err
 	}

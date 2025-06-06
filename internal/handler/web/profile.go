@@ -56,6 +56,10 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.OPTIONS("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
 	routerGroup.GET("/profile/professional", append(middlewareList, cat.GetProfessional)...)
 
+	routerGroup.PUT("/profile/goals", append(middlewareList, cat.UpdateGoals)...)
+	routerGroup.OPTIONS("/profile/goals", append(middlewareList, cat.UpdateGoals)...)
+	routerGroup.GET("/profile/goals", append(middlewareList, cat.GetGoals)...)
+
 	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/:id", append(middlewareList, cat.Personal)...)
@@ -140,68 +144,6 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
-func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
-
-	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// bind crypt payload
-	var payload cryptdata.CryptData
-	err = c.ShouldBindJSON(&payload)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	//decrypt payload
-	data, err := cat.encryptData.PayloadData(payload.Payload)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// bind profile
-	var profession entity_profile.ProfileProfession
-	err = json.Unmarshal(data, &profession)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// update Profile
-	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
-	professionResult, err := cat.service.UpdateProfileProfession(ctx, &userId, &profession)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	b, err := json.Marshal(professionResult)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	result, err := cat.encryptData.EncryptPayload(b)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"payload": result})
-}
-
 func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 
 	// Valida o header
@@ -264,6 +206,69 @@ func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
 }
 
 
+func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
+
+	// Valida o header
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind crypt payload
+	var payload cryptdata.CryptData
+	err = c.ShouldBindJSON(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//decrypt payload
+	data, err := cat.encryptData.PayloadData(payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind profile
+	var profession entity_profile.ProfileProfession
+	err = json.Unmarshal(data, &profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// update Profile
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	professionResult, err := cat.service.UpdateProfileProfession(ctx, &userId, &profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	b, err := json.Marshal(professionResult)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := cat.encryptData.EncryptPayload(b)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": result})
+}
+
+
 func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 
 	// Valida o header
@@ -277,6 +282,106 @@ func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 	// get profile
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	profession, err := cat.service.GetProfileProfession(ctx, &userId)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	b, err := json.Marshal(profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := cat.encryptData.EncryptPayload(b)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": result})
+}
+
+
+func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
+
+	// Valida o header
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind crypt payload
+	var payload cryptdata.CryptData
+	err = c.ShouldBindJSON(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//decrypt payload
+	data, err := cat.encryptData.PayloadData(payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind profile
+	var goals entity_profile.ProfileGoals
+	err = json.Unmarshal(data, &goals)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// update Profile
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	professionResult, err := cat.service.UpdateProfileGoals(ctx, &userId, &goals)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	b, err := json.Marshal(professionResult)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := cat.encryptData.EncryptPayload(b)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": result})
+}
+
+
+func (cat *ProfileHandlerHttp) GetGoals(c *gin.Context) {
+
+	// Valida o header
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// get profile
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	profession, err := cat.service.GetProfileGoals(ctx, &userId)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

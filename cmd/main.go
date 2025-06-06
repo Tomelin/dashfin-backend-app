@@ -83,7 +83,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcProfile, err := service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession)
+	svcProfileGoals, err := service_profile.InicializeProfileGoalsService(repoProfile, svcProfilePerson)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	svcProfile, err := service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
 	if err != nil {
 		log.Fatal(err)
 	}
