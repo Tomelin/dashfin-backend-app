@@ -41,7 +41,9 @@ func (r *ProfileRepository) CreateProfile(ctx context.Context, data *entity_prof
 		return nil, errors.New("data is nil")
 	}
 
-	result, err := r.DB.Create(ctx, data, r.collection)
+	toMap, _ := utils.StructToMap(data)
+
+	result, err := r.DB.Create(ctx, toMap, r.collection)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +56,14 @@ func (r *ProfileRepository) CreateProfile(ctx context.Context, data *entity_prof
 	}
 
 	// Definir o ID no objeto original
-	data.ID = docRef["id"].(string)
+	var id string
+	_, ok := docRef["id"]
+	if ok {
+		id = docRef["id"].(string)
+	} else {
+		id = docRef["ID"].(string)
+	}
+	data.ID = id
 
 	return data, nil
 }
