@@ -52,6 +52,8 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.PUT("/profile/personal", append(middlewareList, cat.UpdateProfile)...)
 	routerGroup.PUT("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
 	routerGroup.GET("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
+	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
+	routerGroup.OPTIONS("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
 
 	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
@@ -59,7 +61,6 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
 	routerGroup.POST("/profile/updateLogin", append(middlewareList, cat.UpdateLogin)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
-	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/search", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/filter", append(middlewareList, cat.Personal)...)
