@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -64,21 +63,23 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 
 	toMap, _ := utils.StructToMap(data)
 
-	result, err := r.DB.Update(ctx, data.ID, toMap, r.collection)
-	log.Println("Repo update", result, err)
+	err := r.DB.Update(ctx, data.ID, toMap, r.collection)
 	if err != nil {
 		return nil, err
 	}
 
-	var profile entity_profile.Profile
-	err = json.Unmarshal(result, &profile)
-	log.Println("Repo Unmarshal", err)
+	result, err := r.GetByFilter(ctx, map[string]interface{}{
+		"ID": data.ID,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("Repo profile", err, profile, string(result))
-	return &profile, err
+	if len(result) == 0 {
+		return nil, errors.New("error get user after update")
+	}
+
+	return &result[0], err
 }
 
 func (r *ProfileRepository) GetProfileByID(ctx context.Context, id string) (*entity_profile.Profile, error) {

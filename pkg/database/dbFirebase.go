@@ -16,7 +16,7 @@ import (
 type FirebaseDBInterface interface {
 	Get(ctx context.Context, collection string) ([]byte, error)
 	Create(ctx context.Context, data interface{}, collection string) ([]byte, error)
-	Update(ctx context.Context, id string, data interface{}, collection string) ([]byte, error)
+	Update(ctx context.Context, id string, data interface{}, collection string) error
 	Delete(ctx context.Context, id, collection string) error
 	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error)
 }
@@ -139,31 +139,25 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 
 // Update modifies an existing document in a default collection.
 // Placeholder: Collection name needed.
-func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, collection string) ([]byte, error) {
+func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, collection string) error {
 	if db.client == nil {
-		return nil, fmt.Errorf("firestore client not initialized. Call Connect first")
+		return fmt.Errorf("firestore client not initialized. Call Connect first")
 	}
 
 	if id == "" {
-		return nil, fmt.Errorf("id is empty")
+		return fmt.Errorf("id is empty")
 	}
 
 	if err := db.validateWithData(ctx, data, collection); err != nil {
-		return nil, err
+		return err
 	}
 
-	result, err := db.client.Collection(collection).Doc(id).Set(ctx, data, firestore.MergeAll)
+	_, err := db.client.Collection(collection).Doc(id).Set(ctx, data, firestore.MergeAll)
 	if err != nil {
-		return nil, err
-	}
-	log.Println("-------result------")
-	log.Println("result", result)
-	b, err := json.Marshal(result)
-	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return b, nil
+	return nil
 }
 
 // Delete removes a document from a default collection by its ID.
