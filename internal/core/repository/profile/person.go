@@ -70,7 +70,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 	}
 
 	result, err := r.GetByFilter(ctx, map[string]interface{}{
-		"ID": data.ID,
+		"userProviderID": data.UserProviderID,
 	})
 	log.Println("Repo update err", result, err)
 	if err != nil {
