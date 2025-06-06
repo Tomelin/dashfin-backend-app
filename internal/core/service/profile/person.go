@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
@@ -103,7 +104,7 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 	}
 
 	if len(result) == 0 {
-		return nil, errors.New("profile not found 2")
+		return nil, errors.New("profile not found")
 	}
 
 	return result, err
@@ -124,6 +125,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 
 	if len(results) == 0 {
 		result, err := s.CreateProfile(ctx, data)
+		log.Println("Created", result, err)
 		if err != nil {
 			return nil, err
 		}
