@@ -54,7 +54,7 @@ func (cat *SupportHandlerHttp) HandleSupportOptions(c *gin.Context) {
 
 	log.Println("recebendo o options....")
 	c.Header("Access-Control-Allow-Origin", "*") // Ou sua origem do frontend
-	c.Header("Access-Control-Allow-Methods", "*")
+	c.Header("Access-Control-Allow-Methods", "POST, OPTIONS")
 	c.Header("Access-Control-Allow-Headers", "Content-Type, X-Authorization, X-USERID, X-APP, X-TRACE-ID")
 	c.Header("Access-Control-Allow-Credentials", "true")
 	c.Header("Content-Type", "application/json")
@@ -62,12 +62,10 @@ func (cat *SupportHandlerHttp) HandleSupportOptions(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// web/support_handler.go
-// ... (imports e outras definições) ...
-
 func (cat *SupportHandlerHttp) CreateSupport(c *gin.Context) {
 	log.Println("Backend: CreateSupport handler iniciado para POST /api/support/requests") // Adicionar log
 
+	log.Println("step 1")
 	// 1. Valida o header
 	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
@@ -90,6 +88,7 @@ func (cat *SupportHandlerHttp) CreateSupport(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Erro ao processar payload da requisição: " + err.Error()})
 		return
 	}
+	log.Println("step 3")
 	if payload.Payload == "" {
 		log.Println("Backend ERROR (CreateSupport): Campo 'payload' está vazio no JSON recebido.")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload criptografado ausente ou inválido."})
