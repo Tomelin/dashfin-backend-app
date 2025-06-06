@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -61,16 +62,19 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 	}
 
 	result, err := r.DB.Update(ctx, data.ID, data, r.collection)
+	log.Println("Repo update", result, err)
 	if err != nil {
 		return nil, err
 	}
 
 	var profile entity_profile.Profile
 	err = json.Unmarshal(result, &profile)
+	log.Println("Repo Unmarshal", err)
 	if err != nil {
 		return nil, err
 	}
 
+	log.Println("Repo profile", err, profile)
 	return &profile, err
 }
 
