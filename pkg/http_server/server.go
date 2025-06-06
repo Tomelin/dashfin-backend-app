@@ -61,7 +61,8 @@ func setHeader(c *gin.Context) {
 func (s *RestAPI) EmbeddedMiddleware(c *gin.Context) {
 
 	if c.Request.Method == "OPTIONS" {
-		c.AbortWithStatus(204)
+		c.Status(http.StatusNoContent)
+		c.AbortWithStatus(http.StatusNoContent)
 		return
 	}
 
