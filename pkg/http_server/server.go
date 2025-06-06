@@ -40,7 +40,7 @@ func (s *RestAPI) Run(handle http.Handler) error {
 
 	s.Route.Use(s.CorsMiddleware())
 	http2.ConfigureServer(&srv, &http2.Server{})
-	s.Route.Use(s.EmbeddedMiddleware)
+	// s.Route.Use(s.EmbeddedMiddleware)
 
 	return srv.ListenAndServe()
 }
