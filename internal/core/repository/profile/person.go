@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -78,7 +79,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 	if len(result) == 0 {
 		return nil, errors.New("error get user after update")
 	}
-
+	log.Println("Repo update", result[0])
 	return &result[0], err
 }
 
