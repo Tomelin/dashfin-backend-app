@@ -117,7 +117,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 
 	// Buscar por UserProviderID (mais confiável que email)
 	results, err := s.GetByFilter(ctx, map[string]interface{}{
-		"UserProviderID": data.UserProviderID, // campo correto
+		"userProviderID": data.UserProviderID, // campo correto
 	})
 	log.Println("GetByFilter", results, err)
 	if err != nil && err.Error() != "profile not found" {
