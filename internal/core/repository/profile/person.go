@@ -13,7 +13,7 @@ import (
 
 type ProfileRepositoryInterface interface {
 	CreateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error)
-	GetProfileByID(ctx context.Context, id string) (*entity_profile.Profile, error)
+	GetProfileByID(ctx context.Context, id *string) (*entity_profile.Profile, error)
 	GetProfile(ctx context.Context) ([]entity_profile.Profile, error)
 	GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity_profile.Profile, error)
 	UpdateProfile(ctx context.Context, data *entity_profile.Profile) (*entity_profile.Profile, error)
@@ -96,13 +96,13 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 	return &result[0], err
 }
 
-func (r *ProfileRepository) GetProfileByID(ctx context.Context, id string) (*entity_profile.Profile, error) {
-	if id == "" {
+func (r *ProfileRepository) GetProfileByID(ctx context.Context, id *string) (*entity_profile.Profile, error) {
+	if id == nil {
 		return nil, errors.New("id is empty")
 	}
 
 	query := map[string]interface{}{
-		"userProviderID": id, // ✅ campo correto
+		"userProviderID": *id,
 	}
 
 	results, err := r.DB.GetByFilter(ctx, query, r.collection)

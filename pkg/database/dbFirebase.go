@@ -123,6 +123,14 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 		return nil, err
 	}
 
+	// Check if data is a map and if "updatedAt" is present.
+	// If data is not a map or "updatedAt" is not present, add it.
+	if mapData, ok := data.(map[string]interface{}); ok {
+		if _, exists := mapData["createdAt"]; !exists {
+			mapData["updatedAt"] = firestore.ServerTimestamp
+		}
+	}
+
 	colRef := db.client.Collection(collection)
 	docRef, _, err := colRef.Add(ctx, data)
 	if err != nil {
@@ -142,6 +150,14 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 func (db *FirebaseDB) Update(ctx context.Context, id string, data interface{}, collection string) error {
 	if db.client == nil {
 		return fmt.Errorf("firestore client not initialized. Call Connect first")
+	}
+
+	// Check if data is a map and if "updatedAt" is present.
+	// If data is not a map or "updatedAt" is not present, add it.
+	if mapData, ok := data.(map[string]interface{}); ok {
+		if _, exists := mapData["updatedAt"]; !exists {
+			mapData["updatedAt"] = firestore.ServerTimestamp
+		}
 	}
 
 	if id == "" {

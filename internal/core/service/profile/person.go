@@ -11,7 +11,7 @@ import (
 
 type ProfileServiceInterface interface {
 	CreateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
-	GetProfileByID(ctx context.Context, id string) (*entity.Profile, error)
+	GetProfileByID(ctx context.Context, id *string) (*entity.Profile, error)
 	GetProfile(ctx context.Context) ([]entity.Profile, error)
 	GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.Profile, error)
 	UpdateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
@@ -62,13 +62,20 @@ func (s *ProfileService) CreateProfile(ctx context.Context, profile *entity.Prof
 	return result, err
 }
 
-func (s *ProfileService) GetProfileByID(ctx context.Context, id string) (*entity.Profile, error) {
+func (s *ProfileService) GetProfileByID(ctx context.Context, id *string) (*entity.Profile, error) {
 
-	if id == "" {
+	if id == nil {
 		return nil, errors.New("id is empty")
 	}
 
 	result, err := s.Repo.GetProfileByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, errors.New("profile not found")
+	}
 
 	return result, err
 }
