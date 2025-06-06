@@ -99,7 +99,7 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 	}
 
 	if result == nil {
-		return nil, errors.New("profile not found 1")
+		return nil, errors.New("profile not found")
 	}
 
 	if len(result) == 0 {
@@ -118,7 +118,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 	results, err := s.GetByFilter(ctx, map[string]interface{}{
 		"userProviderID": data.UserProviderID, // campo correto
 	})
-	if err != nil {
+	if err != nil && err.Error() != "profile not found" {
 		return nil, err
 	}
 
