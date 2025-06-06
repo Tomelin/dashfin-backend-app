@@ -77,7 +77,7 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 		return nil, err
 	}
 
-	log.Println("Repo profile", err, profile)
+	log.Println("Repo profile", err, profile, string(result))
 	return &profile, err
 }
 
