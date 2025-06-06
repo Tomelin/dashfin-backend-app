@@ -123,7 +123,12 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 	}
 
 	if len(results) == 0 {
-		return nil, errors.New("profile not found")
+		result, err := s.CreateProfile(ctx, data)
+		if err != nil {
+			return nil, err
+		}
+		data = result
+		return data, nil
 	}
 
 	// Usar o ID do registro existente
