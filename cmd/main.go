@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 
@@ -21,7 +20,6 @@ import (
 )
 
 func main() {
-
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatal(err)
@@ -32,90 +30,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	token := fmt.Sprintf("%v", cfg.Fields["encrypt"])
-	crypt, err := cryptdata.InicializationCryptData(&token)
+	crypt, err := initializeCryptData(cfg.Fields["encrypt"])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var fConfig authenticatior.FirebaseConfig
-
-	b, _ := json.Marshal(cfg.Fields["firebase"])
-	json.Unmarshal(b, &fConfig)
-
-	authClient, err := authenticatior.InitializeAuth(context.Background(), &authenticatior.FirebaseConfig{
-		ProjectID:             fConfig.ProjectID,
-		APIKey:                fConfig.APIKey,
-		AuthDomain:            fConfig.AuthDomain,
-		AppID:                 fConfig.AppID,
-		MessagingSenderID:     fConfig.MessagingSenderID,
-		StorageBucket:         fConfig.StorageBucket,
-		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
-	})
+	authClient, db, err := initializeFirebase(cfg.Fields["firebase"])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := database.InitializeFirebaseDB(database.FirebaseConfig{
-		ProjectID:             fConfig.ProjectID,
-		APIKey:                fConfig.APIKey,
-		DatabaseURL:           fConfig.DatabaseURL,
-		StorageBucket:         fConfig.StorageBucket,
-		AppID:                 fConfig.AppID,
-		AuthDomain:            fConfig.AuthDomain,
-		MessagingSenderID:     fConfig.MessagingSenderID,
-		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
-	})
-
+	svcProfile, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// PROFILE
-	repoProfile, err := repository_profile.InicializeProfileRepository(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-	svcProfilePerson, err := service_profile.InicializeProfileService(repoProfile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	svcProfileProfession, err := service_profile.InicializeProfileProfessionService(repoProfile, svcProfilePerson)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	svcProfileGoals, err := service_profile.InicializeProfileGoalsService(repoProfile, svcProfilePerson)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	svcProfile, err := service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+	svcSupport, err := initializeSupportServices(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
-
-	// SUPPORT
-	repoSupport, err := repository.InicializeSupportRepository(db)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	svcSupport, err := service.InicializeSupportService(repoSupport)
-	if err != nil {
-		log.Fatal(err)
-	}
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
-	// START GIN
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) {
@@ -135,21 +76,73 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 	return api, nil
 }
 
-func getEncryptToken(data interface{}) (cryptdata.CryptDataInterface, error) {
+func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface, error) {
+	token := fmt.Sprintf("%v", encryptField)
+	return cryptdata.InicializationCryptData(&token)
+}
 
-	if data == nil {
-		return nil, errors.New("token is nil")
-	}
-
-	token, ok := data.(string)
-	if !ok {
-		return nil, errors.New("token is nil")
-	}
-
-	dresult, err := cryptdata.InicializationCryptData(&token)
+func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator, database.FirebaseDBInterface, error) {
+	var fConfig authenticatior.FirebaseConfig
+	b, err := json.Marshal(firebaseField)
 	if err != nil {
-		return nil, err
+		return nil, nil, fmt.Errorf("failed to marshal firebase config: %w", err)
 	}
 
-	return dresult, nil
+	if err := json.Unmarshal(b, &fConfig); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal firebase config: %w", err)
+	}
+
+	authClient, err := authenticatior.InitializeAuth(context.Background(), &fConfig)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to initialize auth: %w", err)
+	}
+
+	db, err := database.InitializeFirebaseDB(database.FirebaseConfig{
+		ProjectID:             fConfig.ProjectID,
+		APIKey:                fConfig.APIKey,
+		DatabaseURL:           fConfig.DatabaseURL,
+		StorageBucket:         fConfig.StorageBucket,
+		AppID:                 fConfig.AppID,
+		AuthDomain:            fConfig.AuthDomain,
+		MessagingSenderID:     fConfig.MessagingSenderID,
+		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to initialize firebase DB: %w", err)
+	}
+
+	return authClient, db, nil
+}
+
+func initializeProfileServices(db database.FirebaseDBInterface) (service_profile.ProfileServiceInterface, error) {
+	repoProfile, err := repository_profile.InicializeProfileRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize profile repository: %w", err)
+	}
+
+	svcProfilePerson, err := service_profile.InicializeProfileService(repoProfile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize profile person service: %w", err)
+	}
+
+	svcProfileProfession, err := service_profile.InicializeProfileProfessionService(repoProfile, svcProfilePerson)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize profile profession service: %w", err)
+	}
+
+	svcProfileGoals, err := service_profile.InicializeProfileGoalsService(repoProfile, svcProfilePerson)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize profile goals service: %w", err)
+	}
+
+	return service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+}
+
+func initializeSupportServices(db database.FirebaseDBInterface) (service.SupportServiceInterface, error) {
+	repoSupport, err := repository.InicializeSupportRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize support repository: %w", err)
+	}
+
+	return service.InicializeSupportService(repoSupport)
 }
