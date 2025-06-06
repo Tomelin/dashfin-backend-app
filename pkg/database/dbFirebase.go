@@ -191,13 +191,8 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 		query = query.Where(key, "==", value)
 	}
 
-	type resultObject struct {
-		ID   string
-		Data interface{}
-	}
-
-	objects := make([]resultObject, 0)
 	iter := query.Documents(ctx)
+	var results []interface{}
 	defer iter.Stop()
 	for {
 		doc, err := iter.Next()
@@ -208,13 +203,12 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 			return nil, err
 		}
 
-		objects = append(objects, resultObject{
-			ID:   doc.Ref.ID,
-			Data: doc.Data(),
-		})
+		data := doc.Data()
+		data["id"] = doc.Ref.ID // Importante para updates
+		results = append(results, data)
 	}
 
-	b, err := json.Marshal(objects)
+	b, err := json.Marshal(results)
 	if err != nil {
 		return nil, err
 	}

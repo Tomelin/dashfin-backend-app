@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
@@ -111,30 +110,24 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 }
 
 func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error) {
-
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
 
+	// Buscar por UserProviderID (mais confiável que email)
 	results, err := s.GetByFilter(ctx, map[string]interface{}{
-		"Email": data.Email,
+		"userProviderID": data.UserProviderID, // campo correto
 	})
 	if err != nil {
-		if err.Error() != "profile not found" {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	if len(results) == 0 {
 		return nil, errors.New("profile not found")
 	}
+
+	// Usar o ID do registro existente
 	data.ID = results[0].ID
 
-	log.Println("Service Update", len(results), err, data.ID)
-	result, err := s.Repo.UpdateProfile(ctx, data)
-	if result == nil {
-		return nil, errors.New("profile not found update")
-	}
-
-	return result, err
+	return s.Repo.UpdateProfile(ctx, data)
 }
