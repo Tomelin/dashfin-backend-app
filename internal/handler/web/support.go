@@ -54,7 +54,7 @@ func (cat *SupportHandlerHttp) HandleSupportOptions(c *gin.Context) {
 
 	log.Println("recebendo o options....")
 	c.Header("Access-Control-Allow-Origin", "*") // Ou sua origem do frontend
-	c.Header("Access-Control-Allow-Methods", "POST, OPTIONS")
+	c.Header("Access-Control-Allow-Methods", "*")
 	c.Header("Access-Control-Allow-Headers", "Content-Type, X-Authorization, X-USERID, X-APP, X-TRACE-ID")
 	c.Header("Access-Control-Allow-Credentials", "true")
 	c.Header("Content-Type", "application/json")

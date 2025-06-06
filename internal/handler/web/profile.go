@@ -59,16 +59,6 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	routerGroup.PUT("/profile/goals", append(middlewareList, cat.UpdateGoals)...)
 	routerGroup.OPTIONS("/profile/goals", append(middlewareList, cat.UpdateGoals)...)
 	routerGroup.GET("/profile/goals", append(middlewareList, cat.GetGoals)...)
-
-	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
-	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
-	routerGroup.GET("/profile/:id", append(middlewareList, cat.Personal)...)
-	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
-	routerGroup.POST("/profile/updateLogin", append(middlewareList, cat.UpdateLogin)...)
-	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
-	routerGroup.DELETE("/profile/:id", append(middlewareList, cat.Personal)...)
-	routerGroup.GET("/profile/search", append(middlewareList, cat.Personal)...)
-	routerGroup.GET("/profile/filter", append(middlewareList, cat.Personal)...)
 }
 
 func (cat *ProfileHandlerHttp) Create(c *gin.Context) {

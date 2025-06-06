@@ -8,7 +8,9 @@ import (
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
+	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
+	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
@@ -69,6 +71,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// PROFILE
 	repoProfile, err := repository_profile.InicializeProfileRepository(db)
 	if err != nil {
 		log.Fatal(err)
@@ -94,10 +97,25 @@ func main() {
 	}
 
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+
+	// SUPPORT
+	repoSupport, err := repository.InicializeSupportRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	svcSupport, err := service.InicializeSupportService(repoSupport)
+	if err != nil {
+		log.Fatal(err)
+	}
+	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+
+	// START GIN
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
 
 func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) {
