@@ -8,6 +8,7 @@ import (
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 type ProfileRepositoryInterface interface {
@@ -61,7 +62,9 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 		return nil, errors.New("data is nil")
 	}
 
-	result, err := r.DB.Update(ctx, data.ID, data, r.collection)
+	toMap, _ := utils.StructToMap(data)
+
+	result, err := r.DB.Update(ctx, data.ID, toMap, r.collection)
 	log.Println("Repo update", result, err)
 	if err != nil {
 		return nil, err
