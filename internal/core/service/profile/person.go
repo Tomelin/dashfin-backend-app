@@ -95,7 +95,10 @@ func (s *ProfileService) GetByFilter(ctx context.Context, data map[string]interf
 	}
 
 	result, err := s.Repo.GetByFilter(ctx, data)
-	log.Println("Service GetByFilter", len(result), result, err)
+	if err != nil {
+		return nil, err
+	}
+
 	if result == nil {
 		return nil, errors.New("profile not found 1")
 	}
@@ -116,6 +119,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 	results, err := s.GetByFilter(ctx, map[string]interface{}{
 		"Email": data.Email,
 	})
+	log.Println("Service Update", len(results), err)
 	if err != nil {
 		if err.Error() != "profile not found" {
 			return nil, err
