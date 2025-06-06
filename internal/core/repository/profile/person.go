@@ -72,11 +72,13 @@ func (r *ProfileRepository) UpdateProfile(ctx context.Context, data *entity_prof
 	result, err := r.GetByFilter(ctx, map[string]interface{}{
 		"ID": data.ID,
 	})
+	log.Println("Repo update err", result, err)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(result) == 0 {
+		log.Println("Repo update eln", result, len(result))
 		return nil, errors.New("error get user after update")
 	}
 	log.Println("Repo update", result[0])
