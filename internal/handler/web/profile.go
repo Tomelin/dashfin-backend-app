@@ -18,6 +18,7 @@ type HandlerHttpInterface interface {
 	Personal(c *gin.Context)
 	UpdateProfile(c *gin.Context)
 	GetProfile(c *gin.Context)
+	UpdateProfessional(c *gin.Context)
 }
 
 type ProfileHandlerHttp struct {
@@ -47,12 +48,15 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 		middlewareList[i] = mw
 	}
 
+	routerGroup.GET("/profile/personal", append(middlewareList, cat.GetProfile)...)
+	routerGroup.PUT("/profile/personal", append(middlewareList, cat.UpdateProfile)...)
+	routerGroup.PUT("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
+	routerGroup.GET("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
+
 	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/:id", append(middlewareList, cat.Personal)...)
 	routerGroup.PUT("/profile/:id", append(middlewareList, cat.Personal)...)
-	routerGroup.PUT("/profile/personal", append(middlewareList, cat.UpdateProfile)...)
-	routerGroup.GET("/profile/personal", append(middlewareList, cat.GetProfile)...)
 	routerGroup.POST("/profile/updateLogin", append(middlewareList, cat.UpdateLogin)...)
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.Personal)...)
 	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
@@ -134,6 +138,67 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
+func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
+
+	// Valida o header
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind crypt payload
+	var payload cryptdata.CryptData
+	err = c.ShouldBindJSON(&payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	//decrypt payload
+	data, err := cat.encryptData.PayloadData(payload.Payload)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// bind profile
+	var profession entity_profile.ProfileProfession
+	err = json.Unmarshal(data, &profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// update Profile
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	professionResult, err := cat.service.UpdateProfileProfession(ctx, &userId, &profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	b, err := json.Marshal(professionResult)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := cat.encryptData.EncryptPayload(b)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": result})
+}
 func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 
 	// Valida o header

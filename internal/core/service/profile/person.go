@@ -9,7 +9,7 @@ import (
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 )
 
-type ProfileServiceInterface interface {
+type ProfilePersonServiceInterface interface {
 	CreateProfile(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
 	GetProfileByID(ctx context.Context, id *string) (*entity.Profile, error)
 	GetProfile(ctx context.Context) ([]entity.Profile, error)
@@ -21,7 +21,7 @@ type ProfileService struct {
 	Repo repository.ProfileRepositoryInterface
 }
 
-func InicializeProfileService(repo repository.ProfileRepositoryInterface) (ProfileServiceInterface, error) {
+func InicializeProfileService(repo repository.ProfileRepositoryInterface) (ProfilePersonServiceInterface, error) {
 
 	if repo == nil {
 		return nil, errors.New("repo is nil")
