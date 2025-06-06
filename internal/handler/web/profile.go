@@ -50,10 +50,11 @@ func (cat *ProfileHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 
 	routerGroup.GET("/profile/personal", append(middlewareList, cat.GetProfile)...)
 	routerGroup.PUT("/profile/personal", append(middlewareList, cat.UpdateProfile)...)
-	routerGroup.PUT("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
-	routerGroup.GET("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
 	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.Personal)...)
+
+	routerGroup.PUT("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
 	routerGroup.OPTIONS("/profile/professional", append(middlewareList, cat.UpdateProfessional)...)
+	routerGroup.GET("/profile/professional", append(middlewareList, cat.GetProfessional)...)
 
 	routerGroup.POST("/profile", append(middlewareList, cat.Personal)...)
 	routerGroup.GET("/profile/", append(middlewareList, cat.Personal)...)
@@ -200,6 +201,7 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
+
 func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 
 	// Valida o header
@@ -259,4 +261,41 @@ func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
 	log.Println("received data", data)
 	log.Println("received data string", string(data))
 	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
+}
+
+
+func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
+
+	// Valida o header
+	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// get profile
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	profession, err := cat.service.GetProfileProfession(ctx, &userId)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	b, err := json.Marshal(profession)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := cat.encryptData.EncryptPayload(b)
+	if err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": result})
 }

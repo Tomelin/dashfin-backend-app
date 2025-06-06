@@ -10,10 +10,7 @@ import (
 
 type ProfileProfessionServiceInterface interface {
 	UpdateProfileProfession(ctx context.Context, userId *string, data *entity.ProfileProfession) (*entity.ProfileProfession, error)
-	// GetProfileProfessionByID(ctx context.Context, id *string) (*entity.Profile, error)
-	// GetProfileProfession(ctx context.Context) ([]entity.Profile, error)
-	// GetProfileProfessionByFilter(ctx context.Context, data map[string]interface{}) ([]entity.Profile, error)
-	// UpdateProfileProfession(ctx context.Context, data *entity.Profile) (*entity.Profile, error)
+	GetProfileProfession(ctx context.Context, userID *string) (entity.ProfileProfession, error)
 }
 
 type ProfileProfessionService struct {
@@ -70,18 +67,26 @@ func (p *ProfileProfessionService) UpdateProfileProfession(ctx context.Context, 
 	return &resultProfile.Profession, err
 }
 
-func (p *ProfileProfessionService) GetProfileProfessionByID(ctx context.Context, id *string) (*entity.Profile, error) {
-	return nil, nil
-}
+func (p *ProfileProfessionService) GetProfileProfession(ctx context.Context, userID *string) (entity.ProfileProfession, error) {
+	if userID == nil {
+		return entity.ProfileProfession{}, errors.New("user id is nil")
+	}
 
-func (p *ProfileProfessionService) GetProfileProfession(ctx context.Context) ([]entity.Profile, error) {
-	return nil, nil
-}
+	query := map[string]interface{}{
+		"userProviderID": *userID,
+	}
+	profiles, err := p.Repo.GetByFilter(ctx, query)
+	if err != nil {
+		return entity.ProfileProfession{}, err
+	}
 
-func (p *ProfileProfessionService) GetProfileProfessionByFilter(ctx context.Context, data map[string]interface{}) ([]entity.Profile, error) {
-	return nil, nil
-}
+	if profiles == nil {
+		return entity.ProfileProfession{}, errors.New("user not found")
+	}
 
-// func (p *ProfileProfessionService) UpdateProfileProfession(ctx context.Context, data *entity.Profile) (*entity.Profile, error) {
-// 	return nil, nil
-// }
+	if len(profiles) == 0 {
+		return entity.ProfileProfession{}, errors.New("user not found")
+	}
+
+	return profiles[0].Profession, nil
+}
