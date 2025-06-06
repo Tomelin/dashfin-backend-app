@@ -15,6 +15,7 @@ import (
 
 type SupportHandlerHttpInterface interface {
 	CreateSupport(c *gin.Context)
+	HandleSupportOptions(c *gin.Context)
 }
 
 type SupportHandlerHttp struct {
@@ -45,8 +46,20 @@ func (cat *SupportHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	}
 
 	routerGroup.POST("/support/requests", append(middlewareList, cat.CreateSupport)...)
-	routerGroup.OPTIONS("/support/requests", append(middlewareList, cat.CreateSupport)...)
+	routerGroup.OPTIONS("/support/requests", append(middlewareList, cat.HandleSupportOptions)...)
 
+}
+
+// Novo handler específico para OPTIONS
+func (cat *SupportHandlerHttp) HandleSupportOptions(c *gin.Context) {
+	// Os headers CORS já devem estar sendo configurados pelo seu middleware CORS global
+	// Se não, você precisaria configurá-los aqui também, por exemplo:
+	// c.Header("Access-Control-Allow-Origin", "http://localhost:9002") // Ou sua origem do frontend
+	// c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	// c.Header("Access-Control-Allow-Headers", "Content-Type, X-Authorization, X-USERID, X-APP, X-TRACE-ID")
+	// c.Header("Access-Control-Allow-Credentials", "true")
+
+	c.Status(http.StatusNoContent) // Ou http.StatusOK
 }
 
 func (cat *SupportHandlerHttp) CreateSupport(c *gin.Context) {
