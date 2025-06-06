@@ -4,13 +4,13 @@ on:
   push:
     branches:
       - "*"
-    paths:
-      - "**/*.go"
-      - "go.mod"
-      - "go.sum"
-      - "Dockerfile"
-      - "docker-compose.yml"
-      - "Makefile"
+    # paths:
+    #   - "**/*.go"
+    #   - "go.mod"
+    #   - "go.sum"
+    #   - "Dockerfile"
+    #   - "docker-compose.yml"
+    #   - "Makefile"
 
 permissions:
   contents: read
