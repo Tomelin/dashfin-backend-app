@@ -47,7 +47,6 @@ func (cat *SupportHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 
 	routerGroup.POST("/support/requests", append(middlewareList, cat.CreateSupport)...)
 	routerGroup.OPTIONS("/support/requests", append(middlewareList, cat.HandleSupportOptions)...)
-
 }
 
 // Novo handler específico para OPTIONS

@@ -151,11 +151,11 @@ func newRestAPI(config *RestAPIConfig) (*gin.Engine, *gin.RouterGroup) {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", " X-Authorization", " X-USERID", " X-APP", " X-USER", " X-TRACE-ID"}
 	router.Use(cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", " X-Authorization", " X-USERID", " X-APP", " X-USER", " X-TRACE-ID"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))

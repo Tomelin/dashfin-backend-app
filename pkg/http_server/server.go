@@ -58,21 +58,21 @@ func setHeader(c *gin.Context) {
 	c.Next()
 }
 
-func (s *RestAPI) EmbeddedMiddleware(c *gin.Context) {
+// func (s *RestAPI) EmbeddedMiddleware(c *gin.Context) {
 
-	if c.Request.Method == "OPTIONS" {
-		c.Status(http.StatusNoContent)
-		c.AbortWithStatus(http.StatusNoContent)
-		return
-	}
+// 	if c.Request.Method == "OPTIONS" {
+// 		c.Status(http.StatusNoContent)
+// 		c.AbortWithStatus(http.StatusNoContent)
+// 		return
+// 	}
 
-	if c.GetHeader("X-APP") != "DashfinApp" {
-		c.AbortWithStatus(401)
-		return
-	}
+// 	if c.GetHeader("X-APP") != "DashfinApp" {
+// 		c.AbortWithStatus(401)
+// 		return
+// 	}
 
-	c.Next()
-}
+// 	c.Next()
+// }
 
 func (s *RestAPI) MiddlewareHeader(c *gin.Context) {
 
@@ -91,7 +91,7 @@ func (s *RestAPI) CorsMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
 		AllowAllOrigins:  true,
 		AllowMethods:     []string{"*"},
-		AllowHeaders:     []string{"*"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", " X-Authorization", " X-USERID", " X-APP", " X-USER", " X-TRACE-ID"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	})
