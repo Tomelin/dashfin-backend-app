@@ -45,6 +45,7 @@ func (cat *SupportHandlerHttp) handlers(routerGroup *gin.RouterGroup, middleware
 	}
 
 	routerGroup.POST("/profile/personal", append(middlewareList, cat.CreateSupport)...)
+	routerGroup.OPTIONS("/profile/personal", append(middlewareList, cat.CreateSupport)...)
 
 }
 
