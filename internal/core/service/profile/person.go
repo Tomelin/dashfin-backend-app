@@ -130,7 +130,7 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 	}
 	data.ID = results[0].ID
 
-	log.Println("Service Update", len(results), err, data)
+	log.Println("Service Update", len(results), err, data.ID)
 	result, err := s.Repo.UpdateProfile(ctx, data)
 	if result == nil {
 		return nil, errors.New("profile not found update")
