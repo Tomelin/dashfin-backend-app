@@ -65,6 +65,52 @@ func (bah *BankAccountHandlerHttp) handlers(routerGroup *gin.RouterGroup, middle
 	routerGroup.DELETE(" /lookups/financial-institutions/:id", append(middlewareList, bah.DeleteBankAccount)...)
 	routerGroup.OPTIONS("/lookups/financial-institutions", append(middlewareList, bah.optionsHandler)...)
 	routerGroup.OPTIONS("/lookups/financial-institutions/:id", append(middlewareList, bah.optionsHandler)...)
+} // GetBankAccounts handles the HTTP request for retrieving all bank accounts for a user.
+func (bah *BankAccountHandlerHttp) GetBankAccounts(c *gin.Context) {
+	// Step 1: Get User ID and Auth Token from headers
+	userID, token, err := web.GetRequiredHeaders(bah.authClient, c.Request)
+	if err != nil {
+		// Step 1a: Log error if headers are missing or invalid
+		log.Println(err.Error())
+		// Step 1b: Return bad request error to the client
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Step 2: Create a context with the auth token
+	ctx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
+	// Step 3: Call the service to get bank accounts
+	result, err := bah.service.GetBankAccounts(ctx, userID)
+	if err != nil {
+		// Step 3a: Log error if service call fails
+		log.Println(err.Error())
+		// Step 3b: Return bad request error to the client
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Step 4: Marshal the result into JSON
+	b, err := json.Marshal(result)
+	if err != nil {
+		// Step 4a: Log error if marshaling fails
+		log.Println(err.Error())
+		// Step 4b: Return bad request error to the client
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Step 5: Encrypt the JSON payload
+	encryptedResult, err := bah.encryptData.EncryptPayload(b)
+	if err != nil {
+		// Step 5a: Log error if encryption fails
+		log.Println(err.Error())
+		// Step 5b: Return bad request error to the client
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Step 6: Return the encrypted payload with OK status
+	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
 
 func (bah *BankAccountHandlerHttp) optionsHandler(c *gin.Context) {
