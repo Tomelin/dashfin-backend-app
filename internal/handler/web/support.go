@@ -65,9 +65,9 @@ func (cat *SupportHandlerHttp) HandleSupportOptions(c *gin.Context) {
 func (cat *SupportHandlerHttp) CreateSupport(c *gin.Context) {
 
 	// 1. Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Printf("Backend ERROR (CreateSupport - getRequiredHeaders): %v\n", err) // Log mais detalhado
+		log.Printf("Backend ERROR (CreateSupport - GetRequiredHeaders): %v\n", err) // Log mais detalhado
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Erro de autenticação: " + err.Error()})
 		return
 	}

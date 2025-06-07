@@ -73,7 +73,7 @@ func (cat *ProfileHandlerHttp) Personal(c *gin.Context) {
 func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -137,7 +137,7 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -195,11 +195,10 @@ func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }
 
-
 func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -258,11 +257,10 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
-
 func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -295,11 +293,10 @@ func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
-
 func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -358,11 +355,10 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": result})
 }
 
-
 func (cat *ProfileHandlerHttp) GetGoals(c *gin.Context) {
 
 	// Valida o header
-	userId, token, err := getRequiredHeaders(cat.authClient, c.Request)
+	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

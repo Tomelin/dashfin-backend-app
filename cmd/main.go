@@ -8,10 +8,13 @@ import (
 
 	"github.com/Tomelin/dashfin-backend-app/config"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
+	repository_finance "github.com/Tomelin/dashfin-backend-app/internal/core/repository/finance"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
+	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -40,6 +43,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// iif := database.NewFirebaseInsert(db)
+	// err = iif.InsertBrazilianBanksFromJSON(context.Background())
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Println("finish")
 	svcProfile, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)
@@ -50,8 +59,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcBankAccount, err := initializeBankAccountServices(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeBankAccountHandlerHttp(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -145,4 +160,13 @@ func initializeSupportServices(db database.FirebaseDBInterface) (service.Support
 	}
 
 	return service.InicializeSupportService(repoSupport)
+}
+
+func initializeBankAccountServices(db database.FirebaseDBInterface) (service_finance.BankAccountServiceInterface, error) {
+	repoBankAccount, err := repository_finance.InitializeBankAccountRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize bank account repository: %w", err)
+	}
+
+	return service_finance.InitializeBankAccountService(repoBankAccount)
 }

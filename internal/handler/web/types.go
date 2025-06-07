@@ -8,7 +8,9 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 )
 
-func getRequiredHeaders(authClient authenticatior.Authenticator, r *http.Request) (userID string, authorization string, err error) {
+const AuthTokenKey = "Authorization"
+
+func GetRequiredHeaders(authClient authenticatior.Authenticator, r *http.Request) (userID string, authorization string, err error) {
 	userID = r.Header.Get("X-Userid")
 	authorization = r.Header.Get("X-Authorization")
 
