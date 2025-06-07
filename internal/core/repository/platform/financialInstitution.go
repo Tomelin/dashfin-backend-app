@@ -23,7 +23,6 @@ func NewFinancialInstitutionRepository(db database.FirebaseDBInterface) (entity_
 		DB:         db,
 		collection: "platform_financial-institution",
 	}, nil
-
 }
 
 func (r *financialInstitutionRepository) GetFinancialInstitutionByID(ctx context.Context, id *string) (*entity_platform.FinancialInstitution, error) {
