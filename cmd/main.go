@@ -44,12 +44,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//iif := database.NewFirebaseInsert(db)
-	//err = iif.InsertBrazilianBanksFromJSON(context.Background())
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//log.Fatal("finish")
+	// Import data at firestore
+//	iif := database.NewFirebaseInsert(db)
+//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	log.Fatal("finish")
+
 	svcProfile, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)

@@ -21,7 +21,7 @@ func NewFinancialInstitutionRepository(db database.FirebaseDBInterface) (entity_
 
 	return &financialInstitutionRepository{
 		DB:         db,
-		collection: "profiles",
+		collection: "platform_financial-institution",
 	}, nil
 
 }
