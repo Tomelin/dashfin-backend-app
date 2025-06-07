@@ -7,14 +7,18 @@ import (
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
+	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	entity_platform "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
+	repository_finance "github.com/Tomelin/dashfin-backend-app/internal/core/repository/finance"
 	repository_platform "github.com/Tomelin/dashfin-backend-app/internal/core/repository/platform"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
+	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 	service_platform "github.com/Tomelin/dashfin-backend-app/internal/core/service/platform"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
@@ -45,12 +49,12 @@ func main() {
 	}
 
 	// Import data at firestore
-//	iif := database.NewFirebaseInsert(db)
-//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	log.Fatal("finish")
+	//	iif := database.NewFirebaseInsert(db)
+	//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+	//	log.Fatal("finish")
 
 	svcProfile, err := initializeProfileServices(db)
 	if err != nil {
@@ -67,9 +71,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcExpenseRecord, err := initializeExpenseRecordServices(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -172,4 +182,17 @@ func initializeFinancialInstitution(db database.FirebaseDBInterface) (entity_pla
 	}
 
 	return service_platform.NewFinancialInstitutionService(repoSupport)
+}
+
+func initializeExpenseRecordServices(db database.FirebaseDBInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
+	repoExpenseRecord, err := repository_finance.InitializeExpenseRecordRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize expense record repository: %w", err)
+	}
+
+	svcExpenseRecord, err := service_finance.InitializeExpenseRecordService(repoExpenseRecord)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize expense record service: %w", err)
+	}
+	return svcExpenseRecord, nil
 }
