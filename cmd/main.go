@@ -7,14 +7,15 @@ import (
 	"log"
 
 	"github.com/Tomelin/dashfin-backend-app/config"
+	entity_platform "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
-	repository_finance "github.com/Tomelin/dashfin-backend-app/internal/core/repository/finance"
+	repository_platform "github.com/Tomelin/dashfin-backend-app/internal/core/repository/platform"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
-	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
+	service_platform "github.com/Tomelin/dashfin-backend-app/internal/core/service/platform"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
-	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
+	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -59,14 +60,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcBankAccount, err := initializeBankAccountServices(db)
+	svcFinancialInstitution, err := initializeFinancialInstitution(db)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
-	web_finance.InitializeBankAccountHandlerHttp(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -162,11 +163,11 @@ func initializeSupportServices(db database.FirebaseDBInterface) (service.Support
 	return service.InicializeSupportService(repoSupport)
 }
 
-func initializeBankAccountServices(db database.FirebaseDBInterface) (service_finance.BankAccountServiceInterface, error) {
-	repoBankAccount, err := repository_finance.InitializeBankAccountRepository(db)
+func initializeFinancialInstitution(db database.FirebaseDBInterface) (entity_platform.FinancialInstitutionInterface, error) {
+	repoSupport, err := repository_platform.NewFinancialInstitutionRepository(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize bank account repository: %w", err)
+		return nil, fmt.Errorf("failed to initialize support repository: %w", err)
 	}
 
-	return service_finance.InitializeBankAccountService(repoBankAccount)
+	return service_platform.NewFinancialInstitutionService(repoSupport)
 }
