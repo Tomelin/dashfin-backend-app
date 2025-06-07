@@ -39,7 +39,6 @@ func (s *BankAccountService) CreateBankAccount(ctx context.Context, userID strin
 		return nil, errors.New("userID is required")
 	}
 
-	bankAccount.SetDefaults()
 	if err := bankAccount.Validate(); err != nil {
 		return nil, err
 	}
@@ -99,7 +98,6 @@ func (s *BankAccountService) UpdateBankAccount(ctx context.Context, userID, id s
 		return nil, errors.New("id is required")
 	}
 
-	bankAccount.SetDefaults()
 	if err := bankAccount.Validate(); err != nil {
 		return nil, err
 	}

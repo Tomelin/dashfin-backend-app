@@ -43,7 +43,6 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, userID st
 		return nil, errors.New("userID is required")
 	}
 
-	data.SetDefaults()
 	if err := data.Validate(); err != nil {
 		return nil, err
 	}
@@ -141,7 +140,6 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, userID, i
 		return nil, errors.New("id is required")
 	}
 
-	data.SetDefaults()
 	if err := data.Validate(); err != nil {
 		return nil, err
 	}
