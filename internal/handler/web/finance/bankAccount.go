@@ -57,6 +57,14 @@ func (bah *BankAccountHandlerHttp) handlers(routerGroup *gin.RouterGroup, middle
 	routerGroup.DELETE("/finance/bank-accounts/:id", append(middlewareList, bah.DeleteBankAccount)...)
 	routerGroup.OPTIONS("/finance/bank-accounts", append(middlewareList, bah.optionsHandler)...)
 	routerGroup.OPTIONS("/finance/bank-accounts/:id", append(middlewareList, bah.optionsHandler)...)
+
+	routerGroup.POST("   /lookups/financial-institutions", append(middlewareList, bah.CreateBankAccount)...)
+	routerGroup.GET("    /lookups/financial-institutions/:id", append(middlewareList, bah.GetBankAccountByID)...)
+	routerGroup.GET("    /lookups/financial-institutions", append(middlewareList, bah.GetBankAccounts)...)
+	routerGroup.PUT("    /lookups/financial-institutions/:id", append(middlewareList, bah.UpdateBankAccount)...)
+	routerGroup.DELETE(" /lookups/financial-institutions/:id", append(middlewareList, bah.DeleteBankAccount)...)
+	routerGroup.OPTIONS("/lookups/financial-institutions", append(middlewareList, bah.optionsHandler)...)
+	routerGroup.OPTIONS("/lookups/financial-institutions/:id", append(middlewareList, bah.optionsHandler)...)
 }
 
 func (bah *BankAccountHandlerHttp) optionsHandler(c *gin.Context) {
