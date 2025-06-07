@@ -49,12 +49,13 @@ func main() {
 	}
 
 	// Import data at firestore
-//	iif := database.NewFirebaseInsert(db)
-//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	log.Fatal("finish")
+	//	iif := database.NewFirebaseInsert(db)
+	//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
+
+	//	log.Fatal("finish")
 
 	svcProfile, err := initializeProfileServices(db)
 	if err != nil {
@@ -189,6 +190,5 @@ func initializeBankAccountServices(db database.FirebaseDBInterface) (entity_fina
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize bank account repository: %w", err)
 	}
-
 	return service_finance.InitializeBankAccountService(repoBankAccount)
 }
