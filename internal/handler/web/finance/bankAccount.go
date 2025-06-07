@@ -212,38 +212,38 @@ func (bah *BankAccountHandlerHttp) GetBankAccountByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
 
-func (bah *BankAccountHandlerHttp) GetBankAccounts(c *gin.Context) {
-	userID, token, err := web.GetRequiredHeaders(bah.authClient, c.Request)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// func (bah *BankAccountHandlerHttp) GetBankAccounts(c *gin.Context) {
+// 	userID, token, err := web.GetRequiredHeaders(bah.authClient, c.Request)
+// 	if err != nil {
+// 		log.Println(err.Error())
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	ctx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
-	result, err := bah.service.GetBankAccounts(ctx, userID)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// 	ctx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
+// 	result, err := bah.service.GetBankAccounts(ctx, userID)
+// 	if err != nil {
+// 		log.Println(err.Error())
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	b, err := json.Marshal(result)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// 	b, err := json.Marshal(result)
+// 	if err != nil {
+// 		log.Println(err.Error())
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	encryptedResult, err := bah.encryptData.EncryptPayload(b)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+// 	encryptedResult, err := bah.encryptData.EncryptPayload(b)
+// 	if err != nil {
+// 		log.Println(err.Error())
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
-}
+// 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
+// }
 
 func (bah *BankAccountHandlerHttp) UpdateBankAccount(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(bah.authClient, c.Request)
