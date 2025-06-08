@@ -50,6 +50,7 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 
 		snapDueDate := data.DueDate
 		for i := 1; i < data.RecurrenceCount; i++ {
+			log.Println("i starts at ", i)
 			if i == 1 {
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
