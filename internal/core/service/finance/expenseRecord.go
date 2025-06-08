@@ -55,16 +55,17 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				expensesCreated = append(expensesCreated, *result)
 				s.Repo.CreateExpenseRecord(ctx, data)
 			} else {
-				log.Println("for else ")
 				parsedDueDate, _ := time.Parse("2006-01-02", data.DueDate)
 				newDate := parsedDueDate.AddDate(0, 0, i)
 				data.DueDate = newDate.Format("2006-01-02")
+				log.Println("for else and next date", data.DueDate)
 				result, err := s.Repo.CreateExpenseRecord(ctx, data)
 				log.Println("for if ", err)
 				expensesCreated = append(expensesCreated, *result)
 			}
 		}
 		log.Println("total...", len(expensesCreated))
+		log.Println(expensesCreated)
 		return &expensesCreated[0], nil // Return the first created expense record
 
 	}
