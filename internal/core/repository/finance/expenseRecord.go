@@ -140,6 +140,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
+	log.Println("GetExpenseRecordsByFilter is...", filter)
 	var records []entity_finance.ExpenseRecord
 	if err := json.Unmarshal(result, &records); err != nil {
 		return nil, err
