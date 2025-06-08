@@ -189,39 +189,46 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
-	// startDate := c.Query("startDate")
-	// endDate := c.Query("endDate")
+	startDate := c.Query("startDate")
+	endDate := c.Query("endDate")
 
-	// if startDate != "" || endDate != "" {
-	// 	filter := make(map[string]interface{})
-	// 	if startDate != "" {
-	// 		filter["startDate"] = startDate
-	// 	}
-	// 	if endDate != "" {
-	// 		filter["endDate"] = endDate
-	// 	}
-	// 	// Call the service method that handles filtering
-	// 	results, err := h.service.GetExpenseRecordsByFilter(ctx, filter)
-	// } else {
-	// 	// Existing code for getting all records if no filter
-	// 	results, err := h.service.GetExpenseRecords(ctx)
-	// }
+	// define variables for filtering
+	results := make([]entity_finance.ExpenseRecord, 0)
 
-	results, err := h.service.GetExpenseRecords(ctx)
-	if err != nil {
-		log.Printf("Error getting expense records via service: %v", err)
-		// If service returns "not found" for an empty list, handle it gracefully
-		if strings.Contains(err.Error(), "not found") {
-			c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+	if startDate != "" || endDate != "" {
+		filter := entity_finance.ExpenseRecordQueryByDate{}
+		if startDate != "" {
+			filter.StartDate = startDate
+		}
+		if endDate != "" {
+			filter.EndDate = endDate
+		}
+		// Call the service method that handles filtering
+		results, err = h.service.GetExpenseRecordsByDate(ctx, &filter)
+		if err != nil {
+			log.Printf("Error getting expense records by filter via service: %v", err)
+			if strings.Contains(err.Error(), "not found") {
+				c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+				return
+			}
+		}
+		if results == nil {
+			results = []entity_finance.ExpenseRecord{}
+		}
+
+	} else {
+		// Existing code for getting all records if no filter
+		results, err = h.service.GetExpenseRecords(ctx)
+		if err != nil {
+			log.Printf("Error getting expense records via service: %v", err)
+			// If service returns "not found" for an empty list, handle it gracefully
+			if strings.Contains(err.Error(), "not found") {
+				c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records: " + err.Error()})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records: " + err.Error()})
-		return
-	}
-
-	// Handle case where results might be nil from service if no records found (and no error)
-	if results == nil {
-		results = []entity_finance.ExpenseRecord{} // Ensure a non-nil slice for marshalling
 	}
 
 	responseBytes, err := json.Marshal(results)
