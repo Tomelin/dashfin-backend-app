@@ -56,7 +56,7 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				s.Repo.CreateExpenseRecord(ctx, data)
 			} else {
 				parsedDueDate, _ := time.Parse("2006-01-02", data.DueDate)
-				newDate := parsedDueDate.AddDate(0, 0, i)
+				newDate := parsedDueDate.AddDate(0, i, 0) // Add i months
 				data.DueDate = newDate.Format("2006-01-02")
 				log.Println("for else and next date", data.DueDate)
 				result, err := s.Repo.CreateExpenseRecord(ctx, data)
