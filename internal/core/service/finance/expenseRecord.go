@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -139,6 +140,7 @@ func (s *ExpenseRecordService) GetExpenseRecordsByDate(ctx context.Context, filt
 		if endDate != (time.Time{}) && parsedDueDate.Before(startDate) {
 			continue
 		}
+		log.Printf("dueDate is %v and record Date is %v and endDate is %v", filter.StartDate, record.DueDate, filter.EndDate)
 		filteredRecords = append(filteredRecords, record)
 	}
 
