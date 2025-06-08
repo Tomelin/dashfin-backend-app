@@ -4,16 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
-	"github.com/google/uuid"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 // ExpenseRecordRepository handles database operations for ExpenseRecords.
 type ExpenseRecordRepository struct {
-	DB database.FirebaseDBInterface
+	DB         database.FirebaseDBInterface
+	collection string
 }
 
 // InitializeExpenseRecordRepository creates a new ExpenseRecordRepository.
@@ -21,7 +24,17 @@ func InitializeExpenseRecordRepository(db database.FirebaseDBInterface) (entity_
 	if db == nil {
 		return nil, errors.New("database is nil")
 	}
-	return &ExpenseRecordRepository{DB: db}, nil
+
+	requestCollection := "expenses"
+	collection, err := repository.SetCollection(context.Background(), requestCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExpenseRecordRepository{
+		DB:         db,
+		collection: *collection,
+	}, nil
 }
 
 // CreateExpenseRecord adds a new expense record to the database.
@@ -31,15 +44,23 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 	}
 
 	// Generate ID and set timestamps
-	data.ID = uuid.NewString()
 	data.CreatedAt = time.Now()
 	data.UpdatedAt = time.Now()
 
-	_, err := r.DB.Create(ctx, data, "expenseRecords")
+	toMap, _ := utils.StructToMap(data)
+
+	doc, err := r.DB.Create(ctx, toMap, r.collection)
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+
+	var response entity_finance.ExpenseRecord
+	err = json.Unmarshal(doc, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
 // GetExpenseRecordByID retrieves an expense record by its ID.
@@ -52,7 +73,8 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		"_id": id, // Assuming MongoDB/Firebase uses _id or similar for document ID
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filters, "expenseRecords")
+	result, err := r.DB.GetByFilter(ctx, filters, r.collection)
+	log.Println("erro for filter by ID", err)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +87,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 	if len(records) == 0 {
 		return nil, errors.New("expense record not found")
 	}
+
 	return &records[0], nil
 }
 
@@ -78,7 +101,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 	// }
 	// result, err := r.DB.GetByFilter(ctx, filters, "expenseRecords")
 
-	result, err := r.DB.Get(ctx, "expenseRecords")
+	result, err := r.DB.Get(ctx, r.collection)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +123,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 	// userID := ctx.Value("UserID").(string)
 	// filter["userId"] = userID
 
-
-	result, err := r.DB.GetByFilter(ctx, filter, "expenseRecords")
+	result, err := r.DB.GetByFilter(ctx, filter, r.collection)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +148,9 @@ func (r *ExpenseRecordRepository) UpdateExpenseRecord(ctx context.Context, id st
 	// Ensure ID is not changed and UserID is consistent if those are rules.
 	// data.ID = id // Not needed if ID is part of the data struct and matches `id` argument.
 
-	err := r.DB.Update(ctx, id, data, "expenseRecords")
+	toMap, _ := utils.StructToMap(data)
+
+	err := r.DB.Update(ctx, id, toMap, r.collection)
 	if err != nil {
 		return nil, err
 	}
@@ -138,5 +162,5 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 	if id == "" {
 		return errors.New("id is empty for delete")
 	}
-	return r.DB.Delete(ctx, id, "expenseRecords")
+	return r.DB.Delete(ctx, id, r.collection)
 }
