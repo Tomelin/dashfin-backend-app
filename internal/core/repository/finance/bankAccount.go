@@ -79,6 +79,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 
 	log.Println("filter", filters, "collection", *collection)
 	result, err := r.DB.GetByFilter(ctx, filters, *collection)
+	log.Println("result", string(result), err)
 	if err != nil {
 		return nil, err
 	}
