@@ -78,22 +78,30 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 	}
 
 	log.Println("ID is...", id)
-	result, err := r.DB.GetByFilter(ctx, filters, *collection)
+	docs, err := r.DB.Get(ctx, *collection)
 	log.Println("erro for filter by ID", err)
 	if err != nil {
 		return nil, err
 	}
 
 	var records []entity_finance.ExpenseRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	if err := json.Unmarshal(docs, &records); err != nil {
 		return nil, err
 	}
 
-	if len(records) == 0 {
+	var result *entity_finance.ExpenseRecord
+	for _, v := range records {
+		if v.ID == filters["id"] {
+			result = &v
+			break
+		}
+	}
+
+	if result == nil {
 		return nil, errors.New("expense record not found")
 	}
 
-	return &records[0], nil
+	return result, nil
 }
 
 // GetExpenseRecords retrieves all expense records for the user in context (or all if no user context).
@@ -140,7 +148,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
-	log.Println("GetExpenseRecordsByFilter is...", filter)
+	log.Println("result GetExpenseRecordsByFilter is...", string(filter))
 	var records []entity_finance.ExpenseRecord
 	if err := json.Unmarshal(result, &records); err != nil {
 		return nil, err
