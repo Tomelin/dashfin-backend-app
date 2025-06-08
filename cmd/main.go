@@ -71,12 +71,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 	svcExpenseRecord, err := initializeExpenseRecordServices(db)
 	if err != nil {
 		log.Fatal(err)
 	}
-  
+
 	svcBankAccount, err := initializeBankAccountServices(db)
 	if err != nil {
 		log.Fatal(err)
@@ -197,7 +196,6 @@ func initializeFinancialInstitution(db database.FirebaseDBInterface) (entity_pla
 	return service_platform.NewFinancialInstitutionService(repoSupport)
 }
 
-
 func initializeExpenseRecordServices(db database.FirebaseDBInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
 	repoExpenseRecord, err := repository_finance.InitializeExpenseRecordRepository(db)
 	if err != nil {
@@ -209,6 +207,7 @@ func initializeExpenseRecordServices(db database.FirebaseDBInterface) (entity_fi
 		return nil, fmt.Errorf("failed to initialize expense record service: %w", err)
 	}
 	return svcExpenseRecord, nil
+}
 
 func initializeBankAccountServices(db database.FirebaseDBInterface) (entity_finance.BankAccountServiceInterface, error) {
 	repoBankAccount, err := repository_finance.InitializeBankAccountRepository(db)
