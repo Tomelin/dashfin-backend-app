@@ -69,6 +69,7 @@ func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.B
 		return nil, err
 	}
 
+	log.Println(string(result))
 	var bankAccounts []entity.BankAccount
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
