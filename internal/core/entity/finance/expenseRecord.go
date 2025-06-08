@@ -89,18 +89,18 @@ func (er *ExpenseRecord) Validate() error {
 		return errors.New("subcategory must not exceed 100 characters")
 	}
 
-	parsedDueDate, err := time.Parse(time.RFC3339Nano, er.DueDate)
+	parsedDueDate, err := time.Parse("2006-01-02", er.DueDate)
 	if err != nil {
-		return errors.New("dueDate must be in ISO 8601 format (e.g., 2025-06-08T18:52:56.753Z)")
+		return errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
 	}
-	er.DueDate = parsedDueDate.Format(time.RFC3339) // Ensure ISO 8601 format without nanoseconds
+	er.DueDate = parsedDueDate.Format("2006-01-02") // Ensure YYYY-MM-DD format
 
 	if er.PaymentDate != nil && *er.PaymentDate != "" {
-		parsedPaymentDate, err := time.Parse(time.RFC3339Nano, er.DueDate)
+		parsedPaymentDate, err := time.Parse("2006-01-02", er.DueDate)
 		if err != nil {
-			return errors.New("dueDate must be in ISO 8601 format (e.g., 2025-06-08T18:52:56.753Z)")
+			return errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
 		}
-		pd := parsedPaymentDate.Format(time.RFC3339)
+		pd := parsedPaymentDate.Format("2006-01-02")
 		er.PaymentDate = &pd // Ensure ISO 8601 format without nanoseconds
 	}
 
