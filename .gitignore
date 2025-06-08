@@ -27,6 +27,19 @@ go.work.sum
 # env file
 .env
 
+*.json
+config.yaml
+*.yaml
+
 # Editor/IDE
 # .idea/
 # .vscode/
+
+frontend_data/*
+frontend_data
+
+newcode
+newcode/*
+
+data
+data/*
