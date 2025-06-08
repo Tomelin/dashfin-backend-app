@@ -9,6 +9,7 @@ import (
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 type BankAccountRepository struct {
@@ -30,7 +31,9 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 		return nil, errors.New("data is nil")
 	}
 
-	doc, err := r.DB.Create(ctx, data, "bankAccounts")
+	toMap, _ := utils.StructToMap(data)
+
+	doc, err := r.DB.Create(ctx, toMap, "bankAccounts")
 	if err != nil {
 		return nil, err
 	}
@@ -110,10 +113,18 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 		return nil, errors.New("data is nil")
 	}
 
+	log.Println(">>>>> repository <<<<<")
+	log.Println("ID", data.ID)
+	log.Println("object", data)
 	// Note: You'll need to add an ID field to the BankAccount entity for proper updates
 	// For now, assuming there's a way to identify the document
-	id := "" // This should be data.ID when you add it to the entity
-	err := r.DB.Update(ctx, id, data, "bankAccounts")
+	if data.ID == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	toMap, _ := utils.StructToMap(data)
+
+	err := r.DB.Update(ctx, data.ID, toMap, "bankAccounts")
 	if err != nil {
 		return nil, fmt.Errorf("failed to update bank account: %w", err)
 	}
