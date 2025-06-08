@@ -61,7 +61,7 @@ func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string)
 	}
 
 	result, err := s.Repo.GetBankAccountByID(ctx, id)
-	log.Println("service result", *result, err)
+	log.Println("service result", result, "err", err)
 	if err != nil {
 		return nil, err
 	}
