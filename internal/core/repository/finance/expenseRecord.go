@@ -133,6 +133,8 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
+	log.Println("GetExpenseRecordsByFilter is...", filter)
 	result, err := r.DB.GetByFilter(ctx, filter, *collection)
 	if err != nil {
 		return nil, err
