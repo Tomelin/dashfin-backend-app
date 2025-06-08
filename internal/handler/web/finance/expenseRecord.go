@@ -47,7 +47,7 @@ func InitializeExpenseRecordHandler(
 		// router: routerGroup, // Not strictly needed if routerGroup is only used in setupRoutes
 	}
 
-	handler.setupRoutes(routerGroup, middleware...)
+	handlexpenseRecord.setupRoutes(routerGroup, middleware...)
 	return handler
 }
 
@@ -99,7 +99,20 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
 		return
 	}
-	log.Println(expenseRecord)
+	log.Println("id ==> ", expenseRecord.ID)
+	log.Println("category ==> ", expenseRecord.Category)
+	log.Println("subcategory ==> ", expenseRecord.Subcategory)
+	log.Println("dueDate ==> ", expenseRecord.DueDate)
+	log.Println("paymentDate ==> ", expenseRecord.PaymentDate)
+	log.Println("amount ==> ", expenseRecord.Amount)
+	log.Println("bankPaidFrom ==> ", expenseRecord.BankPaidFrom)
+	log.Println("customBankName ==> ", expenseRecord.CustomBankName)
+	log.Println("description ==> ", expenseRecord.Description)
+	log.Println("isRecurring ==> ", expenseRecord.IsRecurring)
+	log.Println("recurrenceCount ==> ", expenseRecord.RecurrenceCount)
+	log.Println("createdAt ==> ", expenseRecord.CreatedAt)
+	log.Println("updatedAt ==> ", expenseRecord.UpdatedAt)
+	log.Println("userID ==> ", expenseRecord.UserID)
 
 	// Set UserID from authenticated user
 	expenseRecord.UserID = userID
@@ -178,7 +191,7 @@ func (h *ExpenseRecordHandler) GetExpenseRecordByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
 
-// GetExpenseRecords handles fetching all expense records for the authenticated user.
+// GetExpenseRecords handles fetching all expense records for the authenticated usexpenseRecord.
 func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
@@ -224,7 +237,7 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
 
-// GetExpenseRecordsByFilter handles fetching expense records based on a filter.
+// GetExpenseRecordsByFilter handles fetching expense records based on a filtexpenseRecord.
 func (h *ExpenseRecordHandler) GetExpenseRecordsByFilter(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
