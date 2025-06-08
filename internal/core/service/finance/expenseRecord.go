@@ -33,30 +33,37 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 	}
 
 	// UserID should be set by the handler from context before calling this service method.
-    if data.UserID == "" {
-        return nil, errors.New("userID is required in expense record data")
-    }
+	if data.UserID == "" {
+		return nil, errors.New("userID is required in expense record data")
+	}
 
 	// For new records, ensure CreatedAt and UpdatedAt are set.
 	// ID will be set by the repository.
 	data.CreatedAt = time.Now()
 	data.UpdatedAt = time.Now()
 
-	// Potentially check for duplicates if necessary, though not explicitly in BankAccountService example for Create.
-	// Example:
-	// filter := map[string]interface{}{
-	// 	"userId":     data.UserID,
-	// 	"category":   data.Category,
-	// 	"dueDate":    data.DueDate,
-	// 	"amount":     data.Amount,
-	// }
-	// existing, err := s.Repo.GetExpenseRecordsByFilter(ctx, filter)
-	// if err != nil && err.Error() != "expense record not found" { // Assuming "not found" is a distinct error
-	// 	return nil, fmt.Errorf("error checking for existing expense record: %w", err)
-	// }
-	// if len(existing) > 0 {
-	// 	return nil, errors.New("an identical expense record already exists")
-	// }
+	// If the expense is recurring and RecurrenceCount is greater than zero,
+	// we might need to handle the creation of future occurrences here or in the repository.
+	if data.IsRecurring && data.RecurrenceCount > 0 {
+		expensesCreated := make([]entity_finance.ExpenseRecord, 0)
+
+		for i := 0; i < data.RecurrenceCount; i++ {
+			if i == 0 {
+				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
+				expensesCreated = append(expensesCreated, *result)
+				s.Repo.CreateExpenseRecord(ctx, data)
+			} else {
+				parsedDueDate, _ := time.Parse("2006-01-02", data.DueDate)
+				newDate := parsedDueDate.AddDate(0, 0, i)
+				data.DueDate = newDate.Format("2006-01-02")
+				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
+				expensesCreated = append(expensesCreated, *result)
+			}
+		}
+
+		return &expensesCreated[0], nil // Return the first created expense record
+
+	}
 
 	return s.Repo.CreateExpenseRecord(ctx, data)
 }
@@ -144,12 +151,11 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	}
 
 	// UserID should be set by the handler from context before calling this service method.
-    // It should match the original record's UserID and the UserID in context.
-    userIDFromCtx := ctx.Value("UserID")
-    if userIDFromCtx == nil || data.UserID != userIDFromCtx.(string) {
-        return nil, errors.New("user ID mismatch or not found in context for update")
-    }
-
+	// It should match the original record's UserID and the UserID in context.
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil || data.UserID != userIDFromCtx.(string) {
+		return nil, errors.New("user ID mismatch or not found in context for update")
+	}
 
 	// First, retrieve the existing record to ensure it exists and belongs to the user.
 	existingRecord, err := s.Repo.GetExpenseRecordByID(ctx, id)
@@ -164,10 +170,10 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 
 	// Ensure critical fields like ID and UserID are not changed by the update payload directly,
 	// or are consistent.
-	data.ID = existingRecord.ID // Preserve original ID
-	data.UserID = existingRecord.UserID // Preserve original UserID
+	data.ID = existingRecord.ID               // Preserve original ID
+	data.UserID = existingRecord.UserID       // Preserve original UserID
 	data.CreatedAt = existingRecord.CreatedAt // Preserve original CreatedAt
-	data.UpdatedAt = time.Now() // Update timestamp
+	data.UpdatedAt = time.Now()               // Update timestamp
 
 	return s.Repo.UpdateExpenseRecord(ctx, id, data)
 }

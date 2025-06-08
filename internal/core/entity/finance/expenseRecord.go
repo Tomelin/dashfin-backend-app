@@ -39,7 +39,7 @@ type ExpenseRecord struct {
 	CustomBankName  *string   `json:"customBankName,omitempty" bson:"customBankName,omitempty"`
 	Description     *string   `json:"description,omitempty" bson:"description,omitempty"`
 	IsRecurring     bool      `json:"isRecurring" bson:"isRecurring"`
-	RecurrenceCount *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
+	RecurrenceCount int       `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
 	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt       time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 	UserID          string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
@@ -111,18 +111,10 @@ func (er *ExpenseRecord) Validate() error {
 		return errors.New("description must not exceed 200 characters")
 	}
 
-	if er.IsRecurring {
-		if er.RecurrenceCount == nil || *er.RecurrenceCount < 1 {
-			return errors.New("recurrenceCount must be at least 1 if isRecurring is true")
-		}
-	} else {
-		if er.RecurrenceCount != nil {
-			// Field should not be present if not recurring, or be explicitly nil/0
-			// Depending on how you want to enforce this.
-			// For now, let's say it's an error if it's set when not recurring.
-			// return errors.New("recurrenceCount should only be set if isRecurring is true")
-		}
+	if er.IsRecurring && er.RecurrenceCount < 0 {
+		return errors.New("recurrenceCount must be greater than 0 when isRecurring is true")
 	}
+
 	if strings.TrimSpace(er.UserID) == "" {
 		return errors.New("userID is required")
 	}
