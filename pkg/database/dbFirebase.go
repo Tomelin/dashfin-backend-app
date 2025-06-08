@@ -205,13 +205,10 @@ func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error) {
-	log.Println("GetByFilter collection", collection)
 
 	if err := db.validateWithData(ctx, filters, collection); err != nil {
 		return nil, err
 	}
-
-	log.Println("GetByFilter collection", collection)
 
 	query := db.client.Collection(collection).Query
 	for key, value := range filters {

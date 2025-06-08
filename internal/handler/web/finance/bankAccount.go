@@ -85,8 +85,7 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println(bankAccount)
-	log.Println(userId)
+
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 
@@ -172,6 +171,9 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
+	for _, v := range results {
+		log.Println("ID", v.ID, "object", v)
+	}
 
 	b, err := json.Marshal(results)
 	if err != nil {
@@ -228,8 +230,8 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	}
 
 	log.Println(">>>>> handler <<<<<")
-	log.Println("ID",bankAccount.ID)
-	log.Println("object",bankAccount)
+	log.Println("ID", bankAccount.ID)
+	log.Println("object", bankAccount)
 	log.Println(userId)
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
