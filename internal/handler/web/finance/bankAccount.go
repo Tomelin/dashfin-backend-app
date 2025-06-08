@@ -84,7 +84,8 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	log.Println(bankAccount)
+	log.Println(userId)
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 

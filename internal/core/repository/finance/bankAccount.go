@@ -28,6 +28,8 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 		return nil, errors.New("data is nil")
 	}
 
+	
+
 	_, err := r.DB.Create(ctx, data, "bankAccounts")
 	if err != nil {
 		return nil, err

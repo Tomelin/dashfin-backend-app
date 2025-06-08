@@ -3,16 +3,15 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 type BrazilianBank struct {
-	Code      string `json:"code"`
-	Name      string `json:"name"`
-	ShortName string `json:"shortName"`
-	Active    bool   `json:"active"`
+	Code string `json:"code"`
+	Name string `json:"name"`
 }
 
 type BanksData struct {
@@ -32,7 +31,7 @@ type FirebaseInsert struct {
 func NewFirebaseInsert(firebaseDB FirebaseDBInterface) FirebaseInsertInterface {
 	return &FirebaseInsert{
 		firebaseDB: firebaseDB,
-		collection: "platform_banks",
+		collection: "platform_financial-institution",
 		filePath:   "/home/user/dashfin-backend-app/data/brazilian-banks.json",
 	}
 }
@@ -49,12 +48,14 @@ func (fi *FirebaseInsert) InsertBrazilianBanksFromJSON(ctx context.Context) erro
 	}
 
 	for _, bank := range banksData.Banks {
+		log.Println(bank)
 		bankMap, err := utils.StructToMap(bank)
 		if err != nil {
 			return err
 		}
-
-		_, err = fi.firebaseDB.Create(ctx, bankMap, fi.collection)
+		log.Println(bankMap)
+		result, err := fi.firebaseDB.Create(ctx, bankMap, fi.collection)
+		log.Println(" result ", result, "err", err)
 		if err != nil {
 			return err
 		}
