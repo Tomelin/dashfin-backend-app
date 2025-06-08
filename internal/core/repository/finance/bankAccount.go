@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -114,7 +115,7 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 	id := "" // This should be data.ID when you add it to the entity
 	err := r.DB.Update(ctx, id, data, "bankAccounts")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update bank account: %w", err)
 	}
 
 	return data, nil

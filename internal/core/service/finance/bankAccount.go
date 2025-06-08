@@ -3,6 +3,7 @@ package service_finance
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 )
@@ -106,7 +107,7 @@ func (s *BankAccountService) UpdateBankAccount(ctx context.Context, data *entity
 	}
 
 	if err := data.Validate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid data: %w", err)
 	}
 
 	return s.Repo.UpdateBankAccount(ctx, data)
