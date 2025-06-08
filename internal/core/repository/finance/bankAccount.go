@@ -77,7 +77,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
 
-	log.Println("filter", filters, "collection", *collection)
+	log.Println("filter", filters, "collection", *collection, "id", *id)
 	result, err := r.DB.GetByFilter(ctx, filters, *collection)
 	log.Println("result", string(result), err)
 	if err != nil {
@@ -183,7 +183,7 @@ func (r *BankAccountRepository) DeleteBankAccount(ctx context.Context, id *strin
 		return err
 	}
 
-	log.Println("id", id, "collection", *collection)
+	log.Println("delete ID", id, "collection", *collection)
 	if collection == nil || *collection == "" {
 		return fmt.Errorf("%s collection is empty", r.collection)
 	}
