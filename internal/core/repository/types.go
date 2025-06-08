@@ -20,7 +20,7 @@ func SetCollection(ctx context.Context, collection string) (*string, error) {
 		if userID == "" {
 			return nil, errors.New("user id is empty")
 		}
-		col = fmt.Sprintf("%s/%s", userID, collection)
+		col = fmt.Sprintf("data-%s-%s", userID, collection)
 	}
 
 	return &col, nil
