@@ -57,14 +57,14 @@ func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlew
 	// You might want more granular control.
 	// Example: financeRoutes := routerGroup.Group("/finance/expense-records", middleware...)
 
-	financeRoutes := routerGroup.Group("/finance/expense-records")
+	financeRoutes := routerGroup.Group("/finance/expenses")
 	for _, mw := range middleware {
 		financeRoutes.Use(mw)
 	}
 
 	financeRoutes.POST("", h.CreateExpenseRecord)
 	financeRoutes.GET("/:id", h.GetExpenseRecordByID)
-	financeRoutes.GET("", h.GetExpenseRecords)      // Get all for user
+	financeRoutes.GET("", h.GetExpenseRecords)                 // Get all for user
 	financeRoutes.POST("/filter", h.GetExpenseRecordsByFilter) // Route for filtered GET
 	financeRoutes.PUT("/:id", h.UpdateExpenseRecord)
 	financeRoutes.DELETE("/:id", h.DeleteExpenseRecord)
@@ -100,8 +100,8 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
-    // Set UserID from authenticated user
-    expenseRecord.UserID = userID
+	// Set UserID from authenticated user
+	expenseRecord.UserID = userID
 
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
@@ -192,20 +192,19 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 	results, err := h.service.GetExpenseRecords(ctx)
 	if err != nil {
 		log.Printf("Error getting expense records via service: %v", err)
-         // If service returns "not found" for an empty list, handle it gracefully
-        if strings.Contains(err.Error(), "not found") {
-             c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
-             return
-        }
+		// If service returns "not found" for an empty list, handle it gracefully
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records: " + err.Error()})
 		return
 	}
 
-    // Handle case where results might be nil from service if no records found (and no error)
-    if results == nil {
-        results = []entity_finance.ExpenseRecord{} // Ensure a non-nil slice for marshalling
-    }
-
+	// Handle case where results might be nil from service if no records found (and no error)
+	if results == nil {
+		results = []entity_finance.ExpenseRecord{} // Ensure a non-nil slice for marshalling
+	}
 
 	responseBytes, err := json.Marshal(results)
 	if err != nil {
@@ -260,17 +259,17 @@ func (h *ExpenseRecordHandler) GetExpenseRecordsByFilter(c *gin.Context) {
 	results, err := h.service.GetExpenseRecordsByFilter(ctx, filter)
 	if err != nil {
 		log.Printf("Error getting expense records by filter via service: %v", err)
-        if strings.Contains(err.Error(), "not found") {
-             c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
-             return
-        }
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records by filter: " + err.Error()})
 		return
 	}
 
-    if results == nil {
-        results = []entity_finance.ExpenseRecord{}
-    }
+	if results == nil {
+		results = []entity_finance.ExpenseRecord{}
+	}
 
 	responseBytes, err := json.Marshal(results)
 	if err != nil {
@@ -288,7 +287,6 @@ func (h *ExpenseRecordHandler) GetExpenseRecordsByFilter(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
-
 
 // UpdateExpenseRecord handles updating an existing expense record.
 func (h *ExpenseRecordHandler) UpdateExpenseRecord(c *gin.Context) {
@@ -326,9 +324,8 @@ func (h *ExpenseRecordHandler) UpdateExpenseRecord(c *gin.Context) {
 		return
 	}
 
-    // Set UserID from authenticated user for the update payload
-    expenseRecord.UserID = userID
-
+	// Set UserID from authenticated user for the update payload
+	expenseRecord.UserID = userID
 
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
@@ -338,7 +335,7 @@ func (h *ExpenseRecordHandler) UpdateExpenseRecord(c *gin.Context) {
 	result, err := h.service.UpdateExpenseRecord(ctx, id, &expenseRecord)
 	if err != nil {
 		log.Printf("Error updating expense record via service (ID: %s): %v", id, err)
-        if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update expense record: " + err.Error()})
@@ -384,7 +381,7 @@ func (h *ExpenseRecordHandler) DeleteExpenseRecord(c *gin.Context) {
 	err = h.service.DeleteExpenseRecord(ctx, id)
 	if err != nil {
 		log.Printf("Error deleting expense record via service (ID: %s): %v", id, err)
-        if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied"){
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete expense record: " + err.Error()})
