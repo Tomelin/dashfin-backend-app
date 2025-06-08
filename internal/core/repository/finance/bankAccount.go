@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
@@ -111,8 +110,6 @@ func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.B
 		return nil, err
 	}
 
-	log.Println("accounts", bankAccounts)
-
 	return bankAccounts, nil
 }
 
@@ -148,9 +145,6 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 		return nil, errors.New("data is nil")
 	}
 
-	log.Println(">>>>> repository <<<<<")
-	log.Println("ID", data.ID)
-	log.Println("object", data)
 	// Note: You'll need to add an ID field to the BankAccount entity for proper updates
 	// For now, assuming there's a way to identify the document
 	if data.ID == "" {

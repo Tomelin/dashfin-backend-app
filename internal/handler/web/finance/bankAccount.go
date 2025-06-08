@@ -229,10 +229,6 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 		return
 	}
 
-	log.Println(">>>>> handler <<<<<")
-	log.Println("ID", bankAccount.ID)
-	log.Println("object", bankAccount)
-	log.Println(userId)
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 
