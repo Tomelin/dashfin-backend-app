@@ -79,10 +79,18 @@ func (er *ExpenseRecord) Validate() error {
 	er.DueDate = parsedDueDate.Format(time.RFC3339) // Ensure ISO 8601 format without nanoseconds
 
 	if er.PaymentDate != nil && *er.PaymentDate != "" {
-		if _, err := time.Parse("2006-01-02", *er.PaymentDate); err != nil {
-			return errors.New("paymentDate must be in YYYY-MM-DD format if provided")
+		parsedPaymentDate, err := time.Parse(time.RFC3339Nano, er.DueDate)
+		if err != nil {
+			return errors.New("dueDate must be in ISO 8601 format (e.g., 2025-06-08T18:52:56.753Z)")
 		}
+		pd := parsedPaymentDate.Format(time.RFC3339)
+		er.PaymentDate = &pd // Ensure ISO 8601 format without nanoseconds
 	}
+	// if er.PaymentDate != nil && *er.PaymentDate != "" {
+	// 	if _, err := time.Parse("2006-01-02", *er.PaymentDate); err != nil {
+	// 		return errors.New("paymentDate must be in YYYY-MM-DD format if provided")
+	// 	}
+	// }
 
 	if er.Amount <= 0 {
 		return errors.New("amount must be greater than 0")
