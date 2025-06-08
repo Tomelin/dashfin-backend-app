@@ -32,7 +32,7 @@ type ExpenseRecord struct {
 	ID              string    `json:"id" bson:"_id,omitempty"` // Auto-generated
 	Category        string    `json:"category" bson:"category"`
 	Subcategory     string    `json:"subcategory,omitempty" bson:"subcategory,omitempty"`
-	DueDate         string    `json:"dueDate" bson:"dueDate"` // ISO 8601 (YYYY-MM-DD)
+	DueDate         string    `json:"dueDate" bson:"dueDate"`                             // ISO 8601 (YYYY-MM-DD)
 	PaymentDate     *string   `json:"paymentDate,omitempty" bson:"paymentDate,omitempty"` // ISO 8601 (YYYY-MM-DD)
 	Amount          float64   `json:"amount" bson:"amount"`
 	BankPaidFrom    *string   `json:"bankPaidFrom,omitempty" bson:"bankPaidFrom,omitempty"`
@@ -72,9 +72,11 @@ func (er *ExpenseRecord) Validate() error {
 		return errors.New("subcategory must not exceed 100 characters")
 	}
 
-	if _, err := time.Parse("2006-01-02", er.DueDate); err != nil {
-		return errors.New("dueDate must be in YYYY-MM-DD format")
+	parsedDueDate, err := time.Parse(time.RFC3339Nano, er.DueDate)
+	if err != nil {
+		return errors.New("dueDate must be in ISO 8601 format (e.g., 2025-06-08T18:52:56.753Z)")
 	}
+	er.DueDate = parsedDueDate.Format(time.RFC3339) // Ensure ISO 8601 format without nanoseconds
 
 	if er.PaymentDate != nil && *er.PaymentDate != "" {
 		if _, err := time.Parse("2006-01-02", *er.PaymentDate); err != nil {
@@ -97,10 +99,9 @@ func (er *ExpenseRecord) Validate() error {
 			return errors.New("customBankName is required when bankPaidFrom is 'other'")
 		}
 	}
-    if er.CustomBankName != nil && len(*er.CustomBankName) > 100 {
-        return errors.New("customBankName must not exceed 100 characters")
-    }
-
+	if er.CustomBankName != nil && len(*er.CustomBankName) > 100 {
+		return errors.New("customBankName must not exceed 100 characters")
+	}
 
 	if er.Description != nil && len(*er.Description) > 200 {
 		return errors.New("description must not exceed 200 characters")
