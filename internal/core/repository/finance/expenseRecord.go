@@ -25,15 +25,9 @@ func InitializeExpenseRecordRepository(db database.FirebaseDBInterface) (entity_
 		return nil, errors.New("database is nil")
 	}
 
-	requestCollection := "expenses"
-	collection, err := repository.SetCollection(context.Background(), requestCollection)
-	if err != nil {
-		return nil, err
-	}
-
 	return &ExpenseRecordRepository{
 		DB:         db,
-		collection: *collection,
+		collection: "expenses",
 	}, nil
 }
 
@@ -49,7 +43,12 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 
 	toMap, _ := utils.StructToMap(data)
 
-	doc, err := r.DB.Create(ctx, toMap, r.collection)
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +72,12 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		"_id": id, // Assuming MongoDB/Firebase uses _id or similar for document ID
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filters, r.collection)
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.DB.GetByFilter(ctx, filters, *collection)
 	log.Println("erro for filter by ID", err)
 	if err != nil {
 		return nil, err
@@ -101,7 +105,12 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 	// }
 	// result, err := r.DB.GetByFilter(ctx, filters, "expenseRecords")
 
-	result, err := r.DB.Get(ctx, r.collection)
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.DB.Get(ctx, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +128,11 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, errors.New("filter data is nil")
 	}
 
-	// Ensure UserID from context is part of the filter if not admin
-	// userID := ctx.Value("UserID").(string)
-	// filter["userId"] = userID
-
-	result, err := r.DB.GetByFilter(ctx, filter, r.collection)
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+	result, err := r.DB.GetByFilter(ctx, filter, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +159,12 @@ func (r *ExpenseRecordRepository) UpdateExpenseRecord(ctx context.Context, id st
 
 	toMap, _ := utils.StructToMap(data)
 
-	err := r.DB.Update(ctx, id, toMap, r.collection)
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.DB.Update(ctx, id, toMap, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -162,5 +176,11 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 	if id == "" {
 		return errors.New("id is empty for delete")
 	}
-	return r.DB.Delete(ctx, id, r.collection)
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return err
+	}
+
+	return r.DB.Delete(ctx, id, *collection)
 }
