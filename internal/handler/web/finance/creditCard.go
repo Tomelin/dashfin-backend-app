@@ -48,11 +48,14 @@ func (h *CreditCardHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware
 		middlewareList[i] = mw
 	}
 
-	routerGroup.POST("/finance/credit-cards", append(middlewareList, h.CreateCreditCard)...)
-	routerGroup.GET("/finance/credit-cards/:id", append(middlewareList, h.GetCreditCard)...)
-	routerGroup.GET("/finance/credit-cards", append(middlewareList, h.GetCreditCards)...)
-	routerGroup.PUT("/finance/credit-cards/:id", append(middlewareList, h.UpdateCreditCard)...)
-	routerGroup.DELETE("/finance/credit-cards/:id", append(middlewareList, h.DeleteCreditCard)...)
+	credCardGroup := h.router.Group("/finance/cards")
+	credCardGroup.Use(middlewareList...)
+
+	routerGroup.POST("", append(middlewareList, h.CreateCreditCard)...)
+	routerGroup.GET("/:id", append(middlewareList, h.GetCreditCard)...)
+	routerGroup.GET("", append(middlewareList, h.GetCreditCards)...)
+	routerGroup.PUT("/:id", append(middlewareList, h.UpdateCreditCard)...)
+	routerGroup.DELETE("/:id", append(middlewareList, h.DeleteCreditCard)...)
 }
 
 func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {

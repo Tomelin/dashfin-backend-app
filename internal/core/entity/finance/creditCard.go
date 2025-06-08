@@ -60,6 +60,23 @@ func (cc *CreditCard) Validate() error {
 		return errors.New("cardBrand is required")
 	}
 
+	validBrands := map[string]bool{
+		"mastercard": true,
+		"visa":       true,
+		"elo":        true,
+		"amex":       true,
+		"hipercard":  true,
+		"diners":     true,
+		"discover":   true,
+		"jcb":        true,
+		"aura":       true,
+		"other":      true,
+	}
+
+	if !validBrands[cc.CardBrand] {
+		return errors.New("cardBrand must be one of: mastercard, visa, elo, amex, hipercard, diners, discover, jcb, aura, other")
+	}
+
 	if cc.CardBrand == "other" && strings.TrimSpace(cc.CustomCardBrand) == "" {
 		return errors.New("customCardBrand is required when cardBrand is 'other'")
 	}
@@ -97,8 +114,14 @@ func (cc *CreditCard) Validate() error {
 	}
 
 	currentYear := time.Now().Year()
+	currentMonth := int(time.Now().Month())
+	
 	if cc.CardExpiryYear < currentYear {
 		return errors.New("cardExpiryYear must be current year or later")
+	}
+	
+	if cc.CardExpiryYear == currentYear && cc.CardExpiryMonth < currentMonth {
+		return errors.New("card expiry date cannot be in the past")
 	}
 
 	if cc.CreditLimit < 0 {
