@@ -47,7 +47,7 @@ func InitializeExpenseRecordHandler(
 		// router: routerGroup, // Not strictly needed if routerGroup is only used in setupRoutes
 	}
 
-	handlexpenseRecord.setupRoutes(routerGroup, middleware...)
+	handler.setupRoutes(routerGroup, middleware...)
 	return handler
 }
 
