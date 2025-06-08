@@ -38,6 +38,7 @@ type BankAccountRequest struct {
 	BankAccount
 }
 type BankAccountResponse BankAccountRequest
+
 func NewBankAccount(bankCode, agency, accountNumber string) *BankAccount {
 	return &BankAccount{
 		BankCode:      bankCode,
