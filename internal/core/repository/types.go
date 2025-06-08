@@ -8,6 +8,10 @@ import (
 
 func SetCollection(ctx context.Context, collection string) (*string, error) {
 
+	if collection == "" {
+		return nil, errors.New("collection is empty")
+	}
+
 	var col string
 	if ctx.Value("UserID") == nil {
 		return nil, errors.New("user id is nil")
