@@ -54,7 +54,6 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 			if i == 0 {
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
-				s.Repo.CreateExpenseRecord(ctx, data)
 			} else {
 				parsedDueDate, _ := time.Parse("2006-01-02", snapDueDate)
 				newDate := parsedDueDate.AddDate(0, i, 0) // Add i months
