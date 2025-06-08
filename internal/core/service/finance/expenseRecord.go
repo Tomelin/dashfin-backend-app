@@ -47,15 +47,15 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 	// we might need to handle the creation of future occurrences here or in the repository.
 	if data.IsRecurring && data.RecurrenceCount > 0 {
 		expensesCreated := make([]entity_finance.ExpenseRecord, 0)
-		log.Println("IsRecurring > ", data.IsRecurring)
-		for i := 0; i < data.RecurrenceCount; i++ {
-			if i == 0 {
-				result, err := s.Repo.CreateExpenseRecord(ctx, data)
-				log.Println("for if ", err)
+
+		snapDueDate := data.DueDate
+		for i := 1; i < data.RecurrenceCount; i++ {
+			if i == 1 {
+				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 				s.Repo.CreateExpenseRecord(ctx, data)
 			} else {
-				parsedDueDate, _ := time.Parse("2006-01-02", data.DueDate)
+				parsedDueDate, _ := time.Parse("2006-01-02", snapDueDate)
 				newDate := parsedDueDate.AddDate(0, i, 0) // Add i months
 				data.DueDate = newDate.Format("2006-01-02")
 				log.Println("for else and next date", data.DueDate)
