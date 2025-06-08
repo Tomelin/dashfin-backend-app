@@ -189,6 +189,24 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
+	// startDate := c.Query("startDate")
+	// endDate := c.Query("endDate")
+
+	// if startDate != "" || endDate != "" {
+	// 	filter := make(map[string]interface{})
+	// 	if startDate != "" {
+	// 		filter["startDate"] = startDate
+	// 	}
+	// 	if endDate != "" {
+	// 		filter["endDate"] = endDate
+	// 	}
+	// 	// Call the service method that handles filtering
+	// 	results, err := h.service.GetExpenseRecordsByFilter(ctx, filter)
+	// } else {
+	// 	// Existing code for getting all records if no filter
+	// 	results, err := h.service.GetExpenseRecords(ctx)
+	// }
+
 	results, err := h.service.GetExpenseRecords(ctx)
 	if err != nil {
 		log.Printf("Error getting expense records via service: %v", err)

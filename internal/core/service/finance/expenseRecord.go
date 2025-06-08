@@ -119,6 +119,39 @@ func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_
 	return records, nil
 }
 
+func (s *ExpenseRecordService) GetExpenseRecordsByDate(ctx context.Context, filter *entity_finance.ExpenseRecordQueryByDate) ([]entity_finance.ExpenseRecord, error) {
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil || userIDFromCtx.(string) == "" {
+		return nil, errors.New("userID not found in context")
+	}
+
+	records, err := s.Repo.GetExpenseRecords(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var filteredRecords []entity_finance.ExpenseRecord
+	startDate, _ := time.Parse("2006-01-02", filter.StartDate)
+	endDate, _ := time.Parse("2006-01-02", filter.EndDate)
+
+	for _, record := range records {
+		parsedDueDate, err := time.Parse("2006-01-02", record.DueDate)
+		if err != nil {
+			return nil, errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
+		}
+		if startDate != (time.Time{}) && parsedDueDate.Before(startDate) {
+			continue
+		}
+
+		if endDate != (time.Time{}) && record.CreatedAt.After(endDate) {
+			continue
+		}
+		filteredRecords = append(filteredRecords, record)
+	}
+
+	return filteredRecords, nil
+}
+
 // GetExpenseRecordsByFilter retrieves expense records based on a filter for the authenticated user.
 func (s *ExpenseRecordService) GetExpenseRecordsByFilter(ctx context.Context, filter map[string]interface{}) ([]entity_finance.ExpenseRecord, error) {
 	if filter == nil {

@@ -23,6 +23,7 @@ type ExpenseRecordServiceInterface interface {
 	GetExpenseRecordByID(ctx context.Context, id string) (*ExpenseRecord, error)
 	GetExpenseRecords(ctx context.Context) ([]ExpenseRecord, error)
 	GetExpenseRecordsByFilter(ctx context.Context, filter map[string]interface{}) ([]ExpenseRecord, error)
+	GetExpenseRecordsByDate(ctx context.Context, filter *ExpenseRecordQueryByDate) ([]ExpenseRecord, error)
 	UpdateExpenseRecord(ctx context.Context, id string, data *ExpenseRecord) (*ExpenseRecord, error)
 	DeleteExpenseRecord(ctx context.Context, id string) error
 }
@@ -43,6 +44,11 @@ type ExpenseRecord struct {
 	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt       time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 	UserID          string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
+}
+
+type ExpenseRecordQueryByDate struct {
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
 }
 
 // NewExpenseRecord creates a new ExpenseRecord with default values.
