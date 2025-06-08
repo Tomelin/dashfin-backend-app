@@ -8,12 +8,14 @@ import (
 	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 type BankAccountRepository struct {
-	DB database.FirebaseDBInterface
+	DB         database.FirebaseDBInterface
+	collection string
 }
 
 func InitializeBankAccountRepository(db database.FirebaseDBInterface) (entity.BankAccountRepositoryInterface, error) {
@@ -22,7 +24,8 @@ func InitializeBankAccountRepository(db database.FirebaseDBInterface) (entity.Ba
 	}
 
 	return &BankAccountRepository{
-		DB: db,
+		DB:         db,
+		collection: "bank-accounts",
 	}, nil
 }
 
@@ -33,7 +36,12 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 
 	toMap, _ := utils.StructToMap(data)
 
-	doc, err := r.DB.Create(ctx, toMap, "bankAccounts")
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +64,12 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		"id": *id,
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filters, "bankAccounts")
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.DB.GetByFilter(ctx, filters, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -74,12 +87,17 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 }
 
 func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.BankAccountRequest, error) {
-	result, err := r.DB.Get(ctx, "bankAccounts")
+
+	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println(string(result))
+	result, err := r.DB.Get(ctx, *collection)
+	if err != nil {
+		return nil, err
+	}
+
 	var bankAccounts []entity.BankAccountRequest
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
@@ -95,7 +113,12 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, errors.New("data is nil")
 	}
 
-	result, err := r.DB.GetByFilter(ctx, data, "bankAccounts")
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := r.DB.GetByFilter(ctx, data, *collection)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +147,12 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 
 	toMap, _ := utils.StructToMap(data)
 
-	err := r.DB.Update(ctx, data.ID, toMap, "bankAccounts")
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.DB.Update(ctx, data.ID, toMap, *collection)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update bank account: %w", err)
 	}
@@ -137,5 +165,10 @@ func (r *BankAccountRepository) DeleteBankAccount(ctx context.Context, id *strin
 		return errors.New("id is empty")
 	}
 
-	return r.DB.Delete(ctx, *id, "bankAccounts")
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return err
+	}
+
+	return r.DB.Delete(ctx, *id, *collection)
 }
