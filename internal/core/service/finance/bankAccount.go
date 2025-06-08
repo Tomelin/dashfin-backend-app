@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 )
@@ -61,7 +60,6 @@ func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string)
 	}
 
 	result, err := s.Repo.GetBankAccountByID(ctx, id)
-	log.Println("service result", result, "err", err)
 	if err != nil {
 		return nil, err
 	}

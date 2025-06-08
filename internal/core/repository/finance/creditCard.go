@@ -12,23 +12,23 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
-type BankAccountRepository struct {
+type CreditCardRepository struct {
 	DB         database.FirebaseDBInterface
 	collection string
 }
 
-func InitializeBankAccountRepository(db database.FirebaseDBInterface) (entity.BankAccountRepositoryInterface, error) {
+func InitializeCreditCardRepository(db database.FirebaseDBInterface) (entity.CreditCardRepositoryInterface, error) {
 	if db == nil {
 		return nil, errors.New("database is nil")
 	}
 
-	return &BankAccountRepository{
+	return &CreditCardRepository{
 		DB:         db,
-		collection: "bank-accounts",
+		collection: "credit-card",
 	}, nil
 }
 
-func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *entity.BankAccount) (*entity.BankAccountRequest, error) {
+func (r *CreditCardRepository) CreateCreditCard(ctx context.Context, data *entity.CreditCard) (*entity.CreditCardRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -49,7 +49,7 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 		return nil, err
 	}
 
-	var response entity.BankAccountRequest
+	var response entity.CreditCardRequest
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 	return &response, nil
 }
 
-func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccountRequest, error) {
+func (r *CreditCardRepository) GetCreditCardByID(ctx context.Context, id *string) (*entity.CreditCardRequest, error) {
 	if id == nil || *id == "" {
 		return nil, errors.New("id is empty")
 	}
@@ -81,19 +81,19 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, err
 	}
 
-	var bankAccounts []entity.BankAccountRequest
-	if err := json.Unmarshal(result, &bankAccounts); err != nil {
+	var CreditCards []entity.CreditCardRequest
+	if err := json.Unmarshal(result, &CreditCards); err != nil {
 		return nil, err
 	}
 
-	if len(bankAccounts) == 0 {
+	if len(CreditCards) == 0 {
 		return nil, errors.New("bank account not found")
 	}
 
-	return &bankAccounts[0], nil
+	return &CreditCards[0], nil
 }
 
-func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.BankAccountRequest, error) {
+func (r *CreditCardRepository) GetCreditCards(ctx context.Context) ([]entity.CreditCardRequest, error) {
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
@@ -105,15 +105,15 @@ func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.B
 		return nil, err
 	}
 
-	var bankAccounts []entity.BankAccountRequest
-	if err := json.Unmarshal(result, &bankAccounts); err != nil {
+	var CreditCards []entity.CreditCardRequest
+	if err := json.Unmarshal(result, &CreditCards); err != nil {
 		return nil, err
 	}
 
-	return bankAccounts, nil
+	return CreditCards, nil
 }
 
-func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.BankAccountRequest, error) {
+func (r *CreditCardRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.CreditCardRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -132,20 +132,20 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, err
 	}
 
-	var bankAccounts []entity.BankAccountRequest
-	if err := json.Unmarshal(result, &bankAccounts); err != nil {
+	var CreditCards []entity.CreditCardRequest
+	if err := json.Unmarshal(result, &CreditCards); err != nil {
 		return nil, err
 	}
 
-	return bankAccounts, nil
+	return CreditCards, nil
 }
 
-func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *entity.BankAccountRequest) (*entity.BankAccountRequest, error) {
+func (r *CreditCardRepository) UpdateCreditCard(ctx context.Context, data *entity.CreditCardRequest) (*entity.CreditCardRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
 
-	// Note: You'll need to add an ID field to the BankAccount entity for proper updates
+	// Note: You'll need to add an ID field to the CreditCard entity for proper updates
 	// For now, assuming there's a way to identify the document
 	if data.ID == "" {
 		return nil, errors.New("id is empty")
@@ -169,7 +169,7 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 	return data, nil
 }
 
-func (r *BankAccountRepository) DeleteBankAccount(ctx context.Context, id *string) error {
+func (r *CreditCardRepository) DeleteCreditCard(ctx context.Context, id *string) error {
 	if id == nil || *id == "" {
 		return errors.New("id is empty")
 	}

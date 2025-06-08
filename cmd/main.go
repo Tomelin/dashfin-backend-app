@@ -77,10 +77,16 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcCreditCard, err := initializeCreditCardServices(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeBankAccountHandler(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -191,4 +197,12 @@ func initializeBankAccountServices(db database.FirebaseDBInterface) (entity_fina
 		return nil, fmt.Errorf("failed to initialize bank account repository: %w", err)
 	}
 	return service_finance.InitializeBankAccountService(repoBankAccount)
+}
+
+func initializeCreditCardServices(db database.FirebaseDBInterface) (entity_finance.CreditCardServiceInterface, error) {
+	repoCreditCard, err := repository_finance.InitializeCreditCardRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize credit card repository: %w", err)
+	}
+	return service_finance.InitializeCreditCardService(repoCreditCard)
 }
