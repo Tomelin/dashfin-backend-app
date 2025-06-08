@@ -218,7 +218,7 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 		return
 	}
 
-	var bankAccount entity_finance.BankAccount
+	var bankAccount entity_finance.BankAccountRequest
 	err = json.Unmarshal(data, &bankAccount)
 	if err != nil {
 		log.Println(err.Error())

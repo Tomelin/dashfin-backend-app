@@ -7,20 +7,20 @@ import (
 )
 
 type BankAccountRepositoryInterface interface {
-	CreateBankAccount(ctx context.Context, data *BankAccount) (*BankAccount, error)
-	GetBankAccountByID(ctx context.Context, id *string) (*BankAccount, error)
-	GetBankAccounts(ctx context.Context) ([]BankAccount, error)
-	GetByFilter(ctx context.Context, data map[string]interface{}) ([]BankAccount, error)
-	UpdateBankAccount(ctx context.Context, data *BankAccount) (*BankAccount, error)
+	CreateBankAccount(ctx context.Context, data *BankAccount) (*BankAccountRequest, error)
+	GetBankAccountByID(ctx context.Context, id *string) (*BankAccountRequest, error)
+	GetBankAccounts(ctx context.Context) ([]BankAccountRequest, error)
+	GetByFilter(ctx context.Context, data map[string]interface{}) ([]BankAccountRequest, error)
+	UpdateBankAccount(ctx context.Context, data *BankAccountRequest) (*BankAccountRequest, error)
 	DeleteBankAccount(ctx context.Context, id *string) error
 }
 
 type BankAccountServiceInterface interface {
-	CreateBankAccount(ctx context.Context, data *BankAccount) (*BankAccount, error)
-	GetBankAccountByID(ctx context.Context, id *string) (*BankAccount, error)
-	GetBankAccounts(ctx context.Context) ([]BankAccount, error)
-	GetByFilter(ctx context.Context, data map[string]interface{}) ([]BankAccount, error)
-	UpdateBankAccount(ctx context.Context, data *BankAccount) (*BankAccount, error)
+	CreateBankAccount(ctx context.Context, data *BankAccount) (*BankAccountRequest, error)
+	GetBankAccountByID(ctx context.Context, id *string) (*BankAccountRequest, error)
+	GetBankAccounts(ctx context.Context) ([]BankAccountRequest, error)
+	GetByFilter(ctx context.Context, data map[string]interface{}) ([]BankAccountRequest, error)
+	UpdateBankAccount(ctx context.Context, data *BankAccountRequest) (*BankAccountRequest, error)
 	DeleteBankAccount(ctx context.Context, id *string) error
 }
 
@@ -33,6 +33,11 @@ type BankAccount struct {
 	MonthlyFee     float64 `json:"monthlyFee" bson:"monthlyFee"`
 }
 
+type BankAccountRequest struct {
+	ID string `json:"id"`
+	BankAccount
+}
+type BankAccountResponse BankAccountRequest
 func NewBankAccount(bankCode, agency, accountNumber string) *BankAccount {
 	return &BankAccount{
 		BankCode:      bankCode,

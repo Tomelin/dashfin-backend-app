@@ -21,7 +21,7 @@ func InitializeBankAccountService(repo entity.BankAccountRepositoryInterface) (e
 	}, nil
 }
 
-func (s *BankAccountService) CreateBankAccount(ctx context.Context, bankAccount *entity.BankAccount) (*entity.BankAccount, error) {
+func (s *BankAccountService) CreateBankAccount(ctx context.Context, bankAccount *entity.BankAccount) (*entity.BankAccountRequest, error) {
 	if bankAccount == nil {
 		return nil, errors.New("bankAccount is nil")
 	}
@@ -53,7 +53,7 @@ func (s *BankAccountService) CreateBankAccount(ctx context.Context, bankAccount 
 	return result, nil
 }
 
-func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccount, error) {
+func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccountRequest, error) {
 	if id == nil || *id == "" {
 		return nil, errors.New("id is empty")
 	}
@@ -70,7 +70,7 @@ func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string)
 	return result, nil
 }
 
-func (s *BankAccountService) GetBankAccounts(ctx context.Context) ([]entity.BankAccount, error) {
+func (s *BankAccountService) GetBankAccounts(ctx context.Context) ([]entity.BankAccountRequest, error) {
 	result, err := s.Repo.GetBankAccounts(ctx)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (s *BankAccountService) GetBankAccounts(ctx context.Context) ([]entity.Bank
 	return result, nil
 }
 
-func (s *BankAccountService) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.BankAccount, error) {
+func (s *BankAccountService) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.BankAccountRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -100,7 +100,7 @@ func (s *BankAccountService) GetByFilter(ctx context.Context, data map[string]in
 	return result, nil
 }
 
-func (s *BankAccountService) UpdateBankAccount(ctx context.Context, data *entity.BankAccount) (*entity.BankAccount, error) {
+func (s *BankAccountService) UpdateBankAccount(ctx context.Context, data *entity.BankAccountRequest) (*entity.BankAccountRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}

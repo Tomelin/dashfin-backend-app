@@ -24,20 +24,26 @@ func InitializeBankAccountRepository(db database.FirebaseDBInterface) (entity.Ba
 	}, nil
 }
 
-func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *entity.BankAccount) (*entity.BankAccount, error) {
+func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *entity.BankAccount) (*entity.BankAccountRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
 
-	_, err := r.DB.Create(ctx, data, "bankAccounts")
+	doc, err := r.DB.Create(ctx, data, "bankAccounts")
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	var response entity.BankAccountRequest
+	err = json.Unmarshal(doc, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response, nil
 }
 
-func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccount, error) {
+func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccountRequest, error) {
 	if id == nil || *id == "" {
 		return nil, errors.New("id is empty")
 	}
@@ -51,7 +57,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, err
 	}
 
-	var bankAccounts []entity.BankAccount
+	var bankAccounts []entity.BankAccountRequest
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
@@ -63,14 +69,14 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 	return &bankAccounts[0], nil
 }
 
-func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.BankAccount, error) {
+func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.BankAccountRequest, error) {
 	result, err := r.DB.Get(ctx, "bankAccounts")
 	if err != nil {
 		return nil, err
 	}
 
 	log.Println(string(result))
-	var bankAccounts []entity.BankAccount
+	var bankAccounts []entity.BankAccountRequest
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
@@ -80,7 +86,7 @@ func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.B
 	return bankAccounts, nil
 }
 
-func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.BankAccount, error) {
+func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string]interface{}) ([]entity.BankAccountRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -90,7 +96,7 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, err
 	}
 
-	var bankAccounts []entity.BankAccount
+	var bankAccounts []entity.BankAccountRequest
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
@@ -98,7 +104,7 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 	return bankAccounts, nil
 }
 
-func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *entity.BankAccount) (*entity.BankAccount, error) {
+func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *entity.BankAccountRequest) (*entity.BankAccountRequest, error) {
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
