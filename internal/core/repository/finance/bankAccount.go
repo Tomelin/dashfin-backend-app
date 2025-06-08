@@ -121,14 +121,17 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, errors.New("data is nil")
 	}
 
+	log.Println("[after] collection is ", r.collection)
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
 	}
+	log.Println("[middle] collection is ", collection)
 
 	if collection == nil || *collection == "" {
 		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
+	log.Println("[after] collection is ", collection)
 
 	result, err := r.DB.GetByFilter(ctx, data, *collection)
 	if err != nil {
