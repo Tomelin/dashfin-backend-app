@@ -69,7 +69,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 	}
 
 	filters := map[string]interface{}{
-		"_id": id, // Assuming MongoDB/Firebase uses _id or similar for document ID
+		"id": id,
 	}
 
 	collection, err := repository.SetCollection(ctx, r.collection)
@@ -77,6 +77,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		return nil, err
 	}
 
+	log.Println("ID is...", id)
 	result, err := r.DB.GetByFilter(ctx, filters, *collection)
 	log.Println("erro for filter by ID", err)
 	if err != nil {
