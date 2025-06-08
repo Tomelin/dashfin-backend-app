@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -27,8 +28,6 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
-
-	
 
 	_, err := r.DB.Create(ctx, data, "bankAccounts")
 	if err != nil {
@@ -74,6 +73,8 @@ func (r *BankAccountRepository) GetBankAccounts(ctx context.Context) ([]entity.B
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
+
+	log.Println("accounts", bankAccounts)
 
 	return bankAccounts, nil
 }
