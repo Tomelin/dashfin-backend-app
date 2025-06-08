@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -46,21 +47,24 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 	// we might need to handle the creation of future occurrences here or in the repository.
 	if data.IsRecurring && data.RecurrenceCount > 0 {
 		expensesCreated := make([]entity_finance.ExpenseRecord, 0)
-
+		log.Println("IsRecurring > ", data.IsRecurring)
 		for i := 0; i < data.RecurrenceCount; i++ {
 			if i == 0 {
-				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
+				result, err := s.Repo.CreateExpenseRecord(ctx, data)
+				log.Println("for if ", err)
 				expensesCreated = append(expensesCreated, *result)
 				s.Repo.CreateExpenseRecord(ctx, data)
 			} else {
+				log.Println("for else ")
 				parsedDueDate, _ := time.Parse("2006-01-02", data.DueDate)
 				newDate := parsedDueDate.AddDate(0, 0, i)
 				data.DueDate = newDate.Format("2006-01-02")
-				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
+				result, err := s.Repo.CreateExpenseRecord(ctx, data)
+				log.Println("for if ", err)
 				expensesCreated = append(expensesCreated, *result)
 			}
 		}
-
+		log.Println("total...", len(expensesCreated))
 		return &expensesCreated[0], nil // Return the first created expense record
 
 	}
