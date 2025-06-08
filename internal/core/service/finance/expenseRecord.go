@@ -137,7 +137,7 @@ func (s *ExpenseRecordService) GetExpenseRecordsByDate(ctx context.Context, filt
 			continue
 		}
 
-		if endDate != (time.Time{}) && parsedDueDate.After(startDate) {
+		if endDate != (time.Time{}) && parsedDueDate.After(endDate) {
 			continue
 		}
 		log.Printf("dueDate is %v and record Date is %v and endDate is %v", filter.StartDate, record.DueDate, filter.EndDate)
