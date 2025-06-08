@@ -3,7 +3,6 @@ package entity_finance
 import (
 	"context"
 	"errors"
-	"log"
 	"strings"
 	"time"
 )
@@ -62,21 +61,6 @@ func NewExpenseRecord(category, dueDate string, amount float64, userID string) *
 
 // Validate checks the ExpenseRecord fields for correctness.
 func (er *ExpenseRecord) Validate() error {
-
-	log.Println("id > ", er.ID)
-	log.Println("category > ", er.Category)
-	log.Println("subcategory > ", er.Subcategory)
-	log.Println("dueDate > ", er.DueDate)
-	log.Println("paymentDate > ", er.PaymentDate)
-	log.Println("amount > ", er.Amount)
-	log.Println("bankPaidFrom > ", er.BankPaidFrom)
-	log.Println("customBankName > ", er.CustomBankName)
-	log.Println("description > ", er.Description)
-	log.Println("isRecurring > ", er.IsRecurring)
-	log.Println("recurrenceCount > ", er.RecurrenceCount)
-	log.Println("createdAt > ", er.CreatedAt)
-	log.Println("updatedAt > ", er.UpdatedAt)
-	log.Println("userID > ", er.UserID)
 
 	if strings.TrimSpace(er.Category) == "" {
 		return errors.New("category is required")

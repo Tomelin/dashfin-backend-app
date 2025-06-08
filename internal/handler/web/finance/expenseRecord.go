@@ -99,20 +99,6 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
 		return
 	}
-	log.Println("id ==> ", expenseRecord.ID)
-	log.Println("category ==> ", expenseRecord.Category)
-	log.Println("subcategory ==> ", expenseRecord.Subcategory)
-	log.Println("dueDate ==> ", expenseRecord.DueDate)
-	log.Println("paymentDate ==> ", *expenseRecord.PaymentDate)
-	log.Println("amount ==> ", expenseRecord.Amount)
-	log.Println("bankPaidFrom ==> ", expenseRecord.BankPaidFrom)
-	log.Println("customBankName ==> ", expenseRecord.CustomBankName)
-	log.Println("description ==> ", expenseRecord.Description)
-	log.Println("isRecurring ==> ", expenseRecord.IsRecurring)
-	log.Println("recurrenceCount ==> ", expenseRecord.RecurrenceCount)
-	log.Println("createdAt ==> ", expenseRecord.CreatedAt)
-	log.Println("updatedAt ==> ", expenseRecord.UpdatedAt)
-	log.Println("userID ==> ", expenseRecord.UserID)
 
 	// Set UserID from authenticated user
 	expenseRecord.UserID = userID
