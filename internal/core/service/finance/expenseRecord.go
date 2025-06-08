@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -50,7 +49,6 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 
 		snapDueDate := data.DueDate
 		for i := 0; i < data.RecurrenceCount; i++ {
-			log.Println("i starts at ", i)
 			if i == 0 {
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
@@ -58,16 +56,11 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				parsedDueDate, _ := time.Parse("2006-01-02", snapDueDate)
 				newDate := parsedDueDate.AddDate(0, i, 0) // Add i months
 				data.DueDate = newDate.Format("2006-01-02")
-				log.Printf("next date is %s and i value is %v", data.DueDate, i)
-				result, err := s.Repo.CreateExpenseRecord(ctx, data)
-				log.Println("for if ", err)
+				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 			}
 		}
-		log.Println("total...", len(expensesCreated))
-		log.Println(expensesCreated)
 		return &expensesCreated[0], nil // Return the first created expense record
-
 	}
 
 	return s.Repo.CreateExpenseRecord(ctx, data)
@@ -143,7 +136,7 @@ func (s *ExpenseRecordService) GetExpenseRecordsByDate(ctx context.Context, filt
 			continue
 		}
 
-		if endDate != (time.Time{}) && record.CreatedAt.After(endDate) {
+		if endDate != (time.Time{}) && parsedDueDate.Before(startDate) {
 			continue
 		}
 		filteredRecords = append(filteredRecords, record)
