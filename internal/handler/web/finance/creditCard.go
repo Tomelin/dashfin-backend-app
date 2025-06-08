@@ -37,12 +37,12 @@ func InitializeCreditCardHandler(svc entity_finance.CreditCardServiceInterface, 
 		authClient:  authClient,
 	}
 
-	handler.setupRoutes(routerGroup, middleware...)
+	handler.setupRoutes(middleware...)
 
 	return handler
 }
 
-func (h *CreditCardHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...func(c *gin.Context)) {
+func (h *CreditCardHandler) setupRoutes(middleware ...func(c *gin.Context)) {
 	middlewareList := make([]gin.HandlerFunc, len(middleware))
 	for i, mw := range middleware {
 		middlewareList[i] = mw
@@ -51,11 +51,11 @@ func (h *CreditCardHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware
 	credCardGroup := h.router.Group("/finance/cards")
 	credCardGroup.Use(middlewareList...)
 
-	routerGroup.POST("", append(middlewareList, h.CreateCreditCard)...)
-	routerGroup.GET("/:id", append(middlewareList, h.GetCreditCard)...)
-	routerGroup.GET("", append(middlewareList, h.GetCreditCards)...)
-	routerGroup.PUT("/:id", append(middlewareList, h.UpdateCreditCard)...)
-	routerGroup.DELETE("/:id", append(middlewareList, h.DeleteCreditCard)...)
+	credCardGroup.POST("", append(middlewareList, h.CreateCreditCard)...)
+	credCardGroup.GET("/:id", append(middlewareList, h.GetCreditCard)...)
+	credCardGroup.GET("", append(middlewareList, h.GetCreditCards)...)
+	credCardGroup.PUT("/:id", append(middlewareList, h.UpdateCreditCard)...)
+	credCardGroup.DELETE("/:id", append(middlewareList, h.DeleteCreditCard)...)
 }
 
 func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
