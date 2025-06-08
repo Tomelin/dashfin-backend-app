@@ -206,7 +206,9 @@ func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error) {
 
+	log.Println("GetByFilter > ", filters)
 	if err := db.validateWithData(ctx, filters, collection); err != nil {
+		log.Println("validateWithData > ", err)
 		return nil, err
 	}
 
@@ -215,6 +217,7 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 		query = query.Where(key, "==", value)
 	}
 
+	log.Println("query...", query)
 	iter := query.Documents(ctx)
 	var results []interface{}
 	defer iter.Stop()
@@ -232,6 +235,7 @@ func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interf
 		results = append(results, data)
 	}
 
+	log.Println("results,....", results)
 	b, err := json.Marshal(results)
 	if err != nil {
 		return nil, err
