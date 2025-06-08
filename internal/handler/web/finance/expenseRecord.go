@@ -103,7 +103,7 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 	log.Println("category ==> ", expenseRecord.Category)
 	log.Println("subcategory ==> ", expenseRecord.Subcategory)
 	log.Println("dueDate ==> ", expenseRecord.DueDate)
-	log.Println("paymentDate ==> ", expenseRecord.PaymentDate)
+	log.Println("paymentDate ==> ", *expenseRecord.PaymentDate)
 	log.Println("amount ==> ", expenseRecord.Amount)
 	log.Println("bankPaidFrom ==> ", expenseRecord.BankPaidFrom)
 	log.Println("customBankName ==> ", expenseRecord.CustomBankName)
