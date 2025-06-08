@@ -99,6 +99,7 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
 		return
 	}
+	log.Println(expenseRecord)
 
 	// Set UserID from authenticated user
 	expenseRecord.UserID = userID
