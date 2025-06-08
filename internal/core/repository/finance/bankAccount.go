@@ -41,6 +41,10 @@ func (r *BankAccountRepository) CreateBankAccount(ctx context.Context, data *ent
 		return nil, err
 	}
 
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
+
 	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
 		return nil, err
@@ -67,6 +71,10 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
+	}
+
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
 
 	result, err := r.DB.GetByFilter(ctx, filters, *collection)
@@ -118,6 +126,10 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, err
 	}
 
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
+
 	result, err := r.DB.GetByFilter(ctx, data, *collection)
 	if err != nil {
 		return nil, err
@@ -151,6 +163,9 @@ func (r *BankAccountRepository) UpdateBankAccount(ctx context.Context, data *ent
 	if err != nil {
 		return nil, err
 	}
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
 
 	err = r.DB.Update(ctx, data.ID, toMap, *collection)
 	if err != nil {
@@ -168,6 +183,10 @@ func (r *BankAccountRepository) DeleteBankAccount(ctx context.Context, id *strin
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return err
+	}
+
+	if collection == nil || *collection == "" {
+		return fmt.Errorf("%s collection is empty", r.collection)
 	}
 
 	return r.DB.Delete(ctx, *id, *collection)
