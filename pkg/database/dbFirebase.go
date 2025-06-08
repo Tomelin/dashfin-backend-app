@@ -104,7 +104,9 @@ func (db *FirebaseDB) Get(ctx context.Context, collection string) ([]byte, error
 
 	var results []interface{}
 	for _, d := range doc {
-		results = append(results, d.Data())
+		data := d.Data()
+		data["id"] = d.Ref.ID
+		results = append(results, data)
 	}
 
 	b, err := json.Marshal(results)
@@ -137,7 +139,12 @@ func (db *FirebaseDB) Create(ctx context.Context, data interface{}, collection s
 		return nil, err
 	}
 
-	b, err := json.Marshal(docRef)
+	if mapData, ok := data.(map[string]interface{}); ok {
+		mapData["id"] = docRef.ID
+		data = mapData
+	}
+
+	b, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +205,7 @@ func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.
 // Placeholder: Collection name needed.
 func (db *FirebaseDB) GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error) {
+
 	if err := db.validateWithData(ctx, filters, collection); err != nil {
 		return nil, err
 	}

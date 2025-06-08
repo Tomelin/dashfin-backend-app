@@ -22,17 +22,36 @@ func GetRequiredHeaders(authClient authenticatior.Authenticator, r *http.Request
 		authorization = authorization[7:]
 	}
 
-	err = validAuth(authClient, &userID, &authorization)
+	tokenUserID, err := validAuth(authClient, userID, authorization)
 	if err != nil {
 		return "", "", err
 	}
 
-	return userID, authorization, nil
+	// Verify that the user ID from the token matches the X-Userid header
+	if tokenUserID != userID {
+		return "", "", fmt.Errorf("user ID mismatch: token user ID (%s) does not match X-Userid header (%s)", tokenUserID, userID)
+	}
+
+	return tokenUserID, authorization, nil
 }
 
-func validAuth(authClient authenticatior.Authenticator, user, auth *string) error {
+func validAuth(authClient authenticatior.Authenticator, userID, authToken string) (string, error) {
+	claims, err := authClient.ValidateToken(context.TODO(), userID, authToken)
+	if err != nil {
+		return "", err
+	}
 
-	_, err := authClient.ValidateToken(context.TODO(), *user, *auth)
-	return err
+	// Extract user ID from token claims
+	tokenUserID := ""
+	if uid, ok := claims["user_id"].(string); ok {
+		tokenUserID = uid
+	} else if sub, ok := claims["sub"].(string); ok {
+		tokenUserID = sub
+	}
 
+	if tokenUserID == "" {
+		return "", fmt.Errorf("user ID not found in token claims")
+	}
+
+	return tokenUserID, nil
 }
