@@ -120,10 +120,10 @@ func (s *BankAccountService) DeleteBankAccount(ctx context.Context, id *string) 
 		return errors.New("id is empty")
 	}
 
-	_, err := s.GetBankAccountByID(ctx, id)
-	if err != nil {
-		return err
-	}
+	// _, err := s.GetBankAccountByID(ctx, id)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return s.Repo.DeleteBankAccount(ctx, id)
 }
