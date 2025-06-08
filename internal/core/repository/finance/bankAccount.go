@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
@@ -76,6 +77,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
 
+	log.Println("filter", filters, "collection", *collection)
 	result, err := r.DB.GetByFilter(ctx, filters, *collection)
 	if err != nil {
 		return nil, err
@@ -127,6 +129,7 @@ func (r *BankAccountRepository) GetByFilter(ctx context.Context, data map[string
 		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
 
+	log.Println("data", data, "collection", *collection)
 	result, err := r.DB.GetByFilter(ctx, data, *collection)
 	if err != nil {
 		return nil, err
@@ -179,6 +182,7 @@ func (r *BankAccountRepository) DeleteBankAccount(ctx context.Context, id *strin
 		return err
 	}
 
+	log.Println("id", id, "collection", *collection)
 	if collection == nil || *collection == "" {
 		return fmt.Errorf("%s collection is empty", r.collection)
 	}
