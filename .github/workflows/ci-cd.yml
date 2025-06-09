@@ -8,6 +8,14 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  packages: write
+  attestations: write
+  id-token: write
+
 env:
   GO_VERSION: '1.21' # Specify the Go version to use
   DOCKER_REGISTRY: docker.io # Example, adjust if using GHCR or other
@@ -95,17 +103,63 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_NAMESPACE }}/myapp # Example: yourusername/myapp or org/myapp
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp
 
-      - name: Build and push Docker image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only build and push on pushes to main
+      - name: Build and Push Docker Image (Main Branch) / Build and Load (Pull Request)
+        id: build_image
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
+          file: ./Dockerfile # Explicitly state Dockerfile location
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Ensure your Dockerfile is in the root, or specify 'file: ./path/to/Dockerfile'
+          # Cache settings can be added here if desired, e.g.
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
+
+  security-scan:
+    name: Security Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: build
+    # Run on push to main (image is pushed) or on PRs (image is built locally)
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Note: This job assumes the 'build' job for pull_request events will make the Docker image
+      # available to the local Docker daemon (e.g., using 'load: true' in docker/build-push-action).
+      # If not, Trivy might not find the image when running on a PR.
+      # The image tag includes github.sha, which should be consistent with the build job.
+      - name: Run Trivy vulnerability scanner on Docker image
+        uses: aquasecurity/trivy-action@master # Or pin to a specific version like @0.18.0
+        with:
+          image-ref: '${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }}'
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH' # Comma-separated list of severities to scan for
+          exit-code: '1'          # Fail if vulnerabilities of specified severity are found
+
+      - name: Upload Trivy scan results
+        if: always() # Upload results even if the scan fails (due to vulnerabilities found)
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-scan-results
+          path: trivy-results.sarif
+          retention-days: 7
+
+      - name: Upload SARIF to GitHub Security tab
+        # Run if the trivy-results.sarif file exists, which it should if trivy ran.
+        # The previous step (Trivy scan) might fail due to vulnerabilities (exit-code: 1),
+        # but the SARIF file should still be generated.
+        if: success() || failure()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'myapp-docker-image' # A category for the scan
 
   generate-docs:
     name: Generate Go Documentation
@@ -136,6 +190,125 @@ jobs:
           name: godoc-html
           path: godocs.html
           retention-days: 7
+
+  gemini-review:
+    name: Gemini Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for tj-actions/changed-files to work correctly
+          token: ${{ secrets.GITHUB_TOKEN }} # Or specific PAT if scripts need more permissions
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # Or the version your scripts require
+
+      - name: Get changed Go files
+        id: get_changed_files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.go
+          files_ignore: |
+            **_test.go
+            **/testdata/**
+            **/vendor/**
+            **/mocks/**
+
+      - name: Run Gemini Analysis
+        if: steps.get_changed_files.outputs.any_changed == 'true'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_CONTEXT: "Repository: ${{ github.repository }}. Pull Request: #${{ github.event.pull_request.number }}. Commit: ${{ github.sha }}. Changed Files: ${{ steps.get_changed_files.outputs.all_changed_files }}"
+          MAX_PROMPT_LENGTH_KB: "15" # Example: 15KB, adjust as needed
+          MAX_TOKENS_PER_FILE: "8000" # Example, adjust based on Gemini model and typical file size
+          GEMINI_MODEL: "gemini-1.5-flash-latest" # Or your preferred model
+        run: node .github/scripts/analyze-gemini-go.js "${{ steps.get_changed_files.outputs.all_changed_files }}"
+
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    needs: test # Can run in parallel with gemini-review
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Get changed Go files
+        id: get_changed_files_claude # Use a different id if needed, though scope is per job
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            **.go
+          files_ignore: |
+            **_test.go
+            **/testdata/**
+            **/vendor/**
+            **/mocks/**
+
+      - name: Run Claude Analysis
+        if: steps.get_changed_files_claude.outputs.any_changed == 'true'
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_CONTEXT: "Repository: ${{ github.repository }}. Pull Request: #${{ github.event.pull_request.number }}. Commit: ${{ github.sha }}. Changed Files: ${{ steps.get_changed_files_claude.outputs.all_changed_files }}"
+          MAX_PROMPT_LENGTH_KB: "80" # Example: 80KB for Claude
+          MAX_TOKENS_PER_FILE: "8000" # Example
+          CLAUDE_MODEL: "claude-3-haiku-20240307" # Or your preferred model
+        run: node .github/scripts/analyze-claude-go.js "${{ steps.get_changed_files_claude.outputs.all_changed_files }}"
+
+  ai-review-summary:
+    name: AI Review Summary
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.draft == false
+    needs: [gemini-review, claude-review]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Post AI Review Summary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_FULL_NAME: ${{ github.repository }}
+          GEMINI_REVIEW_STATUS: ${{ needs.gemini-review.result }}
+          CLAUDE_REVIEW_STATUS: ${{ needs.claude-review.result }}
+        run: node .github/scripts/post-summary.js
 
   deploy-dev:
     name: Deploy to Development
@@ -214,7 +387,7 @@ jobs:
     name: Send Workflow Notification
     runs-on: ubuntu-latest
     if: always() # Ensures this job runs regardless of previous job failures
-    needs: [lint, test, build, generate-docs, deploy-dev, deploy-prod] # Wait for all main jobs
+    needs: [lint, test, build, security-scan, generate-docs, gemini-review, claude-review, ai-review-summary, deploy-dev, deploy-prod] # Wait for all main jobs
     steps:
       - name: Check Job Statuses and Send Notification
         run: |
@@ -230,7 +403,11 @@ jobs:
           echo "  Lint: ${{ needs.lint.result }}"
           echo "  Test: ${{ needs.test.result }}"
           echo "  Build: ${{ needs.build.result }}"
+          echo "  Security Scan: ${{ needs.security-scan.result }}"
           echo "  Generate Docs: ${{ needs.generate-docs.result }}"
+          echo "  Gemini Review: ${{ needs.gemini-review.result }}"
+          echo "  Claude Review: ${{ needs.claude-review.result }}"
+          echo "  AI Review Summary: ${{ needs.ai-review-summary.result }}"
           echo "  Deploy Dev: ${{ needs.deploy-dev.result }}"
           echo "  Deploy Prod: ${{ needs.deploy-prod.result }}"
           echo "---"
@@ -242,17 +419,31 @@ jobs:
           # For more complex logic, a script might be needed.
 
           overall_status="SUCCESS"
+          # Check for failures
           if [[ "${{ needs.lint.result }}" == "failure" || \
                 "${{ needs.test.result }}" == "failure" || \
                 "${{ needs.build.result }}" == "failure" || \
+                "${{ needs.security-scan.result }}" == "failure" || \
                 "${{ needs.generate-docs.result }}" == "failure" || \
+                "${{ needs.gemini-review.result }}" == "failure" || \
+                "${{ needs.claude-review.result }}" == "failure" || \
+                "${{ needs.ai-review-summary.result }}" == "failure" || \
+                # deploy-dev and deploy-prod results are only critical if they were supposed to run (i.e., on push to main)
+                # For PRs, their skipped status is fine.
+                # However, a simple check for failure is okay for now.
+                # A more nuanced check might consider github.event_name
                 "${{ needs.deploy-dev.result }}" == "failure" || \
                 "${{ needs.deploy-prod.result }}" == "failure" ]]; then
             overall_status="FAILURE"
+          # Check for cancellations if no primary failure
           elif [[ "${{ needs.lint.result }}" == "cancelled" || \
                   "${{ needs.test.result }}" == "cancelled" || \
                   "${{ needs.build.result }}" == "cancelled" || \
+                  "${{ needs.security-scan.result }}" == "cancelled" || \
                   "${{ needs.generate-docs.result }}" == "cancelled" || \
+                  "${{ needs.gemini-review.result }}" == "cancelled" || \
+                  "${{ needs.claude-review.result }}" == "cancelled" || \
+                  "${{ needs.ai-review-summary.result }}" == "cancelled" || \
                   "${{ needs.deploy-dev.result }}" == "cancelled" || \
                   "${{ needs.deploy-prod.result }}" == "cancelled" ]]; then
             overall_status="CANCELLED"
