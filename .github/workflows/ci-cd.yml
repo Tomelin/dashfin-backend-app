@@ -1,0 +1,278 @@
+name: Go CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  GO_VERSION: '1.21' # Specify the Go version to use
+  DOCKER_REGISTRY: docker.io # Example, adjust if using GHCR or other
+  DOCKER_NAMESPACE: yourusername # TODO: Configure this. Example, for Docker Hub, replace with your username/org
+
+jobs:
+  # Linting, Testing, Building, Deployment jobs will be defined in subsequent steps
+  # This initial structure just sets up the workflow basics.
+
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest # Or a specific version like v1.55.2
+          args: --timeout=5m
+
+  test:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests with coverage
+        run: |
+          go test -v -race -coverprofile=coverage.out ./...
+          go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.html
+          retention-days: 7 # Optional: Keep artifacts for 7 days
+
+  build:
+    name: Build Application and Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Build Go Application
+        run: go build -v -o myapp ./... # Assumes outputting a binary named 'myapp'
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only login when pushing to main
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_NAMESPACE }}/myapp # Example: yourusername/myapp or org/myapp
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only build and push on pushes to main
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Ensure your Dockerfile is in the root, or specify 'file: ./path/to/Dockerfile'
+
+  generate-docs:
+    name: Generate Go Documentation
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install godoc
+        run: go install golang.org/x/tools/cmd/godoc@latest # Ensures godoc is available
+
+      - name: Generate GoDoc HTML
+        run: |
+          # Ensure GOPATH/bin is in PATH for godoc if installed via go install
+          export PATH=$(go env GOPATH)/bin:$PATH
+          godoc -html ./... > godocs.html
+
+      - name: Upload GoDocs HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: godoc-html
+          path: godocs.html
+          retention-days: 7
+
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: # Optional: define a GitHub environment for 'development'
+      name: development
+      url: http://dev.example.com # Placeholder URL
+    steps:
+      - name: Checkout code # May not be needed if only deploying an image
+        uses: actions/checkout@v4
+
+      - name: Download Docker image information (if needed)
+        # If the build job uploads image name/tag as an artifact, download it here.
+        # Alternatively, construct image name using env vars and github.sha.
+        run: echo "Image to deploy: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }}"
+
+      - name: Placeholder for Deploy to Development
+        env:
+          DEV_SERVER_HOST: ${{ secrets.DEV_SERVER_HOST }} # Example secret
+          DEV_SERVER_USER: ${{ secrets.DEV_SERVER_USER }} # Example secret
+          # SSH_PRIVATE_KEY_DEV: ${{ secrets.SSH_PRIVATE_KEY_DEV }} # Example secret
+        run: |
+          echo "Deploying to Development server: $DEV_SERVER_HOST as $DEV_SERVER_USER..."
+          echo "Using image: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }}"
+          echo "---"
+          echo "Actual deployment commands would go here."
+          echo "For example, using ssh:"
+          echo "ssh -i path/to/private_key $DEV_SERVER_USER@$DEV_SERVER_HOST 'docker pull ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }} && docker run ...'"
+          echo "Or using kubectl:"
+          echo "kubectl set image deployment/myapp-deployment myapp=${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }} -n development"
+          echo "---"
+          # Add actual deployment script/commands here
+          # Ensure necessary secrets (DEV_SERVER_HOST, DEV_SERVER_USER, SSH_PRIVATE_KEY_DEV, KUBE_CONFIG_DEV etc.)
+          # are configured in GitHub repository/organization secrets and mapped to the 'development' environment.
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-dev # Depends on successful deployment to development
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: http://your-production-app-url.com # Placeholder
+    steps:
+      - name: Checkout code # May not be needed
+        uses: actions/checkout@v4
+
+      - name: Download Docker image information (if needed)
+        run: echo "Image to deploy to Production: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }}"
+
+      - name: Placeholder for Deploy to Production
+        env:
+          PROD_SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }} # Example secret
+          PROD_SERVER_USER: ${{ secrets.PROD_SERVER_USER }} # Example secret
+          # SSH_PRIVATE_KEY_PROD: ${{ secrets.SSH_PRIVATE_KEY_PROD }} # Example secret
+        run: |
+          echo "DEPLOYING TO PRODUCTION SERVER: $PROD_SERVER_HOST as $PROD_SERVER_USER..."
+          echo "Using image: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_NAMESPACE }}/myapp:${{ github.sha }}"
+          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          echo "!!!                 WARNING: PRODUCTION DEPLOYMENT           !!!"
+          echo "!!! Ensure all tests and approvals are completed before this.!!!"
+          echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+          echo "---"
+          echo "Actual production deployment commands would go here."
+          echo "These should be robust and potentially include health checks post-deployment."
+          echo "e.g., ssh -i path/to/prod_private_key $PROD_SERVER_USER@$PROD_SERVER_HOST 'docker pull ... && docker run ...'"
+          echo "or kubectl apply -f prod-deployment.yml -n production"
+          echo "---"
+          # Add actual deployment script/commands here
+          # Ensure necessary secrets (PROD_SERVER_HOST, PROD_SERVER_USER, SSH_PRIVATE_KEY_PROD, KUBE_CONFIG_PROD etc.)
+          # are configured in GitHub repository/organization secrets and mapped to the 'production' environment.
+
+  notify:
+    name: Send Workflow Notification
+    runs-on: ubuntu-latest
+    if: always() # Ensures this job runs regardless of previous job failures
+    needs: [lint, test, build, generate-docs, deploy-dev, deploy-prod] # Wait for all main jobs
+    steps:
+      - name: Check Job Statuses and Send Notification
+        run: |
+          echo "Workflow Name: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Run Number: ${{ github.run_number }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Branch/Ref: ${{ github.ref }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "---"
+          echo "Job Statuses:"
+          echo "  Lint: ${{ needs.lint.result }}"
+          echo "  Test: ${{ needs.test.result }}"
+          echo "  Build: ${{ needs.build.result }}"
+          echo "  Generate Docs: ${{ needs.generate-docs.result }}"
+          echo "  Deploy Dev: ${{ needs.deploy-dev.result }}"
+          echo "  Deploy Prod: ${{ needs.deploy-prod.result }}"
+          echo "---"
+
+          # Determine overall status
+          # Note: ${{ job.status }} would give the status of THIS 'notify' job if used directly.
+          # We are interested in the overall status derived from previous jobs.
+          # A simple check: if any of the 'needs' failed, then it's a failure.
+          # For more complex logic, a script might be needed.
+
+          overall_status="SUCCESS"
+          if [[ "${{ needs.lint.result }}" == "failure" || \
+                "${{ needs.test.result }}" == "failure" || \
+                "${{ needs.build.result }}" == "failure" || \
+                "${{ needs.generate-docs.result }}" == "failure" || \
+                "${{ needs.deploy-dev.result }}" == "failure" || \
+                "${{ needs.deploy-prod.result }}" == "failure" ]]; then
+            overall_status="FAILURE"
+          elif [[ "${{ needs.lint.result }}" == "cancelled" || \
+                  "${{ needs.test.result }}" == "cancelled" || \
+                  "${{ needs.build.result }}" == "cancelled" || \
+                  "${{ needs.generate-docs.result }}" == "cancelled" || \
+                  "${{ needs.deploy-dev.result }}" == "cancelled" || \
+                  "${{ needs.deploy-prod.result }}" == "cancelled" ]]; then
+            overall_status="CANCELLED"
+          fi
+
+          echo "Overall Workflow Status: $overall_status"
+          echo "---"
+          echo "Placeholder for sending notification to Slack, Teams, Email, etc."
+          echo "For example, using a Slack action:"
+          echo "# - name: Send Slack Notification"
+          echo "#   uses: slackapi/slack-github-action@v1.24.0" # Example action
+          echo "#   with:"
+          echo "#     channel-id: 'YOUR_SLACK_CHANNEL_ID'"
+          echo "#     slack-message: 'Workflow *${{ github.workflow }}* result: ($overall_status) for commit ${{ github.sha }} on ${{ github.ref }}. Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'"
+          echo "#   env:"
+          echo "#     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}"
+
+          # If overall_status is FAILURE, you might want to exit with an error
+          # to make the 'notify' job itself reflect the failure.
+          if [[ "$overall_status" == "FAILURE" ]]; then
+            # exit 1 # Uncomment if 'notify' job should also fail.
+            echo "Exiting with status 0 to allow workflow to complete with overall failure status reflected in logs."
+          fi
