@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -77,9 +76,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		return nil, err
 	}
 
-	log.Println("ID is...", id)
 	docs, err := r.DB.Get(ctx, *collection)
-	log.Println("erro for filter by ID", err)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +139,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
-	log.Println("GetExpenseRecordsByFilter is...", filter)
 	result, err := r.DB.GetByFilter(ctx, filter, *collection)
 	if err != nil {
 		return nil, err
