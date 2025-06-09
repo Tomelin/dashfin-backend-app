@@ -86,12 +86,18 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcIncomeRecord, err := initializeIncomeRecordServices(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeBankAccountHandler(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -224,4 +230,17 @@ func initializeCreditCardServices(db database.FirebaseDBInterface) (entity_finan
 	}
 	return service_finance.InitializeCreditCardService(repoCreditCard)
 
+}
+
+func initializeIncomeRecordServices(db database.FirebaseDBInterface) (entity_finance.IncomeRecordServiceInterface, error) {
+	repoIncomeRecord, err := repository_finance.InitializeIncomeRecordRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
+	}
+
+	svcIncomeRecord, err := service_finance.InitializeIncomeRecordService(repoIncomeRecord)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
+	}
+	return svcIncomeRecord, nil
 }
