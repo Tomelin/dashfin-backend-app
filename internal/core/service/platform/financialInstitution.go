@@ -11,14 +11,14 @@ type FinancialInstitutionService struct {
 	repo entity_platform.FinancialInstitutionInterface
 }
 
-func NewFinancialInstitutionService(repo entity_platform.FinancialInstitutionInterface) (entity_platform.FinancialInstitutionInterface, error ){
+func NewFinancialInstitutionService(repo entity_platform.FinancialInstitutionInterface) (entity_platform.FinancialInstitutionInterface, error) {
 	if repo == nil {
 		return nil, errors.New("repository cannot be nil")
 	}
 
 	return &FinancialInstitutionService{
 		repo: repo,
-	},nil
+	}, nil
 }
 
 func (fis *FinancialInstitutionService) GetFinancialInstitutionByID(ctx context.Context, id *string) (*entity_platform.FinancialInstitution, error) {

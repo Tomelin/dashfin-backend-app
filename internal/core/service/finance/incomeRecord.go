@@ -64,6 +64,7 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 
 		for i := 0; i < *data.RecurrenceCount; i++ {
 			currentRecord := *data // Create a copy for each recurrence
+			currentRecord.RecurrenceNumber = i + 1
 
 			if i > 0 { // For subsequent recurrences, adjust the date
 				newReceiptDate := originalReceiptDate.AddDate(0, i, 0) // Add i months

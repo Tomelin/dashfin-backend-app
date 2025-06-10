@@ -3,9 +3,9 @@ package entity_finance
 import (
 	"context"
 	"errors"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
 )
 
 // IncomeRecordRepositoryInterface defines the repository operations for IncomeRecord.
@@ -33,9 +33,10 @@ type IncomeRecord struct {
 	Description     *string   `json:"description,omitempty" bson:"description,omitempty"`
 	BankAccountID   string    `json:"bankAccountId" bson:"bankAccountId"`
 	Amount          float64   `json:"amount" bson:"amount"`
-	ReceiptDate     string    `json:"receiptDate" bson:"receiptDate"`         // ISO 8601 (YYYY-MM-DD)
+	ReceiptDate     string    `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
 	IsRecurring     bool      `json:"isRecurring" bson:"isRecurring"`
 	RecurrenceCount *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"` // Pointer to allow null
+	RecurrenceNumber  int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"`   // Pointer to allow null
 	Observations    *string   `json:"observations,omitempty" bson:"observations,omitempty"`
 	UserID          string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
 	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
@@ -47,14 +48,14 @@ type IncomeRecord struct {
 type IncomeCategory string
 
 const (
-	Salary            IncomeCategory = "salary"
-	Freelance         IncomeCategory = "freelance"
-	RentReceived      IncomeCategory = "rent_received"
-	InvestmentIncome  IncomeCategory = "investment_income"
-	BonusPLR          IncomeCategory = "bonus_plr"
-	GiftDonation      IncomeCategory = "gift_donation"
-	Reimbursement     IncomeCategory = "reimbursement"
-	Other             IncomeCategory = "other"
+	Salary           IncomeCategory = "salary"
+	Freelance        IncomeCategory = "freelance"
+	RentReceived     IncomeCategory = "rent_received"
+	InvestmentIncome IncomeCategory = "investment_income"
+	BonusPLR         IncomeCategory = "bonus_plr"
+	GiftDonation     IncomeCategory = "gift_donation"
+	Reimbursement    IncomeCategory = "reimbursement"
+	Other            IncomeCategory = "other"
 )
 
 var validIncomeCategories = map[IncomeCategory]bool{
@@ -147,11 +148,11 @@ func (ir *IncomeRecord) Validate() error {
 // This can be used by the service and repository layers.
 type GetIncomeRecordsQueryParameters struct {
 	UserID        string
-	Description   *string `json:"description,omitempty"`    // Textual search
-	StartDate     *string `json:"startDate,omitempty"`      // YYYY-MM-DD
-	EndDate       *string `json:"endDate,omitempty"`        // YYYY-MM-DD
-	SortKey       *string `json:"sortKey,omitempty"`        // "category", "amount", "receiptDate"
-	SortDirection *string `json:"sortDirection,omitempty"`  // "asc", "desc"
+	Description   *string `json:"description,omitempty"`   // Textual search
+	StartDate     *string `json:"startDate,omitempty"`     // YYYY-MM-DD
+	EndDate       *string `json:"endDate,omitempty"`       // YYYY-MM-DD
+	SortKey       *string `json:"sortKey,omitempty"`       // "category", "amount", "receiptDate"
+	SortDirection *string `json:"sortDirection,omitempty"` // "asc", "desc"
 }
 
 func (p *GetIncomeRecordsQueryParameters) Validate() error {

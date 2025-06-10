@@ -40,6 +40,7 @@ type ExpenseRecord struct {
 	CustomBankName  *string   `json:"customBankName,omitempty" bson:"customBankName,omitempty"`
 	Description     *string   `json:"description,omitempty" bson:"description,omitempty"`
 	IsRecurring     bool      `json:"isRecurring" bson:"isRecurring"`
+	RecurrenceNumber  int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
 	RecurrenceCount int       `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
 	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt       time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`

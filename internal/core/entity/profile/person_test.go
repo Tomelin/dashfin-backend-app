@@ -136,9 +136,9 @@ func (suite *ProfileTestSuite) TestProfileGoals() {
 func (suite *ProfileTestSuite) TestProfile() {
 	now := time.Now()
 	tests := []struct {
-		name     string
-		profile  Profile
-		isValid  bool
+		name    string
+		profile Profile
+		isValid bool
 	}{
 		{
 			name: "Complete Profile",
@@ -224,7 +224,7 @@ func (suite *ProfileTestSuite) TestValidateBirthDate() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			result, err := profile.ValidateBirthDate(tt.birthDate)
-			
+
 			if tt.expectError {
 				assert.Error(suite.T(), err)
 			} else {
@@ -264,7 +264,7 @@ func (suite *ProfileTestSuite) TestSetBirthDate() {
 		suite.Run(tt.name, func() {
 			profile := &Profile{}
 			err := profile.SetBirthDate(tt.birthDate)
-			
+
 			if tt.expectError {
 				assert.Error(suite.T(), err)
 				assert.Empty(suite.T(), profile.BirthDate)
@@ -298,7 +298,7 @@ func BenchmarkProfileCreation(b *testing.B) {
 func BenchmarkValidateBirthDate(b *testing.B) {
 	profile := &Profile{}
 	birthDate := "1990-05-15"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = profile.ValidateBirthDate(birthDate)
@@ -307,7 +307,7 @@ func BenchmarkValidateBirthDate(b *testing.B) {
 
 func BenchmarkSetBirthDate(b *testing.B) {
 	birthDate := "1990-05-15"
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		profile := &Profile{}

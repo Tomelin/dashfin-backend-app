@@ -48,7 +48,10 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 		expensesCreated := make([]entity_finance.ExpenseRecord, 0)
 
 		snapDueDate := data.DueDate
+
 		for i := 0; i < data.RecurrenceCount; i++ {
+
+			data.RecurrenceNumber = i + 1
 			if i == 0 {
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)

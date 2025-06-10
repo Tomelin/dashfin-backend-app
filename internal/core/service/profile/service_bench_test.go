@@ -16,10 +16,10 @@ func (m *mockProfileRepository) CreateProfile(ctx context.Context, data *entity_
 
 func (m *mockProfileRepository) GetProfileByID(ctx context.Context, id *string) (*entity_profile.Profile, error) {
 	return &entity_profile.Profile{
-		ID:        "test-id",
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john@example.com",
+		ID:             "test-id",
+		FirstName:      "John",
+		LastName:       "Doe",
+		Email:          "john@example.com",
 		UserProviderID: *id,
 	}, nil
 }
@@ -57,11 +57,11 @@ func BenchmarkProfileServiceCreateProfile(b *testing.B) {
 	mockRepo := &mockProfileRepository{}
 	service, _ := InicializeProfileService(mockRepo)
 	ctx := context.Background()
-	
+
 	profile := &entity_profile.Profile{
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john@example.com",
+		FirstName:      "John",
+		LastName:       "Doe",
+		Email:          "john@example.com",
 		UserProviderID: "provider-123",
 	}
 
@@ -87,12 +87,12 @@ func BenchmarkProfileServiceUpdateProfile(b *testing.B) {
 	mockRepo := &mockProfileRepository{}
 	service, _ := InicializeProfileService(mockRepo)
 	ctx := context.Background()
-	
+
 	profile := &entity_profile.Profile{
-		ID:        "test-id",
-		FirstName: "John",
-		LastName:  "Doe",
-		Email:     "john@example.com",
+		ID:             "test-id",
+		FirstName:      "John",
+		LastName:       "Doe",
+		Email:          "john@example.com",
 		UserProviderID: "provider-123",
 	}
 
@@ -106,7 +106,7 @@ func BenchmarkProfileServiceGetByFilter(b *testing.B) {
 	mockRepo := &mockProfileRepository{}
 	service, _ := InicializeProfileService(mockRepo)
 	ctx := context.Background()
-	
+
 	filter := map[string]interface{}{
 		"userProviderID": "provider-123",
 	}
@@ -134,7 +134,7 @@ func BenchmarkProfileGoalsServiceUpdateProfileGoals(b *testing.B) {
 	goalsService, _ := InicializeProfileGoalsService(mockRepo, profileService)
 	ctx := context.Background()
 	userId := "provider-123"
-	
+
 	goals := &entity_profile.ProfileGoals{
 		Goals2Years: []entity_profile.Goals{
 			{
@@ -158,7 +158,7 @@ func BenchmarkProfileProfessionServiceUpdateProfileProfession(b *testing.B) {
 	professionService, _ := InicializeProfileProfessionService(mockRepo, profileService)
 	ctx := context.Background()
 	userId := "provider-123"
-	
+
 	profession := &entity_profile.ProfileProfession{
 		Profession:    "Software Engineer",
 		Company:       "Tech Corp",

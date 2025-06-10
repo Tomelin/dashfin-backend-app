@@ -123,15 +123,15 @@ func TestIncomeRecord_Validate(t *testing.T) {
 			wantErrMsg: "recurrenceCount must be at least 1 if isRecurring is true",
 		},
 		{
-            name: "isRecurring true, recurrenceCount valid (1)",
-            record: func() *IncomeRecord {
-                ir := NewIncomeRecord("salary", "bankacc001", 100.0, validDate, "user001")
-                ir.IsRecurring = true
-                ir.RecurrenceCount = &one
-                return ir
-            },
-            wantErrMsg: "",
-        },
+			name: "isRecurring true, recurrenceCount valid (1)",
+			record: func() *IncomeRecord {
+				ir := NewIncomeRecord("salary", "bankacc001", 100.0, validDate, "user001")
+				ir.IsRecurring = true
+				ir.RecurrenceCount = &one
+				return ir
+			},
+			wantErrMsg: "",
+		},
 		{
 			name: "observations too long",
 			record: func() *IncomeRecord {
