@@ -73,7 +73,7 @@ func TestExpenseRecord_Validate(t *testing.T) {
 			er: func() *ExpenseRecord {
 				r := validRecord()
 				r.IsRecurring = true
-				r.RecurrenceCount = nil
+				r.RecurrenceCount = 0
 				return r
 			}(),
 			wantErr: true,
@@ -85,7 +85,7 @@ func TestExpenseRecord_Validate(t *testing.T) {
 				r := validRecord()
 				r.IsRecurring = true
 				zero := 0
-				r.RecurrenceCount = &zero
+				r.RecurrenceCount = zero
 				return r
 			}(),
 			wantErr: true,
@@ -97,7 +97,7 @@ func TestExpenseRecord_Validate(t *testing.T) {
 				r := validRecord()
 				r.IsRecurring = true
 				count := 12
-				r.RecurrenceCount = &count
+				r.RecurrenceCount = count
 				return r
 			}(),
 			wantErr: false,
@@ -116,7 +116,7 @@ func TestExpenseRecord_Validate(t *testing.T) {
 			wantErr: true,
 			errText: "customBankName is required when bankPaidFrom is 'other'",
 		},
-		 {
+		{
 			name: "PaymentDate filled but BankPaidFrom missing",
 			er: func() *ExpenseRecord {
 				r := validRecord()

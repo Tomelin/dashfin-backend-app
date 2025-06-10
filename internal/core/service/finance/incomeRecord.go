@@ -81,7 +81,6 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 				return nil, fmt.Errorf("validation failed for recurring instance %d: %w", i+1, errVal)
 			}
 
-
 			created, repoErr := s.Repo.CreateIncomeRecord(ctx, &currentRecord)
 			if repoErr != nil {
 				// If one fails, should we rollback previous or just return error?
@@ -117,7 +116,6 @@ func (s *IncomeRecordService) GetIncomeRecordByID(ctx context.Context, id string
 		return nil, errors.New("userID in context is empty")
 	}
 
-
 	record, err := s.Repo.GetIncomeRecordByID(ctx, id)
 	if err != nil {
 		// Repository handles "not found"
@@ -135,7 +133,7 @@ func (s *IncomeRecordService) GetIncomeRecordByID(ctx context.Context, id string
 }
 
 // GetIncomeRecords retrieves income records based on filters for the authenticated user.
-func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, userID string, description, startDate, endDate, sortKey, sortDirection string) ([]entity_finance.IncomeRecord, error) {
+func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, params *entity_finance.GetIncomeRecordsQueryParameters) ([]entity_finance.IncomeRecord, error) {
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil {
 		return nil, errors.New("userID not found in context for GetIncomeRecords")
@@ -153,32 +151,31 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, userID strin
 	// Let's assume the userID parameter in the signature is intended to be the authenticated user's ID.
 	// If `userID` param could be different (e.g. admin use), then authorization logic would be more complex.
 	// For now, enforce that the provided userID matches the one in context if both are present.
-	if userID != "" && userID != userIDStr {
+	if params.UserID != "" && params.UserID != userIDStr {
 		// This indicates a potential misuse of the service method or an attempt to access unauthorized data.
 		// log.Printf("Warning: Mismatch between UserID in context (%s) and UserID parameter (%s) in GetIncomeRecords.", userIDFromCtx.(string), userID)
 		return nil, errors.New("user ID parameter mismatch with authenticated user")
 	}
 
-
 	queryParams := &entity_finance.GetIncomeRecordsQueryParameters{
 		UserID: userIDStr, // Always use UserID from context for security
 	}
 
-	if strings.TrimSpace(description) != "" {
-		queryParams.Description = &description
+	if params.Description != nil && strings.TrimSpace(*params.Description) != "" {
+		queryParams.Description = params.Description
 	}
-	if strings.TrimSpace(startDate) != "" {
-		queryParams.StartDate = &startDate
+	if params.StartDate != nil && strings.TrimSpace(*params.StartDate) != "" {
+		queryParams.StartDate = params.StartDate
 	}
-	if strings.TrimSpace(endDate) != "" {
-		queryParams.EndDate = &endDate
+	if params.EndDate != nil && strings.TrimSpace(*params.EndDate) != "" {
+		queryParams.EndDate = params.EndDate
 	}
-	if strings.TrimSpace(sortKey) != "" {
-		queryParams.SortKey = &sortKey
+	if params.SortKey != nil && strings.TrimSpace(*params.SortKey) != "" {
+		queryParams.SortKey = params.SortKey
 	}
-	if strings.TrimSpace(sortDirection) != "" {
+	if params.SortDirection != nil && strings.TrimSpace(*params.SortDirection) != "" {
 		// Basic validation, repository will do more specific validation
-		lowerSortDirection := strings.ToLower(sortDirection)
+		lowerSortDirection := strings.ToLower(*params.SortDirection)
 		if lowerSortDirection == "asc" || lowerSortDirection == "desc" {
 			queryParams.SortDirection = &lowerSortDirection
 		} else {
@@ -186,9 +183,9 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, userID strin
 		}
 	}
 
-    if err := queryParams.Validate(); err != nil {
-        return nil, fmt.Errorf("invalid query parameters for GetIncomeRecords: %w", err)
-    }
+	if err := queryParams.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid query parameters for GetIncomeRecords: %w", err)
+	}
 
 	records, err := s.Repo.GetIncomeRecords(ctx, queryParams)
 	if err != nil {
@@ -202,7 +199,6 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, userID strin
 	// }
 	return records, nil
 }
-
 
 // UpdateIncomeRecord handles updating an existing income record.
 func (s *IncomeRecordService) UpdateIncomeRecord(ctx context.Context, id string, data *entity_finance.IncomeRecord) (*entity_finance.IncomeRecord, error) {
@@ -228,7 +224,6 @@ func (s *IncomeRecordService) UpdateIncomeRecord(ctx context.Context, id string,
 	// Ensure the UserID in the payload matches the one from context for consistency.
 	// The repository will perform the definitive ownership check against the stored record.
 	data.UserID = userIDStr
-
 
 	// Validate data before sending to repository
 	if err := data.Validate(); err != nil {
@@ -263,16 +258,15 @@ func (s *IncomeRecordService) DeleteIncomeRecord(ctx context.Context, id string)
 
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil {
-		return nil, errors.New("userID not found in context for delete")
+		return errors.New("userID not found in context for delete")
 	}
 	userIDStr, ok := userIDFromCtx.(string)
 	if !ok {
-		return nil, errors.New("userID in context is not a string")
+		return errors.New("userID in context is not a string")
 	}
 	if userIDStr == "" {
-		return nil, errors.New("userID in context is empty for delete")
+		return errors.New("userID in context is empty for delete")
 	}
-
 
 	// Service-level check: Retrieve the record first to ensure it belongs to the user.
 	// The repository also performs this check, but it's a good pattern for the service.
