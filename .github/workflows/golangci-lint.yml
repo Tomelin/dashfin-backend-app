@@ -23,12 +23,12 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
       - name: gofmt
         uses: Jerome1337/gofmt-action@v1.0.5
         with:
           gofmt-path: './'
           gofmt-flags: '-l -d'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
