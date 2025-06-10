@@ -171,9 +171,6 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	for _, v := range results {
-		log.Println("ID", v.ID, "object", v)
-	}
 
 	b, err := json.Marshal(results)
 	if err != nil {
