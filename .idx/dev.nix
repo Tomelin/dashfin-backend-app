@@ -7,6 +7,10 @@
   packages = [
     pkgs.go
     pkgs.air
+    pkgs.docker
+    pkgs.gh
+    pkgs.podman
+    pkgs.podman-compose
   ];
   # Sets environment variables in the workspace
   env = {};
