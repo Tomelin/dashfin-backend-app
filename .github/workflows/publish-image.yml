@@ -1,4 +1,5 @@
 name: Publish Docker Image to Google Cloud Registry
+run-name: publish-image
 
 on:
   push:
