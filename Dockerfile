@@ -10,8 +10,6 @@ COPY internal .
 COPY pkg .
 COPY config .
 
-RUN go mod tidy
-
 # RUN go build -o /manager cmd/main.go
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags='-s -w' -a -o /manager cmd/main.go
 
