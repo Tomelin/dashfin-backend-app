@@ -43,15 +43,15 @@ jobs:
 
       - name: Print 
         run: |-
-          echo  "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" 
-
+          echo  "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" 
+          echo us-central1-docker.pkg.dev/prospere-app/cloud-run-source-deploy/dashfin-backend-app/dashfin-backend-app@sha256:58679c0d14102df150e08bbbc018588342b7a09b27b7aa4df5c656ad9c0c1b94
       - name: Build and Push Container
         run: |-
-          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
+          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
           
           # Also tag as latest if pushing to main
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}/${{ env.SERVICE }}:latest"
-            docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
+            docker tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.SERVICE }}/${{ env.SERVICE }}:latest"
+            docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
           fi
