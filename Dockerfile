@@ -5,7 +5,11 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . .
+COPY cmd .
+COPY internal .
+COPY pkg .
+COPY config .
+
 RUN go mod tidy
 
 # RUN go build -o /manager cmd/main.go

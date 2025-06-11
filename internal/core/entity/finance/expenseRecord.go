@@ -30,21 +30,21 @@ type ExpenseRecordServiceInterface interface {
 
 // ExpenseRecord defines the structure for an expense record.
 type ExpenseRecord struct {
-	ID              string    `json:"id" bson:"_id,omitempty"` // Auto-generated
-	Category        string    `json:"category" bson:"category"`
-	Subcategory     string    `json:"subcategory,omitempty" bson:"subcategory,omitempty"`
-	DueDate         string    `json:"dueDate" bson:"dueDate"`                             // ISO 8601 (YYYY-MM-DD)
-	PaymentDate     *string   `json:"paymentDate,omitempty" bson:"paymentDate,omitempty"` // ISO 8601 (YYYY-MM-DD)
-	Amount          float64   `json:"amount" bson:"amount"`
-	BankPaidFrom    *string   `json:"bankPaidFrom,omitempty" bson:"bankPaidFrom,omitempty"`
-	CustomBankName  *string   `json:"customBankName,omitempty" bson:"customBankName,omitempty"`
-	Description     *string   `json:"description,omitempty" bson:"description,omitempty"`
-	IsRecurring     bool      `json:"isRecurring" bson:"isRecurring"`
-	RecurrenceNumber  int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
-	RecurrenceCount int       `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
-	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
-	UpdatedAt       time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
-	UserID          string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
+	ID               string    `json:"id" bson:"_id,omitempty"` // Auto-generated
+	Category         string    `json:"category" bson:"category"`
+	Subcategory      string    `json:"subcategory,omitempty" bson:"subcategory,omitempty"`
+	DueDate          string    `json:"dueDate" bson:"dueDate"`                             // ISO 8601 (YYYY-MM-DD)
+	PaymentDate      *string   `json:"paymentDate,omitempty" bson:"paymentDate,omitempty"` // ISO 8601 (YYYY-MM-DD)
+	Amount           float64   `json:"amount" bson:"amount"`
+	BankPaidFrom     *string   `json:"bankPaidFrom,omitempty" bson:"bankPaidFrom,omitempty"`
+	CustomBankName   *string   `json:"customBankName,omitempty" bson:"customBankName,omitempty"`
+	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
+	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
+	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
+	RecurrenceCount  int       `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
+	CreatedAt        time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+	UpdatedAt        time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
+	UserID           string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
 }
 
 type ExpenseRecordQueryByDate struct {

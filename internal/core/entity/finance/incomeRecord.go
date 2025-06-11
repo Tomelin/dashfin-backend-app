@@ -28,19 +28,19 @@ type IncomeRecordServiceInterface interface {
 
 // IncomeRecord defines the structure for an income record.
 type IncomeRecord struct {
-	ID              string    `json:"id" bson:"_id,omitempty"` // Auto-generated
-	Category        string    `json:"category" bson:"category"`
-	Description     *string   `json:"description,omitempty" bson:"description,omitempty"`
-	BankAccountID   string    `json:"bankAccountId" bson:"bankAccountId"`
-	Amount          float64   `json:"amount" bson:"amount"`
-	ReceiptDate     string    `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
-	IsRecurring     bool      `json:"isRecurring" bson:"isRecurring"`
-	RecurrenceCount *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"` // Pointer to allow null
-	RecurrenceNumber  int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"`   // Pointer to allow null
-	Observations    *string   `json:"observations,omitempty" bson:"observations,omitempty"`
-	UserID          string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
-	CreatedAt       time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
-	UpdatedAt       time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
+	ID               string    `json:"id" bson:"_id,omitempty"` // Auto-generated
+	Category         string    `json:"category" bson:"category"`
+	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
+	BankAccountID    string    `json:"bankAccountId" bson:"bankAccountId"`
+	Amount           float64   `json:"amount" bson:"amount"`
+	ReceiptDate      string    `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
+	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
+	RecurrenceCount  *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`   // Pointer to allow null
+	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
+	Observations     *string   `json:"observations,omitempty" bson:"observations,omitempty"`
+	UserID           string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
+	CreatedAt        time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+	UpdatedAt        time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 	// TotalValue might not be needed if it's always equal to Amount for incomes
 }
 
