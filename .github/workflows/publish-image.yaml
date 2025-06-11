@@ -14,7 +14,7 @@ env:
   GAR_LOCATION: us-central1
   SERVICE: dashfin-backend
   REGION: us-central1
-  REPOSITORY: cloud-run-source-deploy
+  REPOSITORY: cloud-run-source-deploy/dashfin-backend-app
 
 jobs:
   deploy:
