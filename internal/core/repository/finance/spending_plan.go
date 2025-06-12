@@ -46,6 +46,7 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 	log.Println("Repo r.collection", r.collection)
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
+		log.Println("err > ", err)
 		return nil, err
 	}
 
