@@ -31,7 +31,7 @@ func InitializeSpendingPlanService(repo entity_finance.SpendingPlanRepositoryInt
 	return &spendingPlanService{repo: repo, cache: cacheService}, nil
 }
 
-const spendingPlanCacheTTL = 10 * time.Minute
+const spendingPlanCacheTTL = 1 * time.Minute
 
 // GetSpendingPlan retrieves a spending plan for a given user, using cache.
 func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string) (*entity_finance.SpendingPlan, error) {
