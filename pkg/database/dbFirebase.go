@@ -93,8 +93,6 @@ func (db *FirebaseDB) Get(ctx context.Context, collection string) ([]byte, error
 		return nil, errors.New("firestore client not initialized. Call Connect first")
 	}
 
-	log.Println("firebase", collection)
-
 	if err := db.validateWithoutData(ctx, collection); err != nil {
 		log.Println(" erro na validação", err)
 		return nil, err

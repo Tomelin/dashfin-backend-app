@@ -89,6 +89,7 @@ func (r *SpendingPlanRepository) SaveSpendingPlan(ctx context.Context, data *ent
 		return err
 	}
 
+	log.Println(toMap, *collection)
 	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
 		return err
