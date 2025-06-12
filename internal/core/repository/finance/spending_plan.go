@@ -28,7 +28,7 @@ func InitializeSpendingPlanRepository(db database.FirebaseDBInterface) (entity_f
 
 	return &SpendingPlanRepository{
 		DB:         db,
-		collection: fmt.Sprintf("%s_spending-plan", dbPath),
+		collection: fmt.Sprintf("%s_spending_plan", dbPath),
 	}, nil
 }
 
