@@ -93,6 +93,7 @@ func (r *SpendingPlanRepository) UpdateSpendingPlan(ctx context.Context, data *e
 	return nil
 }
 
+// CreateSpendingPlan
 func (r *SpendingPlanRepository) CreateSpendingPlan(ctx context.Context, data *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
 
 	if data == nil {
