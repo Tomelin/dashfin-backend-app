@@ -1,0 +1,94 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feat/**'
+      - 'doc/**'
+      - 'chore/**'
+      - 'fix/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  tests:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21.x'] # Exemplo, pode ajustar ou adicionar mais versões LTS
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Atualizado para v4 para boas práticas
+
+      - name: Set up Go ${{ matrix.go-version }}
+        uses: actions/setup-go@v5 # Atualizado para v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Download Go module dependencies
+        run: go mod download
+
+      - name: Run Go tests
+        run: go test -v ./... # -v para saída verbosa, ./... para todos os pacotes
+
+  code_validation:
+    name: Code Validation with AI
+    runs-on: ubuntu-latest
+    # Condição para rodar apenas em main ou develop
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.head_ref, 'main') || startsWith(github.head_ref, 'develop')
+    needs: tests # Garante que a validação rode após os testes passarem (opcional, mas recomendado)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4 # Garantir que está na v4
+
+      - name: Simulate Claude AI Code Review
+        run: |
+          echo "Simulating Claude AI code review..."
+          # Em um cenário real, aqui você chamaria a API do Claude
+          # Exemplo: # Para Go, talvez analisar arquivos .go alterados
+          echo "Claude AI review placeholder complete."
+
+      - name: Simulate Gemini AI Code Review
+        run: |
+          echo "Simulating Gemini AI code review..."
+          # Em um cenário real, aqui você chamaria a API do Gemini
+          # Exemplo: # Para Go, talvez analisar arquivos .go alterados
+          echo "Gemini AI review placeholder complete."
+
+  vulnerability_check:
+    name: Vulnerability Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go for govulncheck
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21.x' # Use uma versão consistente com os testes
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        run: govulncheck ./...
+        # Considere adicionar `|| exit 0` se não quiser que o job falhe por vulnerabilidades informativas
+        # ou configure para falhar apenas em severidades altas.
+        # Exemplo: govulncheck -test ./... (para incluir vulnerabilidades em código de teste)
+
+      - name: Install Checkov
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install checkov # Usar pip3 para evitar conflitos se o runner tiver python2 por padrão
+
+      - name: Run Checkov
+        run: |
+          checkov -d . --quiet --skip-framework go # Pula a varredura específica de 'go' se govulncheck já cobre
+          # Adicione outras flags ou configurações do Checkov conforme necessário
+          # Por exemplo, para falhar o job se vulnerabilidades críticas forem encontradas:
+          # checkov -d . --quiet --check HIGH,CRITICAL --hard-fail
