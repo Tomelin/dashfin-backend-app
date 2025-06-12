@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/stretchr/testify/assert"
-	"github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 )
 
 func TestSpendingPlan_Instantiation(t *testing.T) {
