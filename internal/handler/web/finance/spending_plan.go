@@ -67,6 +67,9 @@ func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 		return
 	}
 
+	log.Println(" userID", userID)
+	log.Println(" token", token)
+
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
