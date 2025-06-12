@@ -87,16 +87,12 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 	cacheKey := fmt.Sprintf("spending_plan:%s", planData.UserID)
 
 	dataByCache, _ := s.cache.Get(ctx, cacheKey)
-	log.Println("cache > ", dataByCache)
 	if dataByCache == "" {
 		existingPlan, err = s.repo.GetSpendingPlanByUserID(ctx, planData.UserID)
-		log.Println("get > ", existingPlan)
 		if err != nil {
 			if err.Error() == "spendingPlan not found" {
 				existingPlan, err = s.CreateSpendingPlan(ctx, planData)
-				log.Println("create > ", existingPlan)
 				if err != nil {
-					log.Println("error on create > ", err)
 					return nil, err
 				}
 				s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
@@ -117,10 +113,8 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 		return nil, err
 	}
 
-	log.Println(" servcice > ", planData.UserID, planData)
 	err = s.repo.UpdateSpendingPlan(ctx, planData)
 	if err != nil {
-		log.Println("error on update > ", err)
 		return nil, err
 	}
 

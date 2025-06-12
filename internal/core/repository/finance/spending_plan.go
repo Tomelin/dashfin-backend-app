@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -43,7 +42,6 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
-		log.Println("err > ", err)
 		return nil, err
 	}
 
@@ -87,7 +85,6 @@ func (r *SpendingPlanRepository) UpdateSpendingPlan(ctx context.Context, data *e
 		return err
 	}
 
-	log.Println(" repo > ", data.UserID, toMap)
 	err = r.DB.Update(ctx, data.UserID, toMap, *collection)
 	if err != nil {
 		return err
