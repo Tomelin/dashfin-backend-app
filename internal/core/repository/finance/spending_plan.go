@@ -38,7 +38,7 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 	}
 
 	filters := map[string]interface{}{
-		"id": userID,
+		"userId": userID,
 	}
 
 	collection, err := repository.SetCollection(ctx, r.collection)
@@ -59,7 +59,7 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 
 	var result *entity_finance.SpendingPlan
 	for _, v := range records {
-		if v.UserID == filters["id"] {
+		if v.UserID == filters["userId"] {
 			result = &v
 			break
 		}
