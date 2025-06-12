@@ -4,7 +4,8 @@ run-name: publish-image
 on:
   push:
     branches:
-      - "*"
+      - "main"
+      - "develop"
   #   paths:
   #     - '**.go'
   # pull_request:

@@ -24,11 +24,12 @@ import (
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
-	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
+	"github.com/Tomelin/dashfin-backend-app/pkg/cache" // Added cache import
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
-	"github.com/Tomelin/dashfin-backend-app/pkg/http_server"
+	"github.com/Tomelin/dashfin-backend-app/pkg/http_server" // Added Redis import
 	"github.com/go-viper/mapstructure/v2"
+	// Ensure this is imported for adapters
 )
 
 func main() {
@@ -63,29 +64,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Initialize Mock Repositories for Dashboard Service dependencies
-	// In a real application, these would be real repository implementations.
-	mockAccountRepo := repository_finance.NewMockAccountRepository()
-	mockTransactionRepo := repository_finance.NewMockTransactionRepository()
-	mockGoalRepo := repository_profile.NewMockGoalRepository()
-	mockRecommendationRepo := repository_platform.NewMockRecommendationRepository()
 
-	// Initialize Dashboard Repository
-	dashboardRepo := repo_dashboard.NewDashboardRepository(
-		mockAccountRepo,
-		mockTransactionRepo,
-		mockGoalRepo,
-		mockRecommendationRepo,
-	)
-	log.Println("Dashboard repository initialized successfully (with mocks).")
+	cacheClient, err := initializeCache(cfg.Fields["cache"])
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Initialize Dashboard Service
-	dashboardSvc := service_dashboard.NewDashboardService(
-		dashboardRepo,
-		redisClient,
-		redisConfig.DefaultTTLSeconds,
-	)
-	log.Println("Dashboard service initialized successfully.")
 
 	// Import data at firestore
 	//	iif := database.NewFirebaseInsert(db)
@@ -130,6 +114,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcSpendingRecord, err := initializeSpendingPlanServices(db, cacheClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
@@ -137,6 +126,7 @@ func main() {
 	web_finance.InitializeBankAccountHandler(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeSpendingPlanHandler(svcSpendingRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	// Initialize Dashboard Handler
 	web_dashboard.NewDashboardHandler(dashboardSvc, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
@@ -163,6 +153,25 @@ func loadWebServer(fields map[string]interface{}) (*http_server.RestAPI, error) 
 		return nil, err
 	}
 	return api, nil
+}
+
+func initializeCache(fields interface{}) (cache.CacheService, error) {
+
+	b, _ := json.Marshal(fields)
+
+	var config cache.CacheConfig
+	err := json.Unmarshal(b, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheClient, err := cache.NewRedisCacheService(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return cacheClient, nil
+
 }
 
 func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface, error) {
@@ -286,4 +295,17 @@ func initializeIncomeRecordServices(db database.FirebaseDBInterface) (entity_fin
 		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	}
 	return svcIncomeRecord, nil
+}
+
+func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache.CacheService) (entity_finance.SpendingPlanServiceInterface, error) {
+	repoSpendingRecord, err := repository_finance.InitializeSpendingPlanRepository(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
+	}
+
+	svcSpendingRecord, err := service_finance.InitializeSpendingPlanService(repoSpendingRecord, cache)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
+	}
+	return svcSpendingRecord, nil
 }

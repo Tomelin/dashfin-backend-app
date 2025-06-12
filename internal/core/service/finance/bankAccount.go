@@ -77,7 +77,7 @@ func (s *BankAccountService) GetBankAccounts(ctx context.Context) ([]entity.Bank
 		return nil, err
 	}
 
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("bank accounts not found")
 	}
 
@@ -94,7 +94,7 @@ func (s *BankAccountService) GetByFilter(ctx context.Context, data map[string]in
 		return nil, err
 	}
 
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("bank account not found")
 	}
 

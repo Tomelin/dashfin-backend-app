@@ -94,6 +94,7 @@ func (db *FirebaseDB) Get(ctx context.Context, collection string) ([]byte, error
 	}
 
 	if err := db.validateWithoutData(ctx, collection); err != nil {
+		log.Println(" erro na validação", err)
 		return nil, err
 	}
 

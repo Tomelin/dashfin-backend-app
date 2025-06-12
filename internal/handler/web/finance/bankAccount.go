@@ -193,7 +193,7 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHeader %", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHeader %s", err.Error())})
 		return
 	}
 
@@ -207,14 +207,14 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("cryptData %", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("cryptData %s", err.Error())})
 		return
 	}
 
 	data, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("payloadData %", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("payloadData %s", err.Error())})
 		return
 	}
 
@@ -222,7 +222,7 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	err = json.Unmarshal(data, &bankAccount)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHunmarshaleader %", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHunmarshaleader %s", err.Error())})
 		return
 	}
 
@@ -232,21 +232,21 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	result, err := h.service.UpdateBankAccount(ctx, &bankAccount)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Update %", err.Error())})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Update %s", err.Error())})
 		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Marshal %", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Marshal %s", err.Error())})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
 		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("encrypt %", err.Error())})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("encrypt %s", err.Error())})
 		return
 	}
 

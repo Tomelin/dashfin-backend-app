@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	repository "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
@@ -133,7 +132,6 @@ func (s *ProfileService) UpdateProfile(ctx context.Context, data *entity.Profile
 
 	if len(results) == 0 {
 		result, err := s.CreateProfile(ctx, data)
-		log.Println("Created", result, err)
 		if err != nil {
 			return nil, err
 		}

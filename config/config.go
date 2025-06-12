@@ -73,7 +73,15 @@ type Connections struct {
 	FileConfig     *FileConfig
 	Cache          map[string]cache.RedisConfig `mapstructure:"cache"` // Added Cache field
 	Fields         map[string]interface{}
+	Redis          RedisConfig `mapstructure:"redis"` // Added Redis config field
 	*AppConfigField
+}
+
+// RedisConfig holds the configuration for Redis connection.
+type RedisConfig struct {
+	Address  string `mapstructure:"address"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
 }
 
 func LoadConfig() (*Connections, error) {
