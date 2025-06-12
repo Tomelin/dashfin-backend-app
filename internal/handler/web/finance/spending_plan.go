@@ -135,7 +135,7 @@ func (h *SpendingPlanHandler) SaveSpendingPlan(c *gin.Context) {
 
 	spendingRecord.UserID = userID
 
-	savedPlan, err := h.service.SaveSpendingPlan(c.Request.Context(), &spendingRecord)
+	savedPlan, err := h.service.SaveSpendingPlan(ctx, &spendingRecord)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save spending plan", "details": err.Error()})
 		return
