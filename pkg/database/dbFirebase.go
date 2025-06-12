@@ -100,11 +100,6 @@ func (db *FirebaseDB) Get(ctx context.Context, collection string) ([]byte, error
 		return nil, err
 	}
 
-	_, err := db.client.Collection(collection).Limit(1).Documents(ctx).GetAll()
-	if err != nil {
-		return nil, fmt.Errorf("error checking collection existence: %w", err)
-	}
-
 	doc, err := db.client.Collection(collection).Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
