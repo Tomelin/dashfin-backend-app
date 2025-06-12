@@ -22,9 +22,12 @@ import (
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
+	"github.com/Tomelin/dashfin-backend-app/pkg/cache" // Added cache import
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/http_server"
 	"github.com/go-viper/mapstructure/v2"
+	"github.com/go-redis/redis/v8" // Added Redis import
+	"cloud.google.com/go/firestore" // Ensure this is imported for adapters
 )
 
 func main() {
@@ -98,6 +101,122 @@ func main() {
 	web_finance.InitializeBankAccountHandler(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+
+	// --- Spending Plan Initialization ---
+	// Ad-hoc Firestore Adapters (minimal implementation for main.go wiring)
+	// IMPORTANT: These are simplified and may need to be fully implemented in a shared package for real use.
+
+	// Adapter for *firestore.Client to repository_finance.FirestoreClientInterface
+	type mainFirestoreClientAdapter struct {
+		client *firestore.Client
+	}
+	func (a *mainFirestoreClientAdapter) Collection(path string) repository_finance.CollectionRefInterface {
+		return &mainFirestoreCollectionAdapter{realCollRef: a.client.Collection(path)}
+	}
+
+	// Adapter for *firestore.CollectionRef to repository_finance.CollectionRefInterface
+	type mainFirestoreCollectionAdapter struct {
+		realCollRef *firestore.CollectionRef
+	}
+	func (a *mainFirestoreCollectionAdapter) Where(path string, op string, value interface{}) repository_finance.QueryInterface {
+		return &mainFirestoreQueryAdapter{realQuery: a.realCollRef.Where(path, op, value)}
+	}
+	func (a *mainFirestoreCollectionAdapter) Doc(id string) repository_finance.DocumentRefInterface {
+		return &mainFirestoreDocumentRefAdapter{realDocRef: a.realCollRef.Doc(id)}
+	}
+	func (a *mainFirestoreCollectionAdapter) Add(ctx context.Context, data interface{}) (repository_finance.DocumentRefInterface, repository_finance.WriteResultInterface, error) {
+		docRef, writeResult, err := a.realCollRef.Add(ctx, data)
+		if err != nil {
+			return nil, nil, err
+		}
+		return &mainFirestoreDocumentRefAdapter{realDocRef: docRef}, &mainFirestoreWriteResultAdapter{realWriteResult: writeResult}, nil
+	}
+
+	// Adapter for firestore.Query to repository_finance.QueryInterface
+	type mainFirestoreQueryAdapter struct {
+		realQuery firestore.Query
+	}
+	func (q *mainFirestoreQueryAdapter) Limit(n int) repository_finance.QueryInterface {
+		return &mainFirestoreQueryAdapter{realQuery: q.realQuery.Limit(n)}
+	}
+	func (q *mainFirestoreQueryAdapter) Documents(ctx context.Context) repository_finance.DocumentIteratorInterface {
+		return &mainFirestoreDocumentIteratorAdapter{realIter: q.realQuery.Documents(ctx)}
+	}
+
+	// Adapter for *firestore.DocumentIterator to repository_finance.DocumentIteratorInterface
+	type mainFirestoreDocumentIteratorAdapter struct {
+		realIter *firestore.DocumentIterator
+	}
+	func (a *mainFirestoreDocumentIteratorAdapter) Next() (repository_finance.DocumentSnapshotInterface, error) {
+		docSnap, err := a.realIter.Next()
+		if err != nil {
+			return nil, err // Including iterator.Done
+		}
+		return &mainFirestoreDocumentSnapshotAdapter{realDocSnap: docSnap}, nil
+	}
+	func (a *mainFirestoreDocumentIteratorAdapter) Stop() { a.realIter.Stop() }
+
+	// Adapter for *firestore.DocumentSnapshot to repository_finance.DocumentSnapshotInterface
+	type mainFirestoreDocumentSnapshotAdapter struct {
+		realDocSnap *firestore.DocumentSnapshot
+	}
+	func (a *mainFirestoreDocumentSnapshotAdapter) DataTo(v interface{}) error { return a.realDocSnap.DataTo(v) }
+	func (a *mainFirestoreDocumentSnapshotAdapter) Ref() repository_finance.DocumentRefInterface {
+		return &mainFirestoreDocumentRefAdapter{realDocRef: a.realDocSnap.Ref}
+	}
+
+	// Adapter for *firestore.DocumentRef to repository_finance.DocumentRefInterface
+	type mainFirestoreDocumentRefAdapter struct {
+		realDocRef *firestore.DocumentRef
+	}
+	func (a *mainFirestoreDocumentRefAdapter) ID() string { return a.realDocRef.ID }
+	func (a *mainFirestoreDocumentRefAdapter) Set(ctx context.Context, data interface{}, opts ...firestore.SetOption) (repository_finance.WriteResultInterface, error) {
+		writeResult, err := a.realDocRef.Set(ctx, data, opts...)
+		if err != nil {
+			return nil, err
+		}
+		return &mainFirestoreWriteResultAdapter{realWriteResult: writeResult}, nil
+	}
+
+	// Adapter for *firestore.WriteResult to repository_finance.WriteResultInterface
+	type mainFirestoreWriteResultAdapter struct {
+		realWriteResult *firestore.WriteResult // Can be empty if not used
+	}
+
+	// Initialize Spending Plan components
+	firestoreClient := db.GetClient() // This is *firestore.Client
+	if firestoreClient == nil {
+		log.Fatal("Firestore client is nil from db.GetClient()")
+	}
+	adaptedFirestoreClient := &mainFirestoreClientAdapter{client: firestoreClient}
+
+	// Initialize Redis Client & Cache Service
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Address,  // cfg is the loaded config (*config.Connections)
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	// Optional: Ping Redis to check connection
+	if _, err := redisClient.Ping(context.Background()).Result(); err != nil {
+		log.Printf("Warning: Could not connect to Redis: %v. Proceeding without cache for some services.", err)
+		// Depending on policy, you might Fatal here or allow running without cache.
+		// For services that strictly require cache, this could be a fatal error.
+	}
+	cacheService := cache.NewRedisCacheService(redisClient)
+
+	spendingPlanRepository := repository_finance.NewSpendingPlanRepository(adaptedFirestoreClient)
+	spendingPlanService := service_finance.NewSpendingPlanService(spendingPlanRepository, cacheService) // Pass cacheService
+	spendingPlanHandler := web_finance.NewSpendingPlanHandler(spendingPlanService)
+
+	// Register Spending Plan routes - assuming finance routes are grouped under apiResponse.RouterGroup directly
+	// or find a more specific finance group if used by other handlers.
+	// Other finance handlers like BankAccountHandler are registered directly on apiResponse.RouterGroup
+	// and their setupRoutes method creates a sub-group e.g., routerGroup.POST("/finance/bank-accounts"...)
+	// The SpendingPlanHandler's RegisterSpendingPlanRoutes creates a "/spending-plan" group on the passed group.
+	// So, passing apiResponse.RouterGroup seems correct.
+	spendingPlanHandler.RegisterSpendingPlanRoutes(apiResponse.RouterGroup)
+	// --- End Spending Plan Initialization ---
+
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
