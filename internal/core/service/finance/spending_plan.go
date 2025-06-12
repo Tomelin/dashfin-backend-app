@@ -117,6 +117,7 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 		return nil, err
 	}
 
+	log.Println(" servcice > ", planData.UserID, planData)
 	err = s.repo.UpdateSpendingPlan(ctx, planData)
 	if err != nil {
 		log.Println("error on update > ", err)

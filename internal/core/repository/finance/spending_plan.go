@@ -87,7 +87,8 @@ func (r *SpendingPlanRepository) UpdateSpendingPlan(ctx context.Context, data *e
 		return err
 	}
 
-	err = r.DB.Update(ctx, data.ID, toMap, *collection)
+	log.Println(" repo > ", data.UserID, toMap)
+	err = r.DB.Update(ctx, data.UserID, toMap, *collection)
 	if err != nil {
 		return err
 	}
