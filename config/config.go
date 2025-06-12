@@ -7,6 +7,8 @@ import (
 	"runtime"
 
 	"github.com/spf13/viper"
+
+	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
 )
 
 var AppConfig ConfigPath
@@ -69,6 +71,7 @@ type Connections struct {
 	PathConfigFile string `mapstructure:"path_config_file"`
 	Paths          *ConfigPath
 	FileConfig     *FileConfig
+	Cache          map[string]cache.RedisConfig `mapstructure:"cache"` // Added Cache field
 	Fields         map[string]interface{}
 	Redis          RedisConfig `mapstructure:"redis"` // Added Redis config field
 	*AppConfigField

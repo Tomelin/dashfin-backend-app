@@ -17,7 +17,10 @@ import (
 	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 	service_platform "github.com/Tomelin/dashfin-backend-app/internal/core/service/platform"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
+	repo_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard"
+	service_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/service/dashboard"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	web_dashboard "github.com/Tomelin/dashfin-backend-app/internal/handler/web/dashboard"
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
@@ -40,6 +43,17 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Initialize Redis Cache
+	redisConfig, ok := cfg.Cache["redis"]
+	if !ok {
+		log.Fatal("Redis configuration not found in config.cache.redis")
+	}
+	redisClient, err := cache.InitializeRedisCache(redisConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis cache: %v", err)
+	}
+	log.Println("Redis cache initialized successfully.")
+
 	crypt, err := initializeCryptData(cfg.Fields["encrypt"])
 	if err != nil {
 		log.Fatal(err)
@@ -50,10 +64,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+
 	cacheClient, err := initializeCache(cfg.Fields["cache"])
 	if err != nil {
 		log.Fatal(err)
 	}
+
 
 	// Import data at firestore
 	//	iif := database.NewFirebaseInsert(db)
@@ -111,6 +127,10 @@ func main() {
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeSpendingPlanHandler(svcSpendingRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+
+	// Initialize Dashboard Handler
+	web_dashboard.NewDashboardHandler(dashboardSvc, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	log.Println("Dashboard handler initialized successfully.")
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
