@@ -71,7 +71,7 @@ func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string
 }
 
 // SaveSpendingPlan creates or updates a spending plan for a given user and invalidates cache.
-func (s *spendingPlanService) SaveSpendingPlan(ctx context.Context, planData *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
+func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
 
 	if planData == nil {
 		return nil, fmt.Errorf("planData cannot be nil")
@@ -81,47 +81,58 @@ func (s *spendingPlanService) SaveSpendingPlan(ctx context.Context, planData *en
 		return nil, fmt.Errorf("UserID cannot be empty")
 	}
 
+	var existingPlan *entity_finance.SpendingPlan
+	var err error
+
 	cacheKey := fmt.Sprintf("spending_plan:%s", planData.UserID)
 
-	existingPlan, err := s.repo.GetSpendingPlanByUserID(ctx, planData.UserID)
+	dataByCache, _ := s.cache.Get(ctx, cacheKey)
+	if dataByCache == "" {
+		existingPlan, err = s.repo.GetSpendingPlanByUserID(ctx, planData.UserID)
+		if err != nil {
+			if err.Error() == "spendingPlan not found" {
+				existingPlan, err := s.CreateSpendingPlan(ctx, planData)
+				if err != nil {
+					return nil, err
+				}
+				go s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
+				return existingPlan, nil
+			}
+			return nil, err
+		}
+
+		go s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
+
+		err = json.Unmarshal([]byte(dataByCache), &existingPlan)
+		if err != nil {
+			return nil, err
+		}
+
+		return existingPlan, nil
+	}
+
+	return existingPlan, nil
+}
+
+func (s *spendingPlanService) CreateSpendingPlan(ctx context.Context, planData *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
+
+	if planData == nil {
+		return nil, fmt.Errorf("planData cannot be nil")
+	}
+
+	if planData.UserID == "" {
+		return nil, fmt.Errorf("UserID cannot be empty")
+	}
+
+	response, err := s.repo.CreateSpendingPlan(ctx, planData)
 	if err != nil {
-		// Assuming error means "not found" for simplicity here. (As per previous logic)
-		// This means we are creating a new plan.
-		// A more robust solution would check the specific error type.
-		newPlan := &entity_finance.SpendingPlan{
-			UserID:          planData.UserID,
-			MonthlyIncome:   planData.MonthlyIncome,
-			CategoryBudgets: planData.CategoryBudgets,
-			CreatedAt:       time.Now(), // Service sets this
-			UpdatedAt:       time.Now(), // Service sets this
-		}
-		// UserID from context takes precedence if planData.UserID is different or empty
-		newPlan.UserID = planData.UserID
-
-		if repoErr := s.repo.SaveSpendingPlan(ctx, newPlan); repoErr != nil {
-			return nil, repoErr
-		}
-		// Invalidate cache
-		if cacheDelErr := s.cache.Delete(ctx, cacheKey); cacheDelErr != nil && cacheDelErr != cache.ErrNotFound {
-			log.Printf("Error deleting cache for spending plan UserID %s after create: %v", planData.UserID, cacheDelErr)
-		}
-		return newPlan, nil // Return the newPlan that was successfully saved
+		return nil, err
 	}
 
-	// Plan exists, update it
-	existingPlan.MonthlyIncome = planData.MonthlyIncome
-	existingPlan.CategoryBudgets = planData.CategoryBudgets
-	existingPlan.UpdatedAt = time.Now() // Service updates this
-	// Ensure UserID is consistent if it came from planData (though userID from context is authoritative)
-	existingPlan.UserID = planData.UserID
+	return response, nil
+}
 
-	if repoErr := s.repo.SaveSpendingPlan(ctx, existingPlan); repoErr != nil {
-		return nil, repoErr
-	}
+func (s *spendingPlanService) setCacheSpendingPlan(ctx context.Context, cacheKey string, planData *entity_finance.SpendingPlan) {
 
-	// Invalidate cache
-	if cacheDelErr := s.cache.Delete(ctx, cacheKey); cacheDelErr != nil && cacheDelErr != cache.ErrNotFound {
-		log.Printf("Error deleting cache for spending plan UserID %s after update: %v", planData.UserID, cacheDelErr)
-	}
-	return existingPlan, nil // Return the existingPlan that was successfully updated
+	s.cache.Set(ctx, cacheKey, *planData, spendingPlanCacheTTL)
 }

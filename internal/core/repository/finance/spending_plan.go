@@ -66,16 +66,39 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 	}
 
 	if result == nil {
-		return nil, errors.New("spendingPlan record not found")
+		return nil, errors.New("spendingPlan not found")
 	}
 
 	return result, nil
 }
 
-func (r *SpendingPlanRepository) SaveSpendingPlan(ctx context.Context, data *entity_finance.SpendingPlan) error {
+func (r *SpendingPlanRepository) UpdateSpendingPlan(ctx context.Context, data *entity_finance.SpendingPlan) error {
 
 	if data == nil {
 		return errors.New("plan cannot be nil")
+	}
+
+	data.UpdatedAt = time.Now()
+
+	toMap, _ := utils.StructToMap(data)
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return err
+	}
+
+	err = r.DB.Update(ctx, data.ID, toMap, *collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *SpendingPlanRepository) CreateSpendingPlan(ctx context.Context, data *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
+
+	if data == nil {
+		return nil, errors.New("plan cannot be nil")
 	}
 
 	// Generate ID and set timestamps
@@ -86,20 +109,19 @@ func (r *SpendingPlanRepository) SaveSpendingPlan(ctx context.Context, data *ent
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	log.Println(toMap, *collection)
 	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var response entity_finance.SpendingPlan
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &response, nil
 }

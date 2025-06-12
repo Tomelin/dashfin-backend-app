@@ -8,17 +8,20 @@ import (
 // SpendingPlanRepository defines the interface for spending plan persistence.
 type SpendingPlanRepositoryInterface interface {
 	GetSpendingPlanByUserID(ctx context.Context, userID string) (*SpendingPlan, error)
-	SaveSpendingPlan(ctx context.Context, plan *SpendingPlan) error
+	UpdateSpendingPlan(ctx context.Context, plan *SpendingPlan) error
+	CreateSpendingPlan(ctx context.Context, data *SpendingPlan) (*SpendingPlan, error)
 }
 
 // SpendingPlanService defines the interface for spending plan business logic.
 type SpendingPlanServiceInterface interface {
 	GetSpendingPlan(ctx context.Context, userID string) (*SpendingPlan, error)
-	SaveSpendingPlan(ctx context.Context,  planData *SpendingPlan) (*SpendingPlan, error)
+	UpdateSpendingPlan(ctx context.Context, planData *SpendingPlan) (*SpendingPlan, error)
+	CreateSpendingPlan(ctx context.Context, planData *SpendingPlan) (*SpendingPlan, error)
 }
 
 // SpendingPlan represents a user's monthly spending plan.
 type SpendingPlan struct {
+	ID              string           `json:"id"`
 	MonthlyIncome   float64          `json:"monthlyIncome"`
 	CategoryBudgets []CategoryBudget `json:"categoryBudgets"`
 	UserID          string           `json:"userId"`    // Managed by the backend
