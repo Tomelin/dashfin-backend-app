@@ -87,28 +87,38 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 	cacheKey := fmt.Sprintf("spending_plan:%s", planData.UserID)
 
 	dataByCache, _ := s.cache.Get(ctx, cacheKey)
+	log.Println("cache > ", dataByCache)
 	if dataByCache == "" {
 		existingPlan, err = s.repo.GetSpendingPlanByUserID(ctx, planData.UserID)
+		log.Println("get > ", existingPlan)
 		if err != nil {
 			if err.Error() == "spendingPlan not found" {
-				existingPlan, err := s.CreateSpendingPlan(ctx, planData)
+				existingPlan, err = s.CreateSpendingPlan(ctx, planData)
+				log.Println("create > ", existingPlan)
 				if err != nil {
 					return nil, err
 				}
-				go s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
+				s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
 				return existingPlan, nil
 			}
 			return nil, err
 		}
 
-		go s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
-
-		err = json.Unmarshal([]byte(dataByCache), &existingPlan)
-		if err != nil {
-			return nil, err
-		}
+		s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
 
 		return existingPlan, nil
+	}
+
+	s.cache.Set(ctx, cacheKey, *planData, spendingPlanCacheTTL)
+
+	err = json.Unmarshal([]byte(dataByCache), &existingPlan)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.repo.UpdateSpendingPlan(ctx, planData)
+	if err != nil {
+		return nil, err
 	}
 
 	return existingPlan, nil
