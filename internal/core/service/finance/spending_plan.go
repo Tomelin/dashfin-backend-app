@@ -96,6 +96,7 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 				existingPlan, err = s.CreateSpendingPlan(ctx, planData)
 				log.Println("create > ", existingPlan)
 				if err != nil {
+					log.Println("error on create > ", err)
 					return nil, err
 				}
 				s.setCacheSpendingPlan(ctx, cacheKey, existingPlan)
@@ -118,6 +119,7 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 
 	err = s.repo.UpdateSpendingPlan(ctx, planData)
 	if err != nil {
+		log.Println("error on update > ", err)
 		return nil, err
 	}
 
