@@ -54,3 +54,19 @@ type PersonalizedRecommendation struct {
 	DescriptionText  string `json:"descriptionText"`  // Texto descritivo da recomendação.
 	Category         string `json:"category"`         // Categoria da recomendação.
 }
+
+// DashboardRepositoryInterface defines the operations for storing and retrieving dashboard data.
+// This would typically be for caching purposes.
+type DashboardRepositoryInterface interface {
+	// GetDashboard retrieves the dashboard data for a given user ID.
+	// It returns the Dashboard, a boolean indicating if it was found (true if found, false if not),
+	// and an error if any occurred (other than not found).
+	GetDashboard(ctx context.Context, userID string) (dashboard *Dashboard, found bool, err error)
+
+	// SaveDashboard stores the dashboard data for a given user ID.
+	// A TTL (time-to-live) duration should be considered by the implementation for caching.
+	SaveDashboard(ctx context.Context, userID string, dashboard *Dashboard, ttl time.Duration) error
+
+	// DeleteDashboard explicitly removes dashboard data for a user, e.g., on logout or data reset.
+	DeleteDashboard(ctx context.Context, userID string) error
+}

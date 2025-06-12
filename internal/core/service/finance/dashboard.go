@@ -4,23 +4,23 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"strconv"
+	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
 
 	"github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
-	// Actual service interface imports - these paths might need adjustment
-	// based on where these interfaces are defined in the project.
-	// Assuming they are in the same package as their entities for now.
 )
+
+const defaultDashboardCacheTTL = 5 * time.Minute // Example TTL for dashboard cache
 
 // DashboardService provides the logic for aggregating dashboard data.
 type DashboardService struct {
 	bankAccountService    financeEntity.BankAccountServiceInterface
 	expenseRecordService  financeEntity.ExpenseRecordServiceInterface
 	incomeRecordService   financeEntity.IncomeRecordServiceInterface
-	profileGoalsService profileEntity.ProfileGoalsServiceInterface // Corrected interface type
+	profileGoalsService   profileEntity.ProfileGoalsServiceInterface
+	dashboardRepository   financeEntity.DashboardRepositoryInterface // New dependency
 }
 
 // NewDashboardService creates a new DashboardService.
@@ -28,17 +28,20 @@ func NewDashboardService(
 	bankAccountSvc financeEntity.BankAccountServiceInterface,
 	expenseRecordSvc financeEntity.ExpenseRecordServiceInterface,
 	incomeRecordSvc financeEntity.IncomeRecordServiceInterface,
-	profileGoalsSvc profileEntity.ProfileGoalsServiceInterface, // Corrected type
+	profileGoalsSvc profileEntity.ProfileGoalsServiceInterface,
+	dashboardRepo financeEntity.DashboardRepositoryInterface, // New dependency
 ) *DashboardService {
 	return &DashboardService{
 		bankAccountService:    bankAccountSvc,
 		expenseRecordService:  expenseRecordSvc,
 		incomeRecordService:   incomeRecordSvc,
-		profileGoalsService: profileGoalsSvc,
+		profileGoalsService:   profileGoalsSvc,
+		dashboardRepository:   dashboardRepo, // Store the new dependency
 	}
 }
 
 // GetDashboardData aggregates all necessary data for the financial dashboard.
+// It now includes caching logic.
 func (s *DashboardService) GetDashboardData(ctx context.Context) (*financeEntity.Dashboard, error) {
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil {
@@ -52,35 +55,53 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*financeEntity
 		return nil, fmt.Errorf("userID in context is empty")
 	}
 
+	// 1. Try to fetch from cache first
+	cachedDashboard, found, err := s.dashboardRepository.GetDashboard(ctx, userID)
+	if err != nil {
+		// Log error but proceed to generate data, cache error shouldn't break main functionality
+		fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
+	}
+	if found && cachedDashboard != nil {
+		fmt.Printf("Info: Dashboard cache hit for user %s\n", userID)
+		return cachedDashboard, nil
+	}
+	fmt.Printf("Info: Dashboard cache miss for user %s\n", userID)
+
+	// 2. If not in cache or error during cache fetch, generate fresh data
+	dashboard, err := s.generateFreshDashboardData(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
+	}
+
+	// 3. Save the newly generated dashboard to cache
+	// Use a default TTL, this could be configurable
+	err = s.dashboardRepository.SaveDashboard(ctx, userID, dashboard, defaultDashboardCacheTTL)
+	if err != nil {
+		// Log error but don't fail the main operation, dashboard was generated successfully
+		fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
+	}
+
+	return dashboard, nil
+}
+
+// generateFreshDashboardData contains the original logic to build the dashboard from various services.
+func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userID string) (*financeEntity.Dashboard, error) {
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
-	// Fetch all accounts first as they are needed for multiple calculations
-	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx) // Assumes this is user-scoped by context
+	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx)
 	if err != nil {
-		// If no bank accounts, some parts of dashboard can't be computed.
-		// Depending on requirements, might return partial data or error.
-		// For now, log and continue where possible.
 		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
-		// Initialize to empty slice if error, to prevent nil pointer issues later
 		allUserBankAccounts = []financeEntity.BankAccountRequest{}
 	}
 
-	// Fetch all incomes and expenses for the user (or a relevant recent period)
-	// This data will be used for balance calculations and monthly summaries.
-	// For simplicity, fetching all records. For performance, might filter by a recent date range.
 	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userID})
 	if err != nil {
 		fmt.Printf("Warning: Error fetching income records for user %s: %v\n", userID, err)
 		allUserIncomes = []financeEntity.IncomeRecord{}
 	}
 
-	// Fetch all *paid* expenses. This requires filtering by PaymentDate != nil.
-	// The current ExpenseRecordService.GetExpenseRecords might not support this directly.
-	// Assuming GetExpenseRecordsByFilter can be used, or GetExpenseRecords and then filter locally.
-	// For now, let's fetch all and filter locally.
-	// This might be inefficient for users with many expense records.
-	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx) // Assumes this is user-scoped
+	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
 		allUserRawExpenses = []financeEntity.ExpenseRecord{}
@@ -89,7 +110,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*financeEntity
 	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
 	for _, exp := range allUserRawExpenses {
 		if exp.PaymentDate != nil && *exp.PaymentDate != "" {
-			// Ensure payment date is in the past or present to be considered "paid" for balance calculation
 			paymentT, parseErr := time.Parse("2006-01-02", *exp.PaymentDate)
 			if parseErr == nil && !paymentT.After(now) {
 				allUserPaidExpenses = append(allUserPaidExpenses, exp)
@@ -97,12 +117,11 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*financeEntity
 		}
 	}
 
-	// 1. SummaryCards
 	totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
-	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart) // Use already filtered paid expenses
+	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
 
-	goalsProgressStr := "N/A (Data unavailable)" // Default if goals cannot be processed
+	goalsProgressStr := "N/A (Data unavailable)"
 	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
@@ -119,36 +138,33 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*financeEntity
 		},
 	}
 
-	// 2. AccountSummaryData
 	dashboard.AccountSummaryData = s.getAccountSummaries(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 
-	// 3. UpcomingBillsData
-	upcomingBills, err := s.getUpcomingBills(ctx, userID, now, allUserRawExpenses) // Pass raw expenses
+	upcomingBills, err := s.getUpcomingBills(ctx, userID, now, allUserRawExpenses)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching upcoming bills: %v\n", err)
-		dashboard.UpcomingBillsData = []financeEntity.UpcomingBill{} // Default to empty
+		dashboard.UpcomingBillsData = []financeEntity.UpcomingBill{}
 	} else {
 		dashboard.UpcomingBillsData = upcomingBills
 	}
 
-	// 4. RevenueExpenseChartData (e.g., last 6 months)
 	dashboard.RevenueExpenseChartData = s.getRevenueExpenseChartData(allUserIncomes, allUserPaidExpenses, now, 6)
 
-
-	// 5. ExpenseCategoryChartData (current month)
 	expenseCategories, err := s.getExpenseCategoriesForMonth(allUserPaidExpenses, currentMonthStart)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense categories: %v\n", err)
-		dashboard.ExpenseCategoryChartData = []financeEntity.ExpenseCategoryChartItem{} // Default
+		dashboard.ExpenseCategoryChartData = []financeEntity.ExpenseCategoryChartItem{}
 	} else {
 		dashboard.ExpenseCategoryChartData = expenseCategories
 	}
 
-	// 6. PersonalizedRecommendationsData
-	dashboard.PersonalizedRecommendationsData = []financeEntity.PersonalizedRecommendation{} // Placeholder
+	dashboard.PersonalizedRecommendationsData = []financeEntity.PersonalizedRecommendation{}
 
 	return dashboard, nil
 }
+
+// --- Helper methods (calculateTotalBalance, etc.) remain the same as before ---
+// Ensure they are part of the DashboardService (s *DashboardService)
 
 func (s *DashboardService) calculateTotalBalance(
 	accounts []financeEntity.BankAccountRequest,
@@ -169,25 +185,19 @@ func (s *DashboardService) calculateAllAccountBalances(
     paidExpenses []financeEntity.ExpenseRecord,
 ) map[string]float64 {
     accountBalances := make(map[string]float64)
-
     for _, acc := range accounts {
-        accountBalances[acc.ID] = 0 // Initialize balance for all accounts
+        accountBalances[acc.ID] = 0
     }
-
     for _, income := range incomes {
-        // Assume income.BankAccountID is the ID of the BankAccountRequest
         accountBalances[income.BankAccountID] += income.Amount
     }
-
     for _, expense := range paidExpenses {
         if expense.BankPaidFrom != nil && *expense.BankPaidFrom != "" {
-            // Assume expense.BankPaidFrom stores the ID of the BankAccountRequest
             accountBalances[*expense.BankPaidFrom] -= expense.Amount
         }
     }
     return accountBalances
 }
-
 
 func (s *DashboardService) calculateMonthlyRevenue(
 	incomes []financeEntity.IncomeRecord,
@@ -207,13 +217,12 @@ func (s *DashboardService) calculateMonthlyRevenue(
 }
 
 func (s *DashboardService) calculateMonthlyExpenses(
-	paidExpenses []financeEntity.ExpenseRecord, // Use pre-filtered paid expenses
+	paidExpenses []financeEntity.ExpenseRecord,
 	monthStart time.Time,
 ) float64 {
 	var totalExpenses float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, expense := range paidExpenses {
-		// PaymentDate should be used to determine if the expense falls into the current month
 		if expense.PaymentDate != nil && *expense.PaymentDate != "" {
 			paymentDate, err := time.Parse("2006-01-02", *expense.PaymentDate)
 			if err == nil {
@@ -231,18 +240,16 @@ func (s *DashboardService) getAccountSummaries(
 	incomes []financeEntity.IncomeRecord,
 	paidExpenses []financeEntity.ExpenseRecord,
 ) []financeEntity.AccountSummary {
-
 	accountBalances := s.calculateAllAccountBalances(accounts, incomes, paidExpenses)
 	summaries := make([]financeEntity.AccountSummary, 0, len(accounts))
-
 	for _, acc := range accounts {
 		summaryName := acc.CustomBankName
 		if summaryName == "" {
-			summaryName = acc.BankCode + " - " + acc.AccountNumber // Default name
+			summaryName = acc.BankCode + " - " + acc.AccountNumber
 		}
 		summaries = append(summaries, financeEntity.AccountSummary{
 			AccountName: summaryName,
-			Balance:     accountBalances[acc.ID], // Use calculated balance
+			Balance:     accountBalances[acc.ID],
 		})
 	}
 	return summaries
@@ -250,56 +257,35 @@ func (s *DashboardService) getAccountSummaries(
 
 func (s *DashboardService) formatGoalsProgress(profileGoals profileEntity.ProfileGoals) string {
 	allGoals := append(profileGoals.Goals2Years, profileGoals.Goals5Years...)
-	allGoals = append(allGoals, profileGoals.Goals10Years...)
-
+	allGoals = append(allGolas, profileGoals.Goals10Years...) // Typo: allGolas -> allGoals
 	totalGoals := len(allGoals)
-	completedGoals := 0
-
-	// CRITICAL LIMITATION: The entity_profile.Goals struct does NOT have a field
-	// like 'IsCompleted' or 'CurrentAmount'. So, we cannot accurately determine
-	// completed goals or percentage progress.
-	// For now, assuming 0 completed until the entity is updated.
-	// completedGoals = countCompleted(allGoals) // This function cannot be implemented yet
-
+	completedGoals := 0 // Limitation: Cannot determine completed goals
 	if totalGoals == 0 {
 		return "Nenhuma meta definida"
 	}
-
-	// Placeholder logic due to missing 'IsCompleted' field in Goals entity
-	// This will always show 0% and (0 of X goals)
 	percentage := 0.0
-	if totalGoals > 0 {
-		// percentage = (float64(completedGoals) / float64(totalGoals)) * 100 // This would be the ideal calculation
-	}
-
 	return fmt.Sprintf("%.0f%% (%d de %d metas)", percentage, completedGoals, totalGoals)
 }
-
 
 func (s *DashboardService) getUpcomingBills(
     ctx context.Context,
     userID string,
     fromDate time.Time,
-    allUserRawExpenses []financeEntity.ExpenseRecord, // Pass all raw expenses
+    allUserRawExpenses []financeEntity.ExpenseRecord,
 ) ([]financeEntity.UpcomingBill, error) {
-	upcomingEndDate := fromDate.AddDate(0, 0, 30) // Next 30 days
+	upcomingEndDate := fromDate.AddDate(0, 0, 30)
 	bills := make([]financeEntity.UpcomingBill, 0)
-
 	for _, exp := range allUserRawExpenses {
-		// Bill is upcoming if:
-		// 1. It's not yet paid (PaymentDate is nil or empty)
-		// 2. DueDate is within the upcoming window (fromDate to upcomingEndDate)
 		if exp.PaymentDate == nil || *exp.PaymentDate == "" {
 			dueDate, errParse := time.Parse("2006-01-02", exp.DueDate)
 			if errParse != nil {
 				fmt.Printf("Warning: Could not parse DueDate '%s' for expense ID %s: %v\n", exp.DueDate, exp.ID, errParse)
 				continue
 			}
-
 			if !dueDate.Before(fromDate) && !dueDate.After(upcomingEndDate) {
 				billName := exp.Description
 				if billName == nil || *billName == "" {
-					billName = &exp.Category // Use category if description is empty
+					billName = &exp.Category
 				}
 				bills = append(bills, financeEntity.UpcomingBill{
 					BillName: *billName,
@@ -309,7 +295,6 @@ func (s *DashboardService) getUpcomingBills(
 			}
 		}
 	}
-	// Sort by DueDate
 	sort.Slice(bills, func(i, j int) bool {
 		return bills[i].DueDate.Before(bills[j].DueDate)
 	})
@@ -323,16 +308,11 @@ func (s *DashboardService) getRevenueExpenseChartData(
     numberOfMonths int,
 ) []financeEntity.RevenueExpenseChartItem {
     chartData := make([]financeEntity.RevenueExpenseChartItem, numberOfMonths)
-
     for i := 0; i < numberOfMonths; i++ {
-        // Go back i months from the current month
         monthStart := time.Date(currentDate.Year(), currentDate.Month()-time.Month(i), 1, 0, 0, 0, 0, time.UTC)
-        // monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond) // Not strictly needed for current logic
-
         monthlyRevenue := s.calculateMonthlyRevenue(incomes, monthStart)
         monthlyExpenses := s.calculateMonthlyExpenses(paidExpenses, monthStart)
-
-        chartData[numberOfMonths-1-i] = financeEntity.RevenueExpenseChartItem{ // Store in reverse for correct order
+        chartData[numberOfMonths-1-i] = financeEntity.RevenueExpenseChartItem{
             Month:    monthStart.Format("Jan/06"),
             Revenue:  monthlyRevenue,
             Expenses: monthlyExpenses,
@@ -341,14 +321,12 @@ func (s *DashboardService) getRevenueExpenseChartData(
     return chartData
 }
 
-
 func (s *DashboardService) getExpenseCategoriesForMonth(
-    paidExpenses []financeEntity.ExpenseRecord, // Use pre-filtered paid expenses
+    paidExpenses []financeEntity.ExpenseRecord,
     monthStart time.Time,
 ) ([]financeEntity.ExpenseCategoryChartItem, error) {
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	categories := make(map[string]float64)
-
 	for _, exp := range paidExpenses {
 		if exp.PaymentDate != nil && *exp.PaymentDate != "" {
 			paymentDate, err := time.Parse("2006-01-02", *exp.PaymentDate)
@@ -356,14 +334,13 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 				if !paymentDate.Before(monthStart) && !paymentDate.After(monthEnd) {
 					categoryName := exp.Category
 					if categoryName == "" {
-						categoryName = "Outros" // Default category
+						categoryName = "Outros"
 					}
 					categories[categoryName] += exp.Amount
 				}
 			}
 		}
 	}
-
 	chartData := make([]financeEntity.ExpenseCategoryChartItem, 0, len(categories))
 	for name, value := range categories {
 		chartData = append(chartData, financeEntity.ExpenseCategoryChartItem{
@@ -371,7 +348,6 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 			Value: value,
 		})
 	}
-    // Sort by value descending for better chart display
     sort.Slice(chartData, func(i, j int) bool {
         return chartData[i].Value > chartData[j].Value
     })

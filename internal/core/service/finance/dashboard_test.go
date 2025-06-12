@@ -2,6 +2,7 @@ package finance
 
 import (
 	"context"
+	"errors" // For creating test errors
 	"fmt"
 	"testing"
 	"time"
@@ -12,6 +13,8 @@ import (
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 )
+
+// --- Existing Mocks (BankAccountService, ExpenseRecordService, IncomeRecordService, ProfileGoalsService) remain the same ---
 
 // MockBankAccountService is a mock type for BankAccountServiceInterface
 type MockBankAccountService struct {
@@ -172,91 +175,100 @@ func (m *MockProfileGoalsService) UpdateProfileGoals(ctx context.Context, userId
 }
 
 func (m *MockProfileGoalsService) GetProfileGoals(ctx context.Context, userID *string) (profileEntity.ProfileGoals, error) {
-	// Note: ProfileGoals is a struct, not a pointer, in the interface.
 	args := m.Called(ctx, userID)
 	return args.Get(0).(profileEntity.ProfileGoals), args.Error(1)
 }
 
 
-func TestDashboardService_GetDashboardData_Nominal(t *testing.T) {
+// --- New Mock for DashboardRepositoryInterface ---
+type MockDashboardRepository struct {
+	mock.Mock
+}
+
+func (m *MockDashboardRepository) GetDashboard(ctx context.Context, userID string) (*financeEntity.Dashboard, bool, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Bool(1), args.Error(2)
+	}
+	return args.Get(0).(*financeEntity.Dashboard), args.Bool(1), args.Error(2)
+}
+
+func (m *MockDashboardRepository) SaveDashboard(ctx context.Context, userID string, dashboard *financeEntity.Dashboard, ttl time.Duration) error {
+	args := m.Called(ctx, userID, dashboard, ttl)
+	return args.Error(0)
+}
+
+func (m *MockDashboardRepository) DeleteDashboard(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+
+// TestDashboardService_GetDashboardData_CacheMiss (Refactored from original Nominal test)
+func TestDashboardService_GetDashboardData_CacheMiss(t *testing.T) {
 	mockBankSvc := new(MockBankAccountService)
 	mockExpenseSvc := new(MockExpenseRecordService)
 	mockIncomeSvc := new(MockIncomeRecordService)
 	mockGoalsSvc := new(MockProfileGoalsService)
+	mockDashboardRepo := new(MockDashboardRepository) // New mock
 
-	dashboardService := NewDashboardService(mockBankSvc, mockExpenseSvc, mockIncomeSvc, mockGoalsSvc)
+	// Pass all mocks to the constructor
+	dashboardService := NewDashboardService(mockBankSvc, mockExpenseSvc, mockIncomeSvc, mockGoalsSvc, mockDashboardRepo)
 
 	ctx := context.WithValue(context.Background(), "UserID", "test-user-123")
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	userIDStr := "test-user-123"
 
-	// --- Mocking BankAccountService ---
+	// --- Mocking DashboardRepository: Cache Miss ---
+	mockDashboardRepo.On("GetDashboard", ctx, userIDStr).Return(nil, false, nil).Once()
+	// Expect SaveDashboard to be called
+	mockDashboardRepo.On("SaveDashboard", ctx, userIDStr, mock.AnythingOfType("*finance.Dashboard"), defaultDashboardCacheTTL).Return(nil).Once()
+
+
+	// --- Mocking other services (as data will be generated) ---
 	mockAccounts := []financeEntity.BankAccountRequest{
 		{ID: "acc1", BankAccount: financeEntity.BankAccount{CustomBankName: "Conta Corrente A", AccountNumber: "111"}},
 		{ID: "acc2", BankAccount: financeEntity.BankAccount{CustomBankName: "Poupança B", AccountNumber: "222"}},
 	}
-	mockBankSvc.On("GetBankAccounts", ctx).Return(mockAccounts, nil)
+	mockBankSvc.On("GetBankAccounts", ctx).Return(mockAccounts, nil).Once()
 
-	// --- Mocking IncomeRecordService ---
-	// Income for acc1 (current month)
-	// Income for acc2 (previous month)
 	mockIncomes := []financeEntity.IncomeRecord{
 		{BankAccountID: "acc1", Amount: 2000.00, ReceiptDate: currentMonthStart.Format("2006-01-02")},
-		{BankAccountID: "acc1", Amount: 3000.00, ReceiptDate: currentMonthStart.AddDate(0,0,1).Format("2006-01-02")}, // 5000 total for acc1 current month
-		{BankAccountID: "acc2", Amount: 1000.00, ReceiptDate: currentMonthStart.AddDate(0, -1, 5).Format("2006-01-02")}, // Previous month
+		{BankAccountID: "acc1", Amount: 3000.00, ReceiptDate: currentMonthStart.AddDate(0,0,1).Format("2006-01-02")},
+		{BankAccountID: "acc2", Amount: 1000.00, ReceiptDate: currentMonthStart.AddDate(0, -1, 5).Format("2006-01-02")},
 	}
-	// We expect GetIncomeRecords to be called with UserID "test-user-123"
-	mockIncomeSvc.On("GetIncomeRecords", ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: "test-user-123"}).Return(mockIncomes, nil)
+	mockIncomeSvc.On("GetIncomeRecords", ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userIDStr}).Return(mockIncomes, nil).Once()
 
-	// --- Mocking ExpenseRecordService ---
-	// Paid expense from acc1 (current month)
-	// Paid expense from acc1 (previous month)
-	// Unpaid expense (current month, upcoming bill)
-	// Paid expense from acc2 (current month)
 	paidDateCurrentMonth := currentMonthStart.AddDate(0,0,2).Format("2006-01-02")
 	paidDatePreviousMonth := currentMonthStart.AddDate(0,-1,3).Format("2006-01-02")
 	unpaidDueDate := currentMonthStart.AddDate(0,0,15).Format("2006-01-02")
-	descUnpaid := "Aluguel Mensal" // Example description for unpaid bill
-
+	descUnpaid := "Aluguel Mensal"
 	mockRawExpenses := []financeEntity.ExpenseRecord{
 		{ID: "exp1", BankPaidFrom: &mockAccounts[0].ID, Amount: 500.00, PaymentDate: &paidDateCurrentMonth, Category: "Alimentação", DueDate: currentMonthStart.Format("2006-01-02")},
 		{ID: "exp2", BankPaidFrom: &mockAccounts[0].ID, Amount: 200.00, PaymentDate: &paidDatePreviousMonth, Category: "Transporte", DueDate: currentMonthStart.AddDate(0,-1,1).Format("2006-01-02")},
-		{ID: "exp3", UserID: "test-user-123", Amount: 1500.00, PaymentDate: nil, Category: "Moradia", DueDate: unpaidDueDate, Description: &descUnpaid},
+		{ID: "exp3", UserID: userIDStr, Amount: 1500.00, PaymentDate: nil, Category: "Moradia", DueDate: unpaidDueDate, Description: &descUnpaid},
 		{ID: "exp4", BankPaidFrom: &mockAccounts[1].ID, Amount: 300.00, PaymentDate: &paidDateCurrentMonth, Category: "Lazer", DueDate: currentMonthStart.Format("2006-01-02")},
 	}
-	mockExpenseSvc.On("GetExpenseRecords", ctx).Return(mockRawExpenses, nil)
+	mockExpenseSvc.On("GetExpenseRecords", ctx).Return(mockRawExpenses, nil).Once()
 
-
-	// --- Mocking ProfileGoalsService ---
 	mockProfileGoals := profileEntity.ProfileGoals{
-		Goals2Years: []profileEntity.Goals{
-			{Name: "Viagem", TargetAmount: 5000}, // Assume not completed
-			{Name: "Curso", TargetAmount: 1000},  // Assume not completed
-		},
-		Goals5Years: []profileEntity.Goals{
-			{Name: "Carro", TargetAmount: 20000}, // Assume not completed
-		},
+		Goals2Years: []profileEntity.Goals{{Name: "Viagem", TargetAmount: 5000}, {Name: "Curso", TargetAmount: 1000}},
+		Goals5Years: []profileEntity.Goals{{Name: "Carro", TargetAmount: 20000}},
 	}
-	userIDStr := "test-user-123"
-	mockGoalsSvc.On("GetProfileGoals", ctx, &userIDStr).Return(mockProfileGoals, nil)
+	mockGoalsSvc.On("GetProfileGoals", ctx, &userIDStr).Return(mockProfileGoals, nil).Once()
 
 	// --- Call the method under test ---
 	dashboard, err := dashboardService.GetDashboardData(ctx)
 
-	// --- Assertions ---
+	// --- Assertions (same as original nominal test) ---
 	assert.NoError(t, err)
 	assert.NotNil(t, dashboard)
-
-	// Summary Cards
-	// Acc1: Income 5000 (current) - Expense 500 (current) = 4500
-	// Acc2: Income 0 (current) - Expense 300 (current) = -300
-	// Total Balance = 4500 - 300 = 4200
 	assert.Equal(t, 4200.00, dashboard.SummaryCards.TotalBalance)
-	assert.Equal(t, 5000.00, dashboard.SummaryCards.MonthlyRevenue)  // 2000 + 3000 from acc1
-	assert.Equal(t, 800.00, dashboard.SummaryCards.MonthlyExpenses) // 500 from acc1 + 300 from acc2
-	assert.Equal(t, "0% (0 de 3 metas)", dashboard.SummaryCards.GoalsProgress) // Due to limitation
+	assert.Equal(t, 5000.00, dashboard.SummaryCards.MonthlyRevenue)
+	assert.Equal(t, 800.00, dashboard.SummaryCards.MonthlyExpenses)
+	assert.Equal(t, "0% (0 de 3 metas)", dashboard.SummaryCards.GoalsProgress)
 
-	// Account Summary
 	assert.Len(t, dashboard.AccountSummaryData, 2)
 	for _, as := range dashboard.AccountSummaryData {
 		if as.AccountName == "Conta Corrente A" {
@@ -268,25 +280,21 @@ func TestDashboardService_GetDashboardData_Nominal(t *testing.T) {
 		}
 	}
 
-	// Upcoming Bills
 	assert.Len(t, dashboard.UpcomingBillsData, 1)
 	if len(dashboard.UpcomingBillsData) > 0 {
-		assert.Equal(t, "Aluguel Mensal", dashboard.UpcomingBillsData[0].BillName) // Was Moradia, changed to use Description
+		assert.Equal(t, descUnpaid, dashboard.UpcomingBillsData[0].BillName)
 		assert.Equal(t, 1500.00, dashboard.UpcomingBillsData[0].Amount)
 		parsedDueDate, _ := time.Parse("2006-01-02", unpaidDueDate)
 		assert.Equal(t, parsedDueDate, dashboard.UpcomingBillsData[0].DueDate)
 	}
 
-	// RevenueExpenseChartData (check for 6 months, values for current month)
 	assert.Len(t, dashboard.RevenueExpenseChartData, 6)
-    currentMonthChartItem := dashboard.RevenueExpenseChartData[5] // Last item is current month
+    currentMonthChartItem := dashboard.RevenueExpenseChartData[5]
     assert.Equal(t, currentMonthStart.Format("Jan/06"), currentMonthChartItem.Month)
     assert.Equal(t, 5000.00, currentMonthChartItem.Revenue)
     assert.Equal(t, 800.00, currentMonthChartItem.Expenses)
 
-
-	// ExpenseCategoryChartData
-	assert.Len(t, dashboard.ExpenseCategoryChartData, 2) // Alimentação, Lazer for current month
+	assert.Len(t, dashboard.ExpenseCategoryChartData, 2)
     foundAlimentacao := false
     foundLazer := false
     for _, cat := range dashboard.ExpenseCategoryChartData {
@@ -300,20 +308,133 @@ func TestDashboardService_GetDashboardData_Nominal(t *testing.T) {
             t.Errorf("Unexpected expense category: %s", cat.Name)
         }
     }
-    assert.True(t, foundAlimentacao, "Alimentação category not found or value incorrect")
-    assert.True(t, foundLazer, "Lazer category not found or value incorrect")
+    assert.True(t, foundAlimentacao)
+    assert.True(t, foundLazer)
 
 
 	// Verify that all expected mock calls were made
+	mockDashboardRepo.AssertExpectations(t)
 	mockBankSvc.AssertExpectations(t)
 	mockExpenseSvc.AssertExpectations(t)
 	mockIncomeSvc.AssertExpectations(t)
 	mockGoalsSvc.AssertExpectations(t)
 }
 
-// TODO: Add more test cases:
-// - Test with no bank accounts
-// - Test with no income/expenses
-// - Test with no goals
-// - Test when a dependent service returns an error (e.g., mockBankSvc.On("GetBankAccounts", ctx).Return(nil, fmt.Errorf("db error")))
-// - Test edge cases for date calculations (e.g., start/end of year for charts)
+
+func TestDashboardService_GetDashboardData_CacheHit(t *testing.T) {
+	mockBankSvc := new(MockBankAccountService)
+	mockExpenseSvc := new(MockExpenseRecordService)
+	mockIncomeSvc := new(MockIncomeRecordService)
+	mockGoalsSvc := new(MockProfileGoalsService)
+	mockDashboardRepo := new(MockDashboardRepository)
+
+	dashboardService := NewDashboardService(mockBankSvc, mockExpenseSvc, mockIncomeSvc, mockGoalsSvc, mockDashboardRepo)
+
+	ctx := context.WithValue(context.Background(), "UserID", "test-user-cache-hit")
+	userIDStr := "test-user-cache-hit"
+
+	// --- Mocking DashboardRepository: Cache Hit ---
+	cachedDashboard := &financeEntity.Dashboard{
+		SummaryCards: financeEntity.SummaryCards{TotalBalance: 9999.99, MonthlyRevenue: 100, MonthlyExpenses: 50, GoalsProgress: "Cached"},
+		// Populate other fields if necessary for more specific assertions later
+	}
+	mockDashboardRepo.On("GetDashboard", ctx, userIDStr).Return(cachedDashboard, true, nil).Once()
+	// SaveDashboard should NOT be called
+	// Other service mocks (Bank, Expense, Income, Goals) should NOT be called
+
+	// --- Call the method under test ---
+	dashboard, err := dashboardService.GetDashboardData(ctx)
+
+	// --- Assertions ---
+	assert.NoError(t, err)
+	assert.NotNil(t, dashboard)
+	// Ensure the returned dashboard is the one from the cache
+	assert.Equal(t, cachedDashboard.SummaryCards.TotalBalance, dashboard.SummaryCards.TotalBalance)
+	assert.Equal(t, "Cached", dashboard.SummaryCards.GoalsProgress)
+	assert.Same(t, cachedDashboard, dashboard, "Should return the exact cached dashboard instance")
+
+
+	// Verify that only GetDashboard was called on the repo, and no other services were hit
+	mockDashboardRepo.AssertExpectations(t)
+	mockBankSvc.AssertNotCalled(t, "GetBankAccounts", mock.Anything)
+	mockExpenseSvc.AssertNotCalled(t, "GetExpenseRecords", mock.Anything)
+	mockIncomeSvc.AssertNotCalled(t, "GetIncomeRecords", mock.Anything, mock.Anything)
+	mockGoalsSvc.AssertNotCalled(t, "GetProfileGoals", mock.Anything, mock.Anything)
+}
+
+func TestDashboardService_GetDashboardData_CacheGetError(t *testing.T) {
+    // Similar to CacheMiss, but GetDashboard returns an error.
+    // The service should proceed to generate data and attempt to save it.
+	mockBankSvc := new(MockBankAccountService)
+	mockExpenseSvc := new(MockExpenseRecordService)
+	mockIncomeSvc := new(MockIncomeRecordService)
+	mockGoalsSvc := new(MockProfileGoalsService)
+	mockDashboardRepo := new(MockDashboardRepository)
+
+	dashboardService := NewDashboardService(mockBankSvc, mockExpenseSvc, mockIncomeSvc, mockGoalsSvc, mockDashboardRepo)
+	ctx := context.WithValue(context.Background(), "UserID", "test-user-cache-get-err")
+	userIDStr := "test-user-cache-get-err"
+
+	// --- Mocking DashboardRepository: Cache Get Error ---
+	mockDashboardRepo.On("GetDashboard", ctx, userIDStr).Return(nil, false, errors.New("cache read error")).Once()
+	// Expect SaveDashboard to be called as data will be regenerated
+	mockDashboardRepo.On("SaveDashboard", ctx, userIDStr, mock.AnythingOfType("*finance.Dashboard"), defaultDashboardCacheTTL).Return(nil).Once()
+
+    // Mocks for data generation services (Bank, Income, Expense, Goals) - simplified for brevity
+    mockBankSvc.On("GetBankAccounts", ctx).Return([]financeEntity.BankAccountRequest{}, nil).Once()
+    mockIncomeSvc.On("GetIncomeRecords", ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userIDStr}).Return([]financeEntity.IncomeRecord{}, nil).Once()
+    mockExpenseSvc.On("GetExpenseRecords", ctx).Return([]financeEntity.ExpenseRecord{}, nil).Once()
+    mockGoalsSvc.On("GetProfileGoals", ctx, &userIDStr).Return(profileEntity.ProfileGoals{}, nil).Once()
+
+
+	dashboard, err := dashboardService.GetDashboardData(ctx)
+	assert.NoError(t, err) // Main operation should succeed
+	assert.NotNil(t, dashboard)
+    // Further assertions on generated data if needed
+
+	mockDashboardRepo.AssertExpectations(t)
+	mockBankSvc.AssertExpectations(t)
+	mockExpenseSvc.AssertExpectations(t)
+	mockIncomeSvc.AssertExpectations(t)
+	mockGoalsSvc.AssertExpectations(t)
+}
+
+
+func TestDashboardService_GetDashboardData_CacheSaveError(t *testing.T) {
+    // Cache miss, data generated, but SaveDashboard returns an error.
+    // Main operation should still succeed.
+	mockBankSvc := new(MockBankAccountService)
+	mockExpenseSvc := new(MockExpenseRecordService)
+	mockIncomeSvc := new(MockIncomeRecordService)
+	mockGoalsSvc := new(MockProfileGoalsService)
+	mockDashboardRepo := new(MockDashboardRepository)
+
+	dashboardService := NewDashboardService(mockBankSvc, mockExpenseSvc, mockIncomeSvc, mockGoalsSvc, mockDashboardRepo)
+	ctx := context.WithValue(context.Background(), "UserID", "test-user-cache-save-err")
+	userIDStr := "test-user-cache-save-err"
+
+	// --- Mocking DashboardRepository: Cache Miss, then Save Error ---
+	mockDashboardRepo.On("GetDashboard", ctx, userIDStr).Return(nil, false, nil).Once()
+	mockDashboardRepo.On("SaveDashboard", ctx, userIDStr, mock.AnythingOfType("*finance.Dashboard"), defaultDashboardCacheTTL).Return(errors.New("cache write error")).Once()
+
+    // Mocks for data generation services (Bank, Income, Expense, Goals) - simplified
+    mockBankSvc.On("GetBankAccounts", ctx).Return([]financeEntity.BankAccountRequest{}, nil).Once()
+    mockIncomeSvc.On("GetIncomeRecords", ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userIDStr}).Return([]financeEntity.IncomeRecord{}, nil).Once()
+    mockExpenseSvc.On("GetExpenseRecords", ctx).Return([]financeEntity.ExpenseRecord{}, nil).Once()
+    mockGoalsSvc.On("GetProfileGoals", ctx, &userIDStr).Return(profileEntity.ProfileGoals{}, nil).Once()
+
+	dashboard, err := dashboardService.GetDashboardData(ctx)
+	assert.NoError(t, err) // Main operation should succeed
+	assert.NotNil(t, dashboard)
+    // Further assertions on generated data
+
+	mockDashboardRepo.AssertExpectations(t)
+    // Other services also expected to be called
+	mockBankSvc.AssertExpectations(t)
+	mockExpenseSvc.AssertExpectations(t)
+	mockIncomeSvc.AssertExpectations(t)
+	mockGoalsSvc.AssertExpectations(t)
+}
+
+// Existing tests for other scenarios (no bank accounts, no income/expenses etc.) should also be updated
+// to include the DashboardRepository mock, typically expecting a GetDashboard (miss) and SaveDashboard call.
