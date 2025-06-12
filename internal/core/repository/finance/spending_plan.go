@@ -50,6 +50,7 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 	}
 
 	log.Println("Repo collection", collection)
+	log.Println("Repo *collection", *collection)
 	docs, err := r.DB.Get(ctx, *collection)
 	if err != nil {
 		return nil, err
