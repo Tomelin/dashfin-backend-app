@@ -46,7 +46,7 @@ func InitializeSpendingPlanHandler(
 	return handler
 }
 
-// RegisterSpendingPlanRoutes sets up the routes for spending plan operations under the given router group.
+// setupRoutes sets up the routes for spending plan operations under the given router group.
 func (h *SpendingPlanHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
 
 	spendingPlanGroup := routerGroup.Group("/finance/spending-plan")

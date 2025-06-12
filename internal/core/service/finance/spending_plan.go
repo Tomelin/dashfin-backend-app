@@ -121,6 +121,7 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 	return existingPlan, nil
 }
 
+// CreateSpendingPlan
 func (s *spendingPlanService) CreateSpendingPlan(ctx context.Context, planData *entity_finance.SpendingPlan) (*entity_finance.SpendingPlan, error) {
 
 	if planData == nil {
