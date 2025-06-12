@@ -35,9 +35,7 @@ const spendingPlanCacheTTL = 10 * time.Minute
 
 // GetSpendingPlan retrieves a spending plan for a given user, using cache.
 func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string) (*entity_finance.SpendingPlan, error) {
-	log.Println("svc ctx > ", ctx.Value("UserID"))
 	cacheKey := fmt.Sprintf("spending_plan:%s", userID)
-	log.Println(" cacheKey", cacheKey)
 	// Try to get from cache
 	cachedData, err := s.cache.Get(ctx, cacheKey)
 	if err == nil { // Found in cache
@@ -54,7 +52,6 @@ func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string
 	}
 
 	// Cache miss or cache error, fetch from repository
-	log.Println("Service userID", userID)
 	plan, repoErr := s.repo.GetSpendingPlanByUserID(ctx, userID)
 	if repoErr != nil {
 		return nil, repoErr

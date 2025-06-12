@@ -37,28 +37,21 @@ func (r *SpendingPlanRepository) GetSpendingPlanByUserID(ctx context.Context, us
 		return nil, errors.New("userID cannot be empty")
 	}
 
-	log.Println("Repo userID", userID)
-
 	filters := map[string]interface{}{
 		"id": userID,
 	}
 
-	log.Println("Repo r.collection", r.collection)
-	log.Println("repo ctx > ", ctx.Value("UserID"))
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		log.Println("err > ", err)
 		return nil, err
 	}
 
-	log.Println("Repo collection", collection)
-	log.Println("Repo *collection", *collection)
 	docs, err := r.DB.Get(ctx, *collection)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("Repo docs", docs)
 	var records []entity_finance.SpendingPlan
 	if err := json.Unmarshal(docs, &records); err != nil {
 		return nil, err

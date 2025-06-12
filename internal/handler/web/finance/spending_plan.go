@@ -67,13 +67,9 @@ func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 		return
 	}
 
-	log.Println(" userID", userID)
-	log.Println(" token", token)
-
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
-	log.Println("handler ctx > ", ctx.Value("UserID"))
 	result, err := h.service.GetSpendingPlan(ctx, userID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
