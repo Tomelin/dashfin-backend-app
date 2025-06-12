@@ -1,4 +1,4 @@
-package service_platform
+package platform
 
 import (
 	"context"

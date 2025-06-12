@@ -1,4 +1,4 @@
-package service_finance
+package finance
 
 import (
 	"testing"

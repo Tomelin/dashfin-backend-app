@@ -1,4 +1,4 @@
-package service
+package profile
 
 type ProfileServiceInterface interface {
 	ProfilePersonServiceInterface
