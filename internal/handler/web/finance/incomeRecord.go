@@ -148,7 +148,6 @@ func (h *IncomeRecordHandler) GetIncomeRecordByID(c *gin.Context) {
 
 	result, err := h.service.GetIncomeRecordByID(ctx, id)
 	if err != nil {
-		log.Printf("Error getting income record by ID via service (ID: %s): %v", id, err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {

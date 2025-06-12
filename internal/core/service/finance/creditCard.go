@@ -76,7 +76,7 @@ func (s *CreditCardService) GetCreditCards(ctx context.Context) ([]entity.Credit
 		return nil, err
 	}
 
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("credit cards not found")
 	}
 
@@ -93,7 +93,7 @@ func (s *CreditCardService) GetByFilter(ctx context.Context, data map[string]int
 		return nil, err
 	}
 
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		return nil, errors.New("credit card not found")
 	}
 

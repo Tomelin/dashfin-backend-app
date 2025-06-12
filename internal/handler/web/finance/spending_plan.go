@@ -2,111 +2,154 @@ package web_finance // Changed package name
 
 import (
 	// "errors" // For placeholder function - removed as not used by current placeholder
+	"context"
+	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
 
-	"github.com/gin-gonic/gin"
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
-	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
+	web "github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
+	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
+	"github.com/gin-gonic/gin"
 )
+
+type SpendingPlanHandlerInterface interface {
+	GetSpendingPlan(c *gin.Context)
+	SaveSpendingPlan(c *gin.Context)
+}
 
 // SpendingPlanHandler handles HTTP requests for spending plans.
 type SpendingPlanHandler struct {
-	service service_finance.SpendingPlanService
+	service     entity_finance.SpendingPlanServiceInterface
+	encryptData cryptdata.CryptDataInterface
+	authClient  authenticatior.Authenticator
 }
 
-// NewSpendingPlanHandler creates a new SpendingPlanHandler.
-func NewSpendingPlanHandler(service service_finance.SpendingPlanService) *SpendingPlanHandler {
-	return &SpendingPlanHandler{service: service}
+// InitializeSpendingPlanHandler creates a new SpendingPlanHandler.
+func InitializeSpendingPlanHandler(
+	service entity_finance.SpendingPlanServiceInterface,
+	encryptData cryptdata.CryptDataInterface,
+	authClient authenticatior.Authenticator,
+	routerGroup *gin.RouterGroup,
+	middleware ...gin.HandlerFunc,
+) *SpendingPlanHandler {
+
+	handler := &SpendingPlanHandler{
+		service:     service,
+		encryptData: encryptData,
+		authClient:  authClient,
+	}
+
+	handler.setupRoutes(routerGroup, middleware...)
+	return handler
 }
 
 // RegisterSpendingPlanRoutes sets up the routes for spending plan operations under the given router group.
-func (h *SpendingPlanHandler) RegisterSpendingPlanRoutes(group *gin.RouterGroup) {
-	spendingPlanGroup := group.Group("/spending-plan") // Changed to make routes /spending-plan
-	{
-		spendingPlanGroup.GET("", h.GetSpendingPlan)    // GET /api/finance/spending-plan
-		spendingPlanGroup.PUT("", h.SaveSpendingPlan)   // PUT /api/finance/spending-plan
+func (h *SpendingPlanHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
+
+	spendingPlanGroup := routerGroup.Group("/finance/spending-plan")
+	for _, mw := range middleware {
+		spendingPlanGroup.Use(mw)
 	}
-}
 
-
-// getUserIDFromContext is a placeholder function to extract user ID.
-// In a real application, this would come from a JWT token or session validated by middleware.
-func getUserIDFromContext(c *gin.Context) (string, error) {
-	// Example: Retrieve from a context value set by auth middleware
-	// userID, exists := c.Get("userID")
-	// if !exists {
-	// 	return "", errors.New("userID not found in context")
-	// }
-	// return userID.(string), nil
-
-	// For now, using a hardcoded value for development/testing:
-	// It's better to get it from a header for temporary testing if possible
-	// testUserID := c.GetHeader("X-Test-User-ID")
-	// if testUserID != "" {
-	// 	return testUserID, nil
-	// }
-	return "temp-user-id-from-handler", nil // Placeholder
+	spendingPlanGroup.GET("/", h.GetSpendingPlan)
+	spendingPlanGroup.PUT("/", h.SaveSpendingPlan)
 }
 
 // GetSpendingPlan handles the GET /spending-plan request.
 func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
-	userID, err := getUserIDFromContext(c)
+	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		log.Printf("Error getting required headers: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Use c.Request.Context() for the service call
-	plan, err := h.service.GetSpendingPlan(c.Request.Context(), userID)
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	ctx = context.WithValue(ctx, "UserID", userID)
+
+	result, err := h.service.GetSpendingPlan(ctx, userID)
 	if err != nil {
-		// Differentiate between "not found" (which might not be an error from service, but a nil plan)
-		// and actual server errors.
-		// For now, assuming service might return a specific error for not found, or just (nil, nil).
-		// Based on current service impl, (nil, error) or (nil,nil) if not found and repo returns (nil,nil)
-		// Let's assume a generic error from service indicates a problem.
-		// A more robust error handling would involve custom error types.
-		// If errors.Is(err, some_specific_not_found_error_type) {
-		//  c.JSON(http.StatusNotFound, gin.H{"error": "Spending plan not found"})
-		//  return
-		// }
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve spending plan", "details": err.Error()})
+		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income record: " + err.Error()})
+		}
 		return
 	}
 
-	if plan == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Spending plan not found for this user"})
+	responseBytes, err := json.Marshal(result)
+	if err != nil {
+		log.Printf("Error marshalling result to JSON for GetIncomeRecordByID: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, plan)
+	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
+	if err != nil {
+		log.Printf("Error encrypting response payload for GetIncomeRecordByID: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
 
 // SaveSpendingPlan handles the PUT /spending-plan request.
 func (h *SpendingPlanHandler) SaveSpendingPlan(c *gin.Context) {
-	userID, err := getUserIDFromContext(c)
+	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized", "details": err.Error()})
+		log.Printf("Error getting required headers: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var requestBody entity_finance.SpendingPlan
-	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+	var payload cryptdata.CryptData
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Printf("Error binding JSON payload for CreateIncomeRecord: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
 		return
 	}
 
-	// The service's SaveSpendingPlan will set UserID, CreatedAt, UpdatedAt.
-	// requestBody here primarily brings MonthlyIncome and CategoryBudgets from the user input.
-	// UserID from context takes precedence.
-	// The service method SaveSpendingPlan(ctx, userID, planData) will handle existingPlan.UserID = userID
-	// For a new plan, it also sets UserID.
-	// So, requestBody.UserID from JSON is effectively ignored by the service if userID from context is used.
+	decryptedData, err := h.encryptData.PayloadData(payload.Payload)
+	if err != nil {
+		log.Printf("Error decrypting payload data for CreateIncomeRecord: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error processing request data: " + err.Error()})
+		return
+	}
 
-	savedPlan, err := h.service.SaveSpendingPlan(c.Request.Context(), userID, &requestBody)
+	var spendingRecord entity_finance.SpendingPlan
+	if err := json.Unmarshal(decryptedData, &spendingRecord); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
+		return
+	}
+
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	ctx = context.WithValue(ctx, "UserID", userID)
+
+	spendingRecord.UserID = userID
+
+	savedPlan, err := h.service.SaveSpendingPlan(c.Request.Context(), &spendingRecord)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save spending plan", "details": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, savedPlan)
+	responseBytes, err := json.Marshal(savedPlan)
+	if err != nil {
+		log.Printf("Error marshalling result to JSON for CreateIncomeRecord: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
+		return
+	}
+
+	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
+	if err != nil {
+		log.Printf("Error encrypting response payload for CreateIncomeRecord: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"payload": encryptedResult})
 }
