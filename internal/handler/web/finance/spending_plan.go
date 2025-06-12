@@ -54,8 +54,8 @@ func (h *SpendingPlanHandler) setupRoutes(routerGroup *gin.RouterGroup, middlewa
 		spendingPlanGroup.Use(mw)
 	}
 
-	spendingPlanGroup.GET("/", h.GetSpendingPlan)
-	spendingPlanGroup.PUT("/", h.SaveSpendingPlan)
+	spendingPlanGroup.GET("", h.GetSpendingPlan)
+	spendingPlanGroup.PUT("", h.SaveSpendingPlan)
 }
 
 // GetSpendingPlan handles the GET /spending-plan request.
