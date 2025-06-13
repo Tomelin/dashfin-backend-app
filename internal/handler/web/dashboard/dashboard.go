@@ -99,7 +99,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	responseBytes, err := json.Marshal(results)
+	responseBytes, err := json.Marshal(results.SummaryCards)
 	if err != nil {
 		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})

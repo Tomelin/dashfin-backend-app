@@ -163,7 +163,6 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	}
 
 	if h.encryptData != nil {
-		log.Printf("Encrypting response for PlannedVsActual for user %s.", userID)
 		responseBytes, err := json.Marshal(results)
 		if err != nil {
 			log.Printf("Error marshalling results for PlannedVsActual user %s: %v", userID, err)
