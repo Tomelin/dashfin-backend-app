@@ -3,6 +3,7 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -81,7 +82,17 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve dashboard data"})
 		return
 	}
-	log.Println("handler result", results)
+	total := []dashboardEntity.Dashboard{}
+	total = append(total, *results)
+	for _, v := range total {
+		fmt.Println("SummaryCards: ", v.SummaryCards)
+		fmt.Println("AccountSummaryData: ", v.AccountSummaryData)
+		fmt.Println("UpcomingBillsData: ", v.UpcomingBillsData)
+		fmt.Println("RevenueExpenseChartData: ", v.RevenueExpenseChartData)
+		fmt.Println("ExpenseCategoryChartData: ", v.ExpenseCategoryChartData)
+		fmt.Println("PersonalizedRecommendationsData: ", v.PersonalizedRecommendationsData)
+	}
+
 	if results == nil {
 		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})
