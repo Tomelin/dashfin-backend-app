@@ -118,6 +118,10 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		return nil, fmt.Errorf("failed to get expense records: %w", err)
 	}
 	log.Printf("Loaded %d expense records", len(recors))
+	for _, v := range recors {
+		b, err := isInCurrentMonthAndYear(v.DueDate)
+		log.Println(v.DueDate, b, err)
+	}
 
 	planningDoc, err := s.repo.GetExpensePlanning(ctx, userID, currentMonth, currentYear)
 	if err != nil {
@@ -216,4 +220,26 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 	log.Printf("Processed %d categories for PlannedVsActual response.", len(result))
 
 	return result, nil
+}
+
+func isInCurrentMonthAndYear(dateString string) (bool, error) {
+	// 1. Parse da string para time.Time
+	// Usamos o layout "2006-01-02", que é a forma padrão do Go para especificar formatos de data.
+	// Isso garante que a string seja interpretada corretamente.
+	inputDate, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		// Retornamos um erro claro se o formato for inválido, tornando a função mais robusta.
+		return false, fmt.Errorf("erro ao analisar a data: %w", err)
+	}
+
+	// 2. Obter a data e hora atuais
+	now := time.Now()
+
+	// 3. Comparar ano e mês
+	// Acessamos e comparamos o ano e o mês de ambas as datas.
+	// Esta é a forma mais clara e performática de fazer essa verificação específica.
+	isSameYear := inputDate.Year() == now.Year()
+	isSameMonth := inputDate.Month() == now.Month()
+
+	return isSameYear && isSameMonth, nil
 }
