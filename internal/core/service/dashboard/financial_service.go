@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"fmt"
-	"log"
 	"math"
 	"regexp"
 
@@ -96,25 +95,21 @@ func roundToTwoDecimals(f float64) float64 {
 //   - An error if any issue occurs during data fetching or processing (e.g., database errors),
 //     except for the "no planning data found" case, which returns ([], nil).
 func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string, req entity_dashboard.PlannedVsActualRequest) ([]entity_dashboard.PlannedVsActualCategory, error) {
-	log.Printf("GetPlannedVsActual called for userID: %s, Month: %d, Year: %d", userID, req.Month, req.Year)
 
 	// Determine Month and Year
 	currentMonth := req.Month
 	currentYear := req.Year
 	if currentMonth == 0 {
 		currentMonth = int(time.Now().Month())
-		log.Printf("Defaulting Month to current month: %d", currentMonth)
 	}
 	if currentYear == 0 {
 		currentYear = time.Now().Year()
-		log.Printf("Defaulting Year to current year: %d", currentYear)
 	}
 
 	currentSpendPlan := make([]entity_dashboard.PlannedVsActualCategory, 0)
 
 	expenses := s.getExpenses(ctx, currentMonth, currentYear)
 	if len(expenses) == 0 {
-		log.Printf("No expenses found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
 		return currentSpendPlan, nil
 	}
 
@@ -122,7 +117,6 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 
 	spend := s.getSpendingPlan(ctx, userID)
 	if spend == nil {
-		log.Printf("No spending plan found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
 		return currentSpendPlan, nil
 	}
 
@@ -175,7 +169,6 @@ func (s *FinancialService) getExpenses(ctx context.Context, month, year int) []f
 	if err != nil {
 		return expenses
 	}
-	log.Printf("Fetched %d expense records", len(queryExpenses))
 
 	for _, v := range queryExpenses {
 		b, err := s.isInCurrentMonthAndYear(v.DueDate)
@@ -185,7 +178,6 @@ func (s *FinancialService) getExpenses(ctx context.Context, month, year int) []f
 		expenses = append(expenses, v)
 	}
 
-	log.Printf("Filtered %d expense records", len(expenses))
 	return expenses
 }
 
@@ -204,8 +196,6 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 	}
 
 	filteredCategoryBudgets := make([]finance_entity.CategoryBudget, 0)
-
-	log.Printf("Fetched %d expense records", len(querySpend.CategoryBudgets))
 
 	for _, v := range querySpend.CategoryBudgets { // Iterate over a copy or use a different approach if removing during iteration
 		if v.Amount > 0.00 {
