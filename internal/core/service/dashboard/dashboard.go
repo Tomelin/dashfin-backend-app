@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -89,28 +88,25 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userID string) (*dashboardEntity.Dashboard, error) {
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	log.Println("currentMonthStart > ", currentMonthStart)
 
 	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
 		allUserBankAccounts = []financeEntity.BankAccountRequest{}
 	}
-	log.Println(" allUserBankAccounts > ", allUserBankAccounts)
 
 	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userID})
 	if err != nil {
 		fmt.Printf("Warning: Error fetching income records for user %s: %v\n", userID, err)
 		allUserIncomes = []financeEntity.IncomeRecord{}
 	}
-	log.Println(" allUserIncomes > ", allUserIncomes)
 
 	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
 		allUserRawExpenses = []financeEntity.ExpenseRecord{}
 	}
-	log.Println(" allUserRawExpenses > ", allUserRawExpenses)
+
 	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
 	for _, exp := range allUserRawExpenses {
 		if exp.PaymentDate != nil && *exp.PaymentDate != "" {
@@ -120,7 +116,6 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 			}
 		}
 	}
-	log.Println(" allUserPaidExpenses > ", allUserPaidExpenses)
 
 	totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
