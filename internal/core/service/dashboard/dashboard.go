@@ -290,18 +290,25 @@ func (s *DashboardService) getUpcomingBills(
 					if billName == nil || *billName == "" {
 						billName = &exp.Category
 					}
-					log.Println(dueDate.String())
+					log.Println(dueDate.Format("2006-01-02"))
 					bills = append(bills, dashboardEntity.UpcomingBill{
 						BillName: *billName,
 						Amount:   exp.Amount,
-						DueDate:  dueDate, // Assign the parsed time.Time value
+						DueDate:  dueDate.Format("2006-01-02"), // Assign the parsed time.Time value
 					})
 				}
 			}
 		}
 	}
 	sort.Slice(bills, func(i, j int) bool {
-		return bills[i].DueDate.Before(bills[j].DueDate)
+		// Parse DueDate strings back to time.Time for comparison
+		dateI, _ := time.Parse("2006-01-02", bills[i].DueDate)
+		dateJ, _ := time.Parse("2006-01-02", bills[j].DueDate)
+
+		// Handle parsing errors, maybe consider invalid dates as later or earlier depending on desired sort behavior
+		// For simplicity, if one fails, the order might be unpredictable for that pair.
+		// A more robust solution would handle errors or ensure dates are always parseable.
+		return dateI.Before(dateJ)
 	})
 	return bills, nil
 }

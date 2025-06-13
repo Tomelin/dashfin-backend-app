@@ -39,9 +39,9 @@ type AccountSummary struct {
 
 // UpcomingBill represents a bill that is due soon.
 type UpcomingBill struct {
-	BillName string    `json:"billName"` // Nome da conta a pagar.
-	Amount   float64   `json:"amount"`   // Valor da conta.
-	DueDate  time.Time `json:"dueDate"`  // Data de vencimento (YYYY-MM-DD).
+	BillName string  `json:"billName"` // Nome da conta a pagar.
+	Amount   float64 `json:"amount"`   // Valor da conta.
+	DueDate  string  `json:"dueDate"`  // Data de vencimento (YYYY-MM-DD).
 }
 
 // RevenueExpenseChartItem represents a data point for the revenue vs. expenses chart.
