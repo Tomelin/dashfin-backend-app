@@ -81,7 +81,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve dashboard data"})
 		return
 	}
-
+	log.Println("handler result", results)
 	if results == nil {
 		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})

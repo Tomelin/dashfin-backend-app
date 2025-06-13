@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -73,7 +72,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	if err != nil {
 		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	}
-	log.Println("generateFreshDashboardData >", dashboard)
 
 	// 3. Save the newly generated dashboard to cache
 	// Use a default TTL, this could be configurable
@@ -122,10 +120,10 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
 	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
-	log.Println("totalBalance > ", totalBalance, "monthlyRevenue > ", monthlyRevenue, "monthlyExpenses > ", monthlyExpenses)
+
 	goalsProgressStr := "N/A (Data unavailable)"
 	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
-	log.Println("profileGoals > ", profileGoals)
+
 	if err != nil {
 		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
 	} else {
@@ -142,9 +140,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	}
 
 	dashboard.AccountSummaryData = s.getAccountSummaries(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
-	log.Println("getAccountSummaries > ", dashboard.AccountSummaryData)
 	upcomingBills, err := s.getUpcomingBills(ctx, userID, now, allUserRawExpenses)
-	log.Println("upcomingBills > ", upcomingBills)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching upcoming bills: %v\n", err)
 		dashboard.UpcomingBillsData = []dashboardEntity.UpcomingBill{}
@@ -153,7 +149,6 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	}
 
 	dashboard.RevenueExpenseChartData = s.getRevenueExpenseChartData(allUserIncomes, allUserPaidExpenses, now, 6)
-	log.Println("RevenueExpenseChartData > ", dashboard.RevenueExpenseChartData)
 	expenseCategories, err := s.getExpenseCategoriesForMonth(allUserPaidExpenses, currentMonthStart)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense categories: %v\n", err)
@@ -164,7 +159,6 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 
 	dashboard.PersonalizedRecommendationsData = []dashboardEntity.PersonalizedRecommendation{}
 
-	log.Println("dashboard > ", dashboard)
 	return dashboard, nil
 }
 
