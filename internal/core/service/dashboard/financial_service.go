@@ -110,10 +110,12 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		log.Printf("Defaulting Year to current year: %d", currentYear)
 	}
 
+	currentSpendPlan := make([]entity_dashboard.PlannedVsActualCategory, 0)
+
 	expenses := s.getExpenses(ctx, currentMonth, currentYear)
 	if len(expenses) == 0 {
 		log.Printf("No expenses found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-		return []entity_dashboard.PlannedVsActualCategory{}, nil
+		return currentSpendPlan, nil
 	}
 
 	sumResult := sumExpense(expenses)
@@ -122,10 +124,24 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 	spend := s.getSpendingPlan(ctx, userID)
 	if spend == nil {
 		log.Printf("No spending plan found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-		return []entity_dashboard.PlannedVsActualCategory{}, nil
+		return currentSpendPlan, nil
 	}
 
-	return nil, nil
+	for _, v := range spend.CategoryBudgets {
+		for _, v2 := range sumResult {
+			if v.Category == v2.Category {
+				currentSpendPlan = append(currentSpendPlan, entity_dashboard.PlannedVsActualCategory{
+					Category:        v.Category,
+					PlannedAmount:   v.Amount,
+					ActualAmount:    v2.Amount,
+					SpentPercentage: roundToTwoDecimals(v2.Amount / spend.MonthlyIncome * 100),
+				})
+				break
+			}
+		}
+	}
+
+	return currentSpendPlan, nil
 }
 
 func (s *FinancialService) getExpenses(ctx context.Context, month, year int) []finance_entity.ExpenseRecord {
