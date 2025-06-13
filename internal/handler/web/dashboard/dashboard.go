@@ -3,7 +3,6 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -82,22 +81,24 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve dashboard data"})
 		return
 	}
-	total := []dashboardEntity.Dashboard{}
-	total = append(total, *results)
-	for _, v := range total {
-		fmt.Println("SummaryCards: ", v.SummaryCards)
-		fmt.Println("AccountSummaryData: ", v.AccountSummaryData)
-		fmt.Println("UpcomingBillsData: ", v.UpcomingBillsData)
-		fmt.Println("RevenueExpenseChartData: ", v.RevenueExpenseChartData)
-		fmt.Println("ExpenseCategoryChartData: ", v.ExpenseCategoryChartData)
-		fmt.Println("PersonalizedRecommendationsData: ", v.PersonalizedRecommendationsData)
-	}
 
 	if results == nil {
 		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})
 		return
 	}
+
+	bills := make([]dashboardEntity.UpcomingBillData, 0)
+
+	for _, v := range results.UpcomingBillsData {
+		bills = append(bills, dashboardEntity.UpcomingBillData{
+			Name:    v.BillName,
+			Amount:  v.Amount,
+			DueDate: v.DueDate.Format("02/01/2006"),
+		})
+	}
+
+	results.SummaryCards.UpcomingBillsData = bills
 
 	responseBytes, err := json.Marshal(results.SummaryCards)
 	if err != nil {

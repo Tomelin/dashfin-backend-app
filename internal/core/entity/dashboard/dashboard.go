@@ -15,12 +15,20 @@ type Dashboard struct {
 	PersonalizedRecommendationsData []PersonalizedRecommendation `json:"personalized_recommendations_data"`
 }
 
+type UpcomingBillData struct {
+	ID      string  `json:"id"`
+	Name    string  `json:"name"`
+	Amount  float64 `json:"amount"`
+	DueDate string  `json:"dueDate"`
+}
+
 // SummaryCards holds the data for the summary cards at the top of the dashboard.
 type SummaryCards struct {
-	TotalBalance    float64 `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
-	MonthlyRevenue  float64 `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
-	MonthlyExpenses float64 `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
-	GoalsProgress   string  `json:"goalsProgress"`   // Progresso geral das metas financeiras.
+	TotalBalance      float64            `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
+	MonthlyRevenue    float64            `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
+	MonthlyExpenses   float64            `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
+	GoalsProgress     string             `json:"goalsProgress"`   // Progresso geral das metas financeiras.
+	UpcomingBillsData []UpcomingBillData `json:"upcomingBillsData"`
 }
 
 // AccountSummary represents a summary of a single account.
