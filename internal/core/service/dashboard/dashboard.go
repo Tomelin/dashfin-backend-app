@@ -65,10 +65,8 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
 	}
 	if found && cachedDashboard != nil {
-		fmt.Printf("Info: Dashboard cache hit for user %s\n", userID)
 		return cachedDashboard, nil
 	}
-	fmt.Printf("Info: Dashboard cache miss for user %s\n", userID)
 
 	// 2. If not in cache or error during cache fetch, generate fresh data
 	dashboard, err := s.generateFreshDashboardData(ctx, userID)
@@ -94,18 +92,21 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
 	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx)
+	log.Println("allUserBankAccounts > ", allUserBankAccounts)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
 		allUserBankAccounts = []financeEntity.BankAccountRequest{}
 	}
 
 	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userID})
+	log.Println("allUserIncomes > ", allUserIncomes)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching income records for user %s: %v\n", userID, err)
 		allUserIncomes = []financeEntity.IncomeRecord{}
 	}
 
 	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
+	log.Println("allUserRawExpenses > ", allUserRawExpenses)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
 		allUserRawExpenses = []financeEntity.ExpenseRecord{}
