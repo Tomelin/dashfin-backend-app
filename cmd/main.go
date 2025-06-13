@@ -66,9 +66,15 @@ func main() {
 	//	}
 	//	log.Fatal("finish")
 
-	svcProfile, err := initializeProfileServices(db)
+	svcProfilePerson, svcProfileProfession, svcProfileGoals, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Reconstruct the aggregate ProfileAllService for handlers that need it
+	svcProfileAll, err := service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+	if err != nil {
+		log.Fatalf("failed to initialize ProfileAllService: %v", err)
 	}
 
 	svcSupport, err := initializeSupportServices(db)
@@ -106,13 +112,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srvDashboard, err := initializeDashboardServices(db, cacheClient, svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfile)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Initialize Financial Repository & Service for PlannedVsActual
+	financialRepo := repository_dashboard.NewFirebaseFinancialRepository()
+	financialSvc := service_dashboard.NewFinancialService(financialRepo, db)
+	// No error is returned by NewFinancialService or NewFirebaseFinancialRepository, so no error check needed here.
+
 	web_dashboard.InitializeDashboardHandler(srvDashboard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
-	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_dashboard.InitializePlannedVsActualHandler(financialSvc, authClient, crypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web.InicializationProfileHandlerHttp(svcProfileAll, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
@@ -201,28 +213,28 @@ func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator
 	return authClient, db, nil
 }
 
-func initializeProfileServices(db database.FirebaseDBInterface) (service_profile.ProfileServiceInterface, error) {
+func initializeProfileServices(db database.FirebaseDBInterface) (service_profile.ProfilePersonServiceInterface, service_profile.ProfileProfessionServiceInterface, service_profile.ProfileGoalsServiceInterface, error) {
 	repoProfile, err := repository_profile.InicializeProfileRepository(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile repository: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile repository: %w", err)
 	}
 
 	svcProfilePerson, err := service_profile.InicializeProfileService(repoProfile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile person service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile person service: %w", err)
 	}
 
 	svcProfileProfession, err := service_profile.InicializeProfileProfessionService(repoProfile, svcProfilePerson)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile profession service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile profession service: %w", err)
 	}
 
 	svcProfileGoals, err := service_profile.InicializeProfileGoalsService(repoProfile, svcProfilePerson)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile goals service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile goals service: %w", err)
 	}
 
-	return service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+	return svcProfilePerson, svcProfileProfession, svcProfileGoals, nil
 }
 
 func initializeSupportServices(db database.FirebaseDBInterface) (service.SupportServiceInterface, error) {
@@ -300,8 +312,6 @@ func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache
 }
 
 func initializeDashboardServices(
-	db database.FirebaseDBInterface,
-	cache cache.CacheService,
 	bankAccountSvc entity_finance.BankAccountServiceInterface,
 	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
 	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
