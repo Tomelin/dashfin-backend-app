@@ -2,11 +2,16 @@ package web_dashboard
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
+	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
+	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	// Service import will be used by the initializer that wires up the actual service
 	// "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 )
@@ -18,15 +23,25 @@ type DashboardServiceInterface interface {
 
 // DashboardHandler handles HTTP requests for dashboard data using Gin.
 type DashboardHandler struct {
-	service DashboardServiceInterface
+	service     DashboardServiceInterface
+	encryptData cryptdata.CryptDataInterface
+	authClient  authenticatior.Authenticator
 	// router  *gin.RouterGroup // Not strictly needed if setupRoutes is called by initializer
 }
 
 // NewDashboardHandler creates a new DashboardHandler instance.
 // This is kept for direct instantiation, e.g. in tests without full router setup.
-func NewDashboardHandler(svc DashboardServiceInterface) *DashboardHandler {
+func NewDashboardHandler(
+	svc DashboardServiceInterface,
+	encryptData cryptdata.CryptDataInterface,
+	authClient authenticatior.Authenticator,
+	routerGroup *gin.RouterGroup,
+	middleware ...gin.HandlerFunc,
+) *DashboardHandler {
 	return &DashboardHandler{
-		service: svc,
+		service:     svc,
+		encryptData: encryptData,
+		authClient:  authClient,
 	}
 }
 
@@ -35,12 +50,15 @@ func NewDashboardHandler(svc DashboardServiceInterface) *DashboardHandler {
 // It mirrors the pattern seen in BankAccountHandler.
 func InitializeDashboardHandler(
 	svc DashboardServiceInterface,
+	encryptData cryptdata.CryptDataInterface,
+	authClient authenticatior.Authenticator,
 	routerGroup *gin.RouterGroup,
-	// authMiddleware gin.HandlerFunc, // Assuming a common auth middleware
-	middleware ...gin.HandlerFunc, // To match BankAccountHandler pattern
+	middleware ...gin.HandlerFunc,
 ) *DashboardHandler {
 	handler := &DashboardHandler{
-		service: svc,
+		service:     svc,
+		encryptData: encryptData,
+		authClient:  authClient,
 	}
 
 	handler.setupRoutes(routerGroup, middleware...)
@@ -75,15 +93,51 @@ func (h *DashboardHandler) setupRoutes(
 
 	// Final decision: make it /finance/dashboard to group with other finance routes
 	// All middleware passed to InitializeDashboardHandler will be applied.
-	routerGroup.GET("/dashboard/summary", append(middleware, h.GetDashboard)...)
+	dashboardRoutes := routerGroup.Group("/dashboard/summary")
+	for _, mw := range middleware {
+		dashboardRoutes.Use(mw)
+	}
+
+	dashboardRoutes.GET("", append(middleware, h.GetDashboard)...)
 }
 
 // GetDashboard is the Gin HTTP handler for GET /dashboard requests.
 func (h *DashboardHandler) GetDashboard(c *gin.Context) {
-	dashboardData, err := h.service.GetDashboardData(c.Request.Context())
+	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
+	if err != nil {
+		log.Printf("Error getting required headers: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	ctx = context.WithValue(ctx, "UserID", userID)
+
+	results, err := h.service.GetDashboardData(ctx)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve dashboard data"})
 		return
 	}
-	c.JSON(http.StatusOK, dashboardData)
+
+	if results == nil {
+		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
+		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})
+		return
+	}
+
+	responseBytes, err := json.Marshal(results)
+	if err != nil {
+		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
+		return
+	}
+
+	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
+	if err != nil {
+		log.Printf("Error encrypting response payload for GetIncomeRecords: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
