@@ -117,7 +117,6 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		log.Printf("Error fetching expense records: %v", err)
 		return nil, fmt.Errorf("failed to get expense records: %w", err)
 	}
-
 	log.Printf("Loaded %d expense records", len(recors))
 
 	planningDoc, err := s.repo.GetExpensePlanning(ctx, userID, currentMonth, currentYear)

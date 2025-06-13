@@ -73,7 +73,7 @@ func (h *PlannedVsActualHandler) setupRoutes(
 ) {
 	// Create a new group for /dashboard/planned-vs-actual endpoint
 	// e.g. if routerGroup is /api/v1, this becomes /api/v1/dashboard/planned-vs-actual
-	plannedVsActualRoutes := routerGroup.Group("/dashboard/planned-vs-actual")
+	plannedVsActualRoutes := routerGroup.Group("/dashboard/planned-vs-actual2")
 
 	// Apply all provided middleware to this specific group of routes.
 	for _, mw := range middleware {

@@ -62,6 +62,13 @@ func (h *DashboardHandler) setupRoutes(
 	}
 
 	dashboardRoutes.GET("", append(middleware, h.GetDashboard)...)
+
+	dashboardRoutes = routerGroup.Group("/dashboard/summary")
+	for _, mw := range middleware {
+		dashboardRoutes.Use(mw)
+	}
+
+	dashboardRoutes.GET("", append(middleware, h.GetDashboard)...)
 }
 
 // GetDashboard is the Gin HTTP handler for GET /dashboard requests.
