@@ -130,10 +130,10 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		for _, v2 := range sumResult {
 			if v.Category == v2.Category {
 				currentSpendPlan = append(currentSpendPlan, entity_dashboard.PlannedVsActualCategory{
-					Category:        v.Category,
+					Category:        v2.Category,
 					PlannedAmount:   v.Amount,
 					ActualAmount:    v2.Amount,
-					Label:           v.Category,
+					Label:           v2.Category,
 					SpentPercentage: roundToTwoDecimals(v2.Amount / spend.MonthlyIncome * 100),
 				})
 				break
