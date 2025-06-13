@@ -290,7 +290,7 @@ func (s *DashboardService) getUpcomingBills(
 					if billName == nil || *billName == "" {
 						billName = &exp.Category
 					}
-					log.Println(dueDate)
+					log.Println(dueDate.String())
 					bills = append(bills, dashboardEntity.UpcomingBill{
 						BillName: *billName,
 						Amount:   exp.Amount,
