@@ -73,11 +73,13 @@ func (h *PlannedVsActualHandler) setupRoutes(
 ) {
 	// Create a new group for /dashboard/planned-vs-actual endpoint
 	// e.g. if routerGroup is /api/v1, this becomes /api/v1/dashboard/planned-vs-actual
-	plannedVsActualRoutes := routerGroup.Group("/dashboard/planned-vs-actual2")
+	plannedVsActualRoutes := routerGroup.Group("/dashboard/planned-vs-actual")
+	financePlannedVsActualRoutes := routerGroup.Group("/finance/dashboard/planned-vs-actual")
 
 	// Apply all provided middleware to this specific group of routes.
 	for _, mw := range middleware {
 		plannedVsActualRoutes.Use(mw)
+		financePlannedVsActualRoutes.Use(mw)
 	}
 
 	// Define the GET route.
@@ -87,6 +89,7 @@ func (h *PlannedVsActualHandler) setupRoutes(
 	// Kept for consistency if this is an established pattern in the project.
 	// Typically, group-level middleware is sufficient.
 	plannedVsActualRoutes.GET("", append(middleware, h.GetPlannedVsActual)...)
+	financePlannedVsActualRoutes.GET("", append(middleware, h.GetPlannedVsActual)...)
 }
 
 // GetPlannedVsActual is the Gin handler function for the GET /dashboard/planned-vs-actual endpoint.
