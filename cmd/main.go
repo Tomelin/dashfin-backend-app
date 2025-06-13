@@ -10,10 +10,12 @@ import (
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	entity_platform "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
+	repository_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard"
 	repository_finance "github.com/Tomelin/dashfin-backend-app/internal/core/repository/finance"
 	repository_platform "github.com/Tomelin/dashfin-backend-app/internal/core/repository/platform"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
+	service_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/service/dashboard"
 	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 	service_platform "github.com/Tomelin/dashfin-backend-app/internal/core/service/platform"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
@@ -289,3 +291,33 @@ func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache
 	}
 	return svcSpendingRecord, nil
 }
+
+func initializeDashboardServices(
+	db database.FirebaseDBInterface,
+	cache cache.CacheService,
+	bankAccountSvc entity_finance.BankAccountServiceInterface,
+	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
+	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
+	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
+) (*service_dashboard.DashboardService, error) {
+	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
+	// }
+
+	svcSpendingRecord := service_dashboard.NewDashboardService(
+		bankAccountSvc,
+		expenseRecordSvc,
+		incomeRecordSvc,
+		profileGoalsSvc,
+		repoSpendingRecord,
+	)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
+	// }
+	return svcSpendingRecord, nil
+}
+
+// too many arguments in call to service_dashboard.NewDashboardService
+// have (*"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository, cache.CacheService, entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, *"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository)
+// want (entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard".DashboardRepositoryInterface)compilerWrongArgCount
