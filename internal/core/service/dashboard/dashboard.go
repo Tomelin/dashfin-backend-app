@@ -73,7 +73,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	if err != nil {
 		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	}
-	log.Println(dashboard)
+	log.Println("generateFreshDashboardData >", dashboard)
 
 	// 3. Save the newly generated dashboard to cache
 	// Use a default TTL, this could be configurable
