@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"regexp"
-	"sort"
 
 	// "strconv" // Not used directly, can be removed if not needed by other implicit operations
 	"time"
@@ -109,120 +108,40 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		log.Printf("Defaulting Year to current year: %d", currentYear)
 	}
 
-	// Fetch Data
-	log.Printf("Fetching expense planning for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-
-	recors, err := s.expsene.GetExpenseRecords(ctx)
-	if err != nil {
-		log.Printf("Error fetching expense records: %v", err)
-		return nil, fmt.Errorf("failed to get expense records: %w", err)
-	}
-	log.Printf("Loaded %d expense records", len(recors))
-	for _, v := range recors {
-		b, err := isInCurrentMonthAndYear(v.DueDate)
-		log.Println(v.DueDate, b, err)
-	}
-
-	planningDoc, err := s.repo.GetExpensePlanning(ctx, userID, currentMonth, currentYear)
-	if err != nil {
-		log.Printf("Error fetching expense planning for userID %s: %v", userID, err)
-		return nil, fmt.Errorf("failed to get expense planning: %w", err)
-	}
-	if planningDoc == nil {
-		log.Printf("No expense planning found for userID %s for %d/%d. Returning empty result.", userID, currentMonth, currentYear)
-		return []entity_dashboard.PlannedVsActualCategory{}, nil // No planning, return empty as per 404 requirement
-	}
-	if planningDoc.Categories == nil || len(planningDoc.Categories) == 0 {
-		log.Printf("Expense planning found for userID %s for %d/%d, but no categories defined. Returning empty result.", userID, currentMonth, currentYear)
+	expenses := s.getExpenses(ctx, currentMonth, currentYear)
+	if len(expenses) == 0 {
+		log.Printf("No expenses found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
 		return []entity_dashboard.PlannedVsActualCategory{}, nil
 	}
 
-	log.Printf("Fetching actual expenses for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-	actualExpenseDocs, err := s.repo.GetExpenses(ctx, userID, currentMonth, currentYear)
-	if err != nil {
-		log.Printf("Error fetching actual expenses for userID %s: %v", userID, err)
-		return nil, fmt.Errorf("failed to get actual expenses: %w", err)
-	}
+	// Fetch Data
+	log.Printf("Fetching expense planning for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
 
-	log.Printf("Fetching expense categories definitions")
-	categoryDocs, err := s.repo.GetExpenseCategories(ctx)
-	if err != nil {
-		log.Printf("Error fetching expense categories definitions: %v", err)
-		return nil, fmt.Errorf("failed to get expense categories: %w", err)
-	}
-
-	categoryLabels := make(map[string]string)
-	for _, catDoc := range categoryDocs {
-		categoryLabels[catDoc.Category] = catDoc.Label
-	}
-	log.Printf("Loaded %d category labels", len(categoryLabels))
-
-	// Process Data
-	actualAmounts := make(map[string]float64)
-	for _, expense := range actualExpenseDocs {
-		if !categoryRegex.MatchString(expense.Category) {
-			log.Printf("Warning: Actual expense document ID %s has invalid category key format: %s. Skipping.", expense.ID, expense.Category)
-			continue // Skip if category key in actual expense is invalid
-		}
-		actualAmounts[expense.Category] += expense.Amount
-	}
-	log.Printf("Aggregated %d actual expense amounts by category", len(actualAmounts))
-
-	var result []entity_dashboard.PlannedVsActualCategory
-
-	log.Println("Processing planned categories...")
-	for categoryKey, plannedAmount := range planningDoc.Categories {
-		// Validation: category key format
-		if !categoryRegex.MatchString(categoryKey) {
-			log.Printf("Warning: Planned category key '%s' does not match format ^[a-z0-9_]+$. Skipping this category.", categoryKey)
-			continue
-		}
-
-		// Validation: plannedAmount must be non-negative (already ensured by struct tag gte=0 if source is validated)
-		if plannedAmount < 0 {
-			log.Printf("Warning: Planned amount for category '%s' is negative (%.2f). Skipping this category.", categoryKey, plannedAmount)
-			continue
-		}
-
-		actualAmount := actualAmounts[categoryKey] // Defaults to 0.0 if not present
-
-		label, labelExists := categoryLabels[categoryKey]
-		if !labelExists || label == "" {
-			log.Printf("Warning: No label found for category key '%s'. Defaulting label to category key.", categoryKey)
-			label = categoryKey // Default label to categoryKey if not found or empty
-		}
-
-		var spentPercentage float64
-		if plannedAmount == 0 {
-			spentPercentage = 0 // If nothing was planned, spent percentage is 0, even if there was actual spending.
-		} else {
-			spentPercentage = (actualAmount / plannedAmount) * 100
-		}
-		spentPercentage = roundToTwoDecimals(spentPercentage)
-
-		// Validation: actualAmount must be non-negative (already ensured by struct tag gte=0 if source is validated)
-		// No explicit check here as it's summed from validated or trusted sources.
-
-		pvaCategory := entity_dashboard.PlannedVsActualCategory{
-			Category:        categoryKey,
-			Label:           label,
-			PlannedAmount:   roundToTwoDecimals(plannedAmount), // Ensure planned amount is also rounded for consistency
-			ActualAmount:    roundToTwoDecimals(actualAmount),
-			SpentPercentage: spentPercentage,
-		}
-		result = append(result, pvaCategory)
-	}
-
-	// Sort Results by Category key for consistent output
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Category < result[j].Category
-	})
-	log.Printf("Processed %d categories for PlannedVsActual response.", len(result))
-
-	return result, nil
+	return nil, nil
 }
 
-func isInCurrentMonthAndYear(dateString string) (bool, error) {
+func (s *FinancialService) getExpenses(ctx context.Context, month, year int) []finance_entity.ExpenseRecord {
+
+	expenses := make([]finance_entity.ExpenseRecord, 0)
+	queryExpenses, err := s.expsene.GetExpenseRecords(ctx)
+	if err != nil {
+		return expenses
+	}
+	log.Printf("Fetched %d expense records", len(queryExpenses))
+
+	for _, v := range queryExpenses {
+		b, err := s.isInCurrentMonthAndYear(v.DueDate)
+		if err != nil || !b {
+			continue
+		}
+		expenses = append(expenses, v)
+	}
+
+	log.Printf("Filtered %d expense records", len(expenses))
+	return expenses
+}
+
+func (s *FinancialService) isInCurrentMonthAndYear(dateString string) (bool, error) {
 	// 1. Parse da string para time.Time
 	// Usamos o layout "2006-01-02", que é a forma padrão do Go para especificar formatos de data.
 	// Isso garante que a string seja interpretada corretamente.
