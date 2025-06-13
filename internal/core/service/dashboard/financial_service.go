@@ -119,7 +119,6 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 	}
 
 	sumResult := sumExpense(expenses)
-	log.Printf("Sum of expenses: %v", sumResult)
 
 	spend := s.getSpendingPlan(ctx, userID)
 	if spend == nil {
@@ -127,8 +126,19 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		return currentSpendPlan, nil
 	}
 
+	notFound := entity_dashboard.PlannedVsActualCategory{
+		Category:        "Não cadastrada",
+		PlannedAmount:   0,
+		ActualAmount:    0,
+		Label:           "Não cadastrada",
+		SpentPercentage: 0,
+	}
+
 	for _, v := range spend.CategoryBudgets {
+		found := false
+		amountNofFound := 0.00
 		for _, v2 := range sumResult {
+			amountNofFound = v2.Amount
 			if v.Category == v2.Category {
 				currentSpendPlan = append(currentSpendPlan, entity_dashboard.PlannedVsActualCategory{
 					Category:        v.Category,
@@ -137,10 +147,17 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 					Label:           v.Category,
 					SpentPercentage: roundToTwoDecimals(v2.Amount / spend.MonthlyIncome * 100),
 				})
+				found = true
+				amountNofFound = 0
 				break
 			}
 		}
+		if !found {
+			notFound.ActualAmount += amountNofFound
+		}
 	}
+
+	currentSpendPlan = append(currentSpendPlan, notFound)
 
 	return currentSpendPlan, nil
 }
@@ -190,10 +207,6 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 		}
 	}
 
-	filteredCategoryBudgets = append(filteredCategoryBudgets, finance_entity.CategoryBudget{
-		Category: "Não Planejado",
-		Amount:   0,
-	})
 	spend := &finance_entity.SpendingPlan{
 		ID:              querySpend.ID,
 		CategoryBudgets: filteredCategoryBudgets,
@@ -202,8 +215,6 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 		CreatedAt:       querySpend.CreatedAt,
 		UpdatedAt:       querySpend.UpdatedAt,
 	}
-
-	log.Printf("Filtered %d expense records", len(spend.CategoryBudgets))
 
 	return spend
 }
