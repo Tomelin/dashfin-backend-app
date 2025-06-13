@@ -1,14 +1,17 @@
-package finance
+package dashboard
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Dashboard represents the data displayed on the main financial dashboard.
 type Dashboard struct {
-	SummaryCards                  SummaryCards                  `json:"summary_cards"`
-	AccountSummaryData            []AccountSummary              `json:"account_summary_data"`
-	UpcomingBillsData             []UpcomingBill                `json:"upcoming_bills_data"`
-	RevenueExpenseChartData       []RevenueExpenseChartItem     `json:"revenue_expense_chart_data"`
-	ExpenseCategoryChartData      []ExpenseCategoryChartItem    `json:"expense_category_chart_data"`
+	SummaryCards                    SummaryCards                 `json:"summary_cards"`
+	AccountSummaryData              []AccountSummary             `json:"account_summary_data"`
+	UpcomingBillsData               []UpcomingBill               `json:"upcoming_bills_data"`
+	RevenueExpenseChartData         []RevenueExpenseChartItem    `json:"revenue_expense_chart_data"`
+	ExpenseCategoryChartData        []ExpenseCategoryChartItem   `json:"expense_category_chart_data"`
 	PersonalizedRecommendationsData []PersonalizedRecommendation `json:"personalized_recommendations_data"`
 }
 

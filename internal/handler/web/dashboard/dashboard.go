@@ -1,4 +1,4 @@
-package web_finance
+package web_dashboard
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	// Service import will be used by the initializer that wires up the actual service
 	// "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 )
 
 // DashboardServiceInterface defines the methods our handler expects from the dashboard service.
 type DashboardServiceInterface interface {
-	GetDashboardData(ctx context.Context) (*financeEntity.Dashboard, error)
+	GetDashboardData(ctx context.Context) (*dashboardEntity.Dashboard, error)
 }
 
 // DashboardHandler handles HTTP requests for dashboard data using Gin.
@@ -60,12 +60,12 @@ func (h *DashboardHandler) setupRoutes(
 	// Using variadic middleware:
 	// dashboardRoute := routerGroup.Group("/dashboard") // Create a group for /dashboard
 	// {
-		// Apply middleware to all routes in this group, or to specific routes.
-		// If middleware should apply to the GET route:
-		// dashboardRoute.GET("", append(middleware, h.GetDashboard)...)
-		// If no specific sub-routes under /dashboard, can do:
-		// routerGroup.GET("/dashboard", append(middleware, h.GetDashboard)...)
-		// For consistency with BankAccountHandler that sets up routes like /finance/bank-accounts directly on the passed group:
+	// Apply middleware to all routes in this group, or to specific routes.
+	// If middleware should apply to the GET route:
+	// dashboardRoute.GET("", append(middleware, h.GetDashboard)...)
+	// If no specific sub-routes under /dashboard, can do:
+	// routerGroup.GET("/dashboard", append(middleware, h.GetDashboard)...)
+	// For consistency with BankAccountHandler that sets up routes like /finance/bank-accounts directly on the passed group:
 	// }
 	// Let's assume the routerGroup passed is already the correct base (e.g., /v1 or /api)
 	// and we just add /dashboard to it.
@@ -75,9 +75,8 @@ func (h *DashboardHandler) setupRoutes(
 
 	// Final decision: make it /finance/dashboard to group with other finance routes
 	// All middleware passed to InitializeDashboardHandler will be applied.
-	routerGroup.GET("/finance/dashboard", append(middleware, h.GetDashboard)...)
+	routerGroup.GET("/dashboard/summary", append(middleware, h.GetDashboard)...)
 }
-
 
 // GetDashboard is the Gin HTTP handler for GET /dashboard requests.
 func (h *DashboardHandler) GetDashboard(c *gin.Context) {

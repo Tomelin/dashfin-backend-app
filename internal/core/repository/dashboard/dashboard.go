@@ -1,4 +1,4 @@
-package finance
+package dashboard
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 )
 
-// InMemoryDashboardRepository implements financeEntity.DashboardRepositoryInterface using an in-memory store.
+// InMemoryDashboardRepository implements dashboardEntity.DashboardRepositoryInterface using an in-memory store.
 // This is suitable for single-instance deployments or testing. For multi-instance, a distributed cache (e.g., Redis) would be needed.
 type InMemoryDashboardRepository struct {
 	store map[string]cachedDashboardItem
@@ -17,9 +17,12 @@ type InMemoryDashboardRepository struct {
 }
 
 type cachedDashboardItem struct {
-	dashboard  *financeEntity.Dashboard
+	dashboard *dashboardEntity.Dashboard
 	expiresAt time.Time
 }
+
+// Ensure InMemoryDashboardRepository implements the interface (compile-time check)
+var _ dashboardEntity.DashboardRepositoryInterface = (*InMemoryDashboardRepository)(nil)
 
 // NewInMemoryDashboardRepository creates a new InMemoryDashboardRepository.
 func NewInMemoryDashboardRepository() *InMemoryDashboardRepository {
@@ -29,7 +32,7 @@ func NewInMemoryDashboardRepository() *InMemoryDashboardRepository {
 }
 
 // GetDashboard retrieves the dashboard data for a given user ID from the in-memory store.
-func (r *InMemoryDashboardRepository) GetDashboard(ctx context.Context, userID string) (*financeEntity.Dashboard, bool, error) {
+func (r *InMemoryDashboardRepository) GetDashboard(ctx context.Context, userID string) (*dashboardEntity.Dashboard, bool, error) {
 	if userID == "" {
 		return nil, false, fmt.Errorf("userID cannot be empty")
 	}
@@ -58,7 +61,7 @@ func (r *InMemoryDashboardRepository) GetDashboard(ctx context.Context, userID s
 }
 
 // SaveDashboard stores the dashboard data for a given user ID in the in-memory store with a TTL.
-func (r *InMemoryDashboardRepository) SaveDashboard(ctx context.Context, userID string, dashboard *financeEntity.Dashboard, ttl time.Duration) error {
+func (r *InMemoryDashboardRepository) SaveDashboard(ctx context.Context, userID string, dashboard *dashboardEntity.Dashboard, ttl time.Duration) error {
 	if userID == "" {
 		return fmt.Errorf("userID cannot be empty")
 	}
@@ -91,6 +94,3 @@ func (r *InMemoryDashboardRepository) DeleteDashboard(ctx context.Context, userI
 	delete(r.store, userID)
 	return nil
 }
-
-// Ensure InMemoryDashboardRepository implements the interface (compile-time check)
-var _ financeEntity.DashboardRepositoryInterface = (*InMemoryDashboardRepository)(nil)
