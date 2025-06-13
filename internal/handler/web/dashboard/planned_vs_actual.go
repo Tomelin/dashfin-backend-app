@@ -146,6 +146,7 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	// Month validation (1-12) is handled by struct tags if req.Month is not 0 (omitempty).
 
 	requestCtx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
+	requestCtx = context.WithValue(requestCtx, "UserID", userID)
 
 	results, err := h.service.GetPlannedVsActual(requestCtx, userID, req)
 	if err != nil {
