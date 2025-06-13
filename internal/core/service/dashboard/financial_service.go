@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"regexp"
-	"slices"
 
 	// "strconv" // Not used directly, can be removed if not needed by other implicit operations
 	"time"
@@ -200,22 +199,21 @@ func sumExpense(expenses []finance_entity.ExpenseRecord) []sumExpenseItems {
 
 		// Verificar se a categoria da despesa já existe no mapa
 		found := false
-		for _, expense := range expenses {
 
-			for _, spend := range expenseMap {
-				if spend.Category == expense.Category {
-					spend.Amount += expense.Amount
-					found = true
-					break
-				}
+		for _, spend := range expenseMap {
+			if spend.Category == expense.Category {
+				spend.Amount += expense.Amount
+				found = true
+				break
 			}
+		}
 
-			if !found {
-				expenseMap = append(expenseMap, sumExpenseItems{
-					Category: expense.Category,
-					Amount:   expense.Amount,
-				})
-			}
+		if !found {
+			expenseMap = append(expenseMap, sumExpenseItems{
+				Category: expense.Category,
+				Amount:   expense.Amount,
+			})
+		}
 	}
 
 	return expenseMap
