@@ -3,6 +3,7 @@ package dashboard
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -289,10 +290,11 @@ func (s *DashboardService) getUpcomingBills(
 					if billName == nil || *billName == "" {
 						billName = &exp.Category
 					}
+					log.Println(dueDate)
 					bills = append(bills, dashboardEntity.UpcomingBill{
 						BillName: *billName,
 						Amount:   exp.Amount,
-						DueDate:  dueDate,
+						DueDate:  dueDate, // Assign the parsed time.Time value
 					})
 				}
 			}
