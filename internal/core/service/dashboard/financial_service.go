@@ -37,15 +37,16 @@ type FinancialServiceInterface interface {
 // It uses a FinancialRepositoryInterface to access underlying financial data and a
 // FirebaseDBInterface to obtain a Firestore client.
 type FinancialService struct {
-	repo    repo_dashboard.FinancialRepositoryInterface // Interface for accessing financial data.
-	expsene finance_entity.ExpenseRecordServiceInterface
-	cache   cache.CacheService
+	repo      repo_dashboard.FinancialRepositoryInterface // Interface for accessing financial data.
+	expsene   finance_entity.ExpenseRecordServiceInterface
+	spendPLan finance_entity.SpendingPlanServiceInterface
+	cache     cache.CacheService
 }
 
 // NewFinancialService creates and returns a new instance of FinancialService.
 // It requires a FinancialRepositoryInterface for data access and a FirebaseDBInterface
 // to get the database client.
-func NewFinancialService(repo repo_dashboard.FinancialRepositoryInterface, cache cache.CacheService, expense finance_entity.ExpenseRecordServiceInterface) (FinancialServiceInterface, error) {
+func NewFinancialService(repo repo_dashboard.FinancialRepositoryInterface, cache cache.CacheService, expense finance_entity.ExpenseRecordServiceInterface, spendPLan finance_entity.SpendingPlanServiceInterface) (FinancialServiceInterface, error) {
 
 	if repo == nil {
 		return nil, fmt.Errorf("repo cannot be nil")
@@ -56,9 +57,10 @@ func NewFinancialService(repo repo_dashboard.FinancialRepositoryInterface, cache
 	}
 
 	return &FinancialService{
-		repo:    repo,
-		cache:   cache,
-		expsene: expense,
+		repo:      repo,
+		cache:     cache,
+		expsene:   expense,
+		spendPLan: spendPLan,
 	}, nil
 }
 
@@ -114,8 +116,11 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		return []entity_dashboard.PlannedVsActualCategory{}, nil
 	}
 
-	// Fetch Data
-	log.Printf("Fetching expense planning for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
+	spend := s.getSpendingPlan(ctx, userID)
+	if spend == nil {
+		log.Printf("No spending plan found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
+		return []entity_dashboard.PlannedVsActualCategory{}, nil
+	}
 
 	return nil, nil
 }
@@ -141,6 +146,42 @@ func (s *FinancialService) getExpenses(ctx context.Context, month, year int) []f
 	return expenses
 }
 
+func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *finance_entity.SpendingPlan {
+
+	if userID == "" {
+		return nil
+	}
+
+	querySpend, err := s.spendPLan.GetSpendingPlan(ctx, userID)
+	if err != nil {
+		return nil
+	}
+	if querySpend == nil {
+		return nil
+	}
+
+	filteredCategoryBudgets := make([]finance_entity.CategoryBudget, 0)
+
+	log.Printf("Fetched %d expense records", len(querySpend.CategoryBudgets))
+
+	for _, v := range querySpend.CategoryBudgets { // Iterate over a copy or use a different approach if removing during iteration
+		if v.Amount > 0.00 {
+			filteredCategoryBudgets = append(filteredCategoryBudgets, v)
+		}
+	}
+
+	spend := &finance_entity.SpendingPlan{
+		ID:              querySpend.ID,
+		CategoryBudgets: filteredCategoryBudgets,
+		UserID:          querySpend.UserID,
+		MonthlyIncome:   querySpend.MonthlyIncome,
+		CreatedAt:       querySpend.CreatedAt,
+		UpdatedAt:       querySpend.UpdatedAt,
+	}
+
+	log.Printf("Filtered %d expense records", len(spend.CategoryBudgets))
+	return spend
+}
 func (s *FinancialService) isInCurrentMonthAndYear(dateString string) (bool, error) {
 	// 1. Parse da string para time.Time
 	// Usamos o layout "2006-01-02", que é a forma padrão do Go para especificar formatos de data.
