@@ -126,19 +126,8 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		return currentSpendPlan, nil
 	}
 
-	notFound := entity_dashboard.PlannedVsActualCategory{
-		Category:        "Não cadastrada",
-		PlannedAmount:   0,
-		ActualAmount:    0,
-		Label:           "Não cadastrada",
-		SpentPercentage: 0,
-	}
-
 	for _, v := range spend.CategoryBudgets {
-		found := false
-		amountNofFound := 0.00
 		for _, v2 := range sumResult {
-			amountNofFound = v2.Amount
 			if v.Category == v2.Category {
 				currentSpendPlan = append(currentSpendPlan, entity_dashboard.PlannedVsActualCategory{
 					Category:        v.Category,
@@ -147,17 +136,34 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 					Label:           v.Category,
 					SpentPercentage: roundToTwoDecimals(v2.Amount / spend.MonthlyIncome * 100),
 				})
-				found = true
-				amountNofFound = 0
 				break
 			}
 		}
-		if !found {
-			notFound.ActualAmount += amountNofFound
+	}
+
+	var unlistedSpendTotal float64 = 0
+	for _, actual := range sumResult {
+		var wasPlanned bool = false
+		for _, planned := range spend.CategoryBudgets {
+			if actual.Category == planned.Category {
+				wasPlanned = true
+				break
+			}
+		}
+		if !wasPlanned {
+			unlistedSpendTotal += actual.Amount
 		}
 	}
 
-	currentSpendPlan = append(currentSpendPlan, notFound)
+	if unlistedSpendTotal > 0 {
+		currentSpendPlan = append(currentSpendPlan, entity_dashboard.PlannedVsActualCategory{
+			Category:        "Não cadastrado",
+			ActualAmount:    unlistedSpendTotal,
+			Label:           "Não cadastrado",
+			SpentPercentage: roundToTwoDecimals(unlistedSpendTotal / spend.MonthlyIncome * 100),
+			PlannedAmount:   0,
+		})
+	}
 
 	return currentSpendPlan, nil
 }
