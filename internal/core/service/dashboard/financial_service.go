@@ -134,6 +134,7 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 					Category:        v.Category,
 					PlannedAmount:   v.Amount,
 					ActualAmount:    v2.Amount,
+					Label:           v.Category,
 					SpentPercentage: roundToTwoDecimals(v2.Amount / spend.MonthlyIncome * 100),
 				})
 				break
@@ -189,6 +190,10 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 		}
 	}
 
+	filteredCategoryBudgets = append(filteredCategoryBudgets, finance_entity.CategoryBudget{
+		Category: "Não Planejado",
+		Amount:   0,
+	})
 	spend := &finance_entity.SpendingPlan{
 		ID:              querySpend.ID,
 		CategoryBudgets: filteredCategoryBudgets,
@@ -199,6 +204,7 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 	}
 
 	log.Printf("Filtered %d expense records", len(spend.CategoryBudgets))
+
 	return spend
 }
 
