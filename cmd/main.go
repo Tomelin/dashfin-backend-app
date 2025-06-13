@@ -119,7 +119,7 @@ func main() {
 
 	// Initialize Financial Repository & Service for PlannedVsActual
 	financialRepo, _ := repository_dashboard.NewFirebaseFinancialRepository(db)
-	financialSvc, _ := service_dashboard.NewFinancialService(financialRepo, cacheClient, svcExpenseRecord, svcBankAccount, svcCreditCard, svcIncomeRecord, svcSpendingRecord)
+	financialSvc, _ := service_dashboard.NewFinancialService(financialRepo, cacheClient, svcExpenseRecord, svcSpendingRecord)
 	// No error is returned by NewFinancialService or NewFirebaseFinancialRepository, so no error check needed here.
 
 	web_dashboard.InitializeDashboardHandler(srvDashboard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
