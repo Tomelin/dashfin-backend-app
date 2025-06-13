@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"regexp"
+	"slices"
 
 	// "strconv" // Not used directly, can be removed if not needed by other implicit operations
 	"time"
@@ -116,6 +117,9 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 		return []entity_dashboard.PlannedVsActualCategory{}, nil
 	}
 
+	sumResult := sumExpense(expenses)
+	log.Printf("Sum of expenses: %v", sumResult)
+
 	spend := s.getSpendingPlan(ctx, userID)
 	if spend == nil {
 		log.Printf("No spending plan found for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
@@ -182,6 +186,41 @@ func (s *FinancialService) getSpendingPlan(ctx context.Context, userID string) *
 	log.Printf("Filtered %d expense records", len(spend.CategoryBudgets))
 	return spend
 }
+
+type sumExpenseItems struct {
+	Category string
+	Amount   float64
+}
+
+func sumExpense(expenses []finance_entity.ExpenseRecord) []sumExpenseItems {
+
+	expenseMap := make([]sumExpenseItems, 0)
+
+	for _, expense := range expenses {
+
+		// Verificar se a categoria da despesa já existe no mapa
+		found := false
+		for _, expense := range expenses {
+
+			for _, spend := range expenseMap {
+				if spend.Category == expense.Category {
+					spend.Amount += expense.Amount
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				expenseMap = append(expenseMap, sumExpenseItems{
+					Category: expense.Category,
+					Amount:   expense.Amount,
+				})
+			}
+	}
+
+	return expenseMap
+}
+
 func (s *FinancialService) isInCurrentMonthAndYear(dateString string) (bool, error) {
 	// 1. Parse da string para time.Time
 	// Usamos o layout "2006-01-02", que é a forma padrão do Go para especificar formatos de data.
