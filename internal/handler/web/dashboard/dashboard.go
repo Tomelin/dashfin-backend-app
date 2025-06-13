@@ -94,7 +94,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		bills = append(bills, dashboardEntity.UpcomingBillData{
 			Name:    v.BillName,
 			Amount:  v.Amount,
-			DueDate: v.DueDate.Format("02/01/2006"),
+			DueDate: v.DueDate,
 		})
 	}
 
