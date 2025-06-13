@@ -29,22 +29,6 @@ type DashboardHandler struct {
 	// router  *gin.RouterGroup // Not strictly needed if setupRoutes is called by initializer
 }
 
-// NewDashboardHandler creates a new DashboardHandler instance.
-// This is kept for direct instantiation, e.g. in tests without full router setup.
-func NewDashboardHandler(
-	svc DashboardServiceInterface,
-	encryptData cryptdata.CryptDataInterface,
-	authClient authenticatior.Authenticator,
-	routerGroup *gin.RouterGroup,
-	middleware ...gin.HandlerFunc,
-) *DashboardHandler {
-	return &DashboardHandler{
-		service:     svc,
-		encryptData: encryptData,
-		authClient:  authClient,
-	}
-}
-
 // InitializeDashboardHandler sets up the dashboard handler with its routes.
 // This function would be called from the main application setup.
 // It mirrors the pattern seen in BankAccountHandler.
@@ -70,28 +54,7 @@ func (h *DashboardHandler) setupRoutes(
 	// authMiddleware gin.HandlerFunc,
 	middleware ...gin.HandlerFunc,
 ) {
-	// Apply middleware to the route
-	// The middleware slice is already prepared by the caller of setupRoutes
-	// or directly in InitializeDashboardHandler.
 
-	// Example: routerGroup.GET("/dashboard", authMiddleware, h.GetDashboard)
-	// Using variadic middleware:
-	// dashboardRoute := routerGroup.Group("/dashboard") // Create a group for /dashboard
-	// {
-	// Apply middleware to all routes in this group, or to specific routes.
-	// If middleware should apply to the GET route:
-	// dashboardRoute.GET("", append(middleware, h.GetDashboard)...)
-	// If no specific sub-routes under /dashboard, can do:
-	// routerGroup.GET("/dashboard", append(middleware, h.GetDashboard)...)
-	// For consistency with BankAccountHandler that sets up routes like /finance/bank-accounts directly on the passed group:
-	// }
-	// Let's assume the routerGroup passed is already the correct base (e.g., /v1 or /api)
-	// and we just add /dashboard to it.
-	// If routerGroup is /api/v1, this will make it /api/v1/dashboard
-	// If BankAccountHandler adds "/finance/bank-accounts", this should add "/dashboard" or "/finance/dashboard"
-	// Let's use "/finance/dashboard" for consistency if it's finance related.
-
-	// Final decision: make it /finance/dashboard to group with other finance routes
 	// All middleware passed to InitializeDashboardHandler will be applied.
 	dashboardRoutes := routerGroup.Group("/dashboard/summary")
 	for _, mw := range middleware {

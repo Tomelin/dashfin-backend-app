@@ -3,6 +3,7 @@ package dashboard
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -74,6 +75,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	if err != nil {
 		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	}
+	log.Println(dashboard)
 
 	// 3. Save the newly generated dashboard to cache
 	// Use a default TTL, this could be configurable
