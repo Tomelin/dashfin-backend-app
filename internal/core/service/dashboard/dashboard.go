@@ -92,21 +92,18 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
 	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx)
-	log.Println("allUserBankAccounts > ", allUserBankAccounts)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
 		allUserBankAccounts = []financeEntity.BankAccountRequest{}
 	}
 
 	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userID})
-	log.Println("allUserIncomes > ", allUserIncomes)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching income records for user %s: %v\n", userID, err)
 		allUserIncomes = []financeEntity.IncomeRecord{}
 	}
 
 	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
-	log.Println("allUserRawExpenses > ", allUserRawExpenses)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
 		allUserRawExpenses = []financeEntity.ExpenseRecord{}
@@ -125,9 +122,10 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
 	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
-
+	log.Println("totalBalance > ", totalBalance, "monthlyRevenue > ", monthlyRevenue, "monthlyExpenses > ", monthlyExpenses)
 	goalsProgressStr := "N/A (Data unavailable)"
 	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
+	log.Println("profileGoals > ", profileGoals)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
 	} else {
@@ -144,8 +142,9 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	}
 
 	dashboard.AccountSummaryData = s.getAccountSummaries(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
-
+	log.Println("getAccountSummaries > ", dashboard.AccountSummaryData)
 	upcomingBills, err := s.getUpcomingBills(ctx, userID, now, allUserRawExpenses)
+	log.Println("upcomingBills > ", upcomingBills)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching upcoming bills: %v\n", err)
 		dashboard.UpcomingBillsData = []dashboardEntity.UpcomingBill{}
@@ -154,7 +153,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	}
 
 	dashboard.RevenueExpenseChartData = s.getRevenueExpenseChartData(allUserIncomes, allUserPaidExpenses, now, 6)
-
+	log.Println("RevenueExpenseChartData > ", dashboard.RevenueExpenseChartData)
 	expenseCategories, err := s.getExpenseCategoriesForMonth(allUserPaidExpenses, currentMonthStart)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense categories: %v\n", err)
@@ -165,6 +164,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 
 	dashboard.PersonalizedRecommendationsData = []dashboardEntity.PersonalizedRecommendation{}
 
+	log.Println("dashboard > ", dashboard)
 	return dashboard, nil
 }
 
