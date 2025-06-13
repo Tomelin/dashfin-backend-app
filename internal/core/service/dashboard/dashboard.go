@@ -284,7 +284,7 @@ func (s *DashboardService) getUpcomingBills(
 				continue
 			}
 			if !dueDate.Before(upcomingStartDate) && !dueDate.After(upcomingEndDate) {
-				if exp.PaymentDate != nil && *exp.PaymentDate != "" {
+				if exp.PaymentDate == nil || *exp.PaymentDate == "" {
 					billName := exp.Description
 					if billName == nil || *billName == "" {
 						billName = &exp.Category
