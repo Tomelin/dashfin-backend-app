@@ -12,7 +12,7 @@ import (
 	service_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/service/dashboard" // service_dashboard
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
-	"github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
+	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
@@ -95,16 +95,18 @@ func (h *PlannedVsActualHandler) setupRoutes(
 // Workflow:
 // 1. Authenticates the user by validating headers via `web.GetRequiredHeaders`.
 // 2. Binds and validates query parameters (Month, Year) from the request.
-//    - Performs struct tag validation (e.g., month range 1-12).
-//    - Performs custom validation for the year (e.g., must be within a sensible range like 2020 to currentYear+1).
+//   - Performs struct tag validation (e.g., month range 1-12).
+//   - Performs custom validation for the year (e.g., must be within a sensible range like 2020 to currentYear+1).
+//
 // 3. Calls the underlying financial service (`h.service.GetPlannedVsActual`) to fetch and compute the data.
 // 4. Handles service responses:
-//    - If the service returns an error, responds with HTTP 500 Internal Server Error.
-//    - If the service returns no data (empty slice), responds with HTTP 404 Not Found and an empty JSON array `[]`.
-//    - If data is returned successfully:
-//        - If an encryption service (`h.encryptData`) is configured, the response payload is encrypted
-//          and returned within a `{"payload": "encrypted_string"}` structure.
-//        - Otherwise, the data is returned as unencrypted JSON.
+//   - If the service returns an error, responds with HTTP 500 Internal Server Error.
+//   - If the service returns no data (empty slice), responds with HTTP 404 Not Found and an empty JSON array `[]`.
+//   - If data is returned successfully:
+//   - If an encryption service (`h.encryptData`) is configured, the response payload is encrypted
+//     and returned within a `{"payload": "encrypted_string"}` structure.
+//   - Otherwise, the data is returned as unencrypted JSON.
+//
 // 5. Responds with appropriate HTTP status codes and JSON payloads for errors or success.
 func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
@@ -140,9 +142,7 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	}
 	// Month validation (1-12) is handled by struct tags if req.Month is not 0 (omitempty).
 
-	requestCtx := c.Request.Context()
-	// Add token to context if any deeper service call might need it (optional, userID is passed directly)
-	requestCtx = context.WithValue(requestCtx, web.AuthorizationKey("Authorization"), token)
+	requestCtx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
 
 	results, err := h.service.GetPlannedVsActual(requestCtx, userID, req)
 	if err != nil {

@@ -7,12 +7,14 @@ import (
 	"math"
 	"regexp"
 	"sort"
+
 	// "strconv" // Not used directly, can be removed if not needed by other implicit operations
 	"time"
 
 	entity_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
+	finance_entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	repo_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard"
-	"github.com/Tomelin/dashfin-backend-app/pkg/database"
+	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
 	// "github.com/shopspring/decimal" // Acknowledged for future use if higher precision is needed
 )
 
@@ -36,18 +38,29 @@ type FinancialServiceInterface interface {
 // It uses a FinancialRepositoryInterface to access underlying financial data and a
 // FirebaseDBInterface to obtain a Firestore client.
 type FinancialService struct {
-	repo       repo_dashboard.FinancialRepositoryInterface // Interface for accessing financial data.
-	dbProvider database.FirebaseDBInterface                // Interface for obtaining a database client (e.g., Firestore client).
+	repo    repo_dashboard.FinancialRepositoryInterface // Interface for accessing financial data.
+	expsene finance_entity.ExpenseRecordServiceInterface
+	cache   cache.CacheService
 }
 
 // NewFinancialService creates and returns a new instance of FinancialService.
 // It requires a FinancialRepositoryInterface for data access and a FirebaseDBInterface
 // to get the database client.
-func NewFinancialService(repo repo_dashboard.FinancialRepositoryInterface, dbProvider database.FirebaseDBInterface) FinancialServiceInterface {
-	return &FinancialService{
-		repo:       repo,
-		dbProvider: dbProvider,
+func NewFinancialService(repo repo_dashboard.FinancialRepositoryInterface, cache cache.CacheService, expense finance_entity.ExpenseRecordServiceInterface) (FinancialServiceInterface, error) {
+
+	if repo == nil {
+		return nil, fmt.Errorf("repo cannot be nil")
 	}
+
+	if cache == nil {
+		return nil, fmt.Errorf("cache cannot be nil")
+	}
+
+	return &FinancialService{
+		repo:    repo,
+		cache:   cache,
+		expsene: expense,
+	}, nil
 }
 
 // roundToTwoDecimals is an unexported helper function to round a float64 to two decimal places.
@@ -59,18 +72,18 @@ func roundToTwoDecimals(f float64) float64 {
 // for a given user and period (month/year).
 //
 // It performs the following steps:
-// 1. Obtains a Firestore client via the dbProvider.
-// 2. Defaults month/year to current if not provided in the request.
-// 3. Fetches expense planning data, actual expense records, and category definitions using the repository.
-// 4. If no planning data is found for the specified period, it returns an empty list, signifying no content for that period.
-// 5. Aggregates actual expenses by category.
-// 6. For each category in the planning data:
-//    a. Validates the category key format.
-//    b. Retrieves the category label (defaults to key if not found).
-//    c. Calculates planned amount, actual amount, and spent percentage (actual/planned * 100).
-//       - If planned amount is 0, spent percentage is 0.
-//    d. Rounds monetary values and percentages to two decimal places.
-// 7. Sorts the results by category key for consistent output.
+//  1. Obtains a Firestore client via the dbProvider.
+//  2. Defaults month/year to current if not provided in the request.
+//  3. Fetches expense planning data, actual expense records, and category definitions using the repository.
+//  4. If no planning data is found for the specified period, it returns an empty list, signifying no content for that period.
+//  5. Aggregates actual expenses by category.
+//  6. For each category in the planning data:
+//     a. Validates the category key format.
+//     b. Retrieves the category label (defaults to key if not found).
+//     c. Calculates planned amount, actual amount, and spent percentage (actual/planned * 100).
+//     - If planned amount is 0, spent percentage is 0.
+//     d. Rounds monetary values and percentages to two decimal places.
+//  7. Sorts the results by category key for consistent output.
 //
 // Parameters:
 //   - ctx: The context for the operation.
@@ -83,12 +96,6 @@ func roundToTwoDecimals(f float64) float64 {
 //     except for the "no planning data found" case, which returns ([], nil).
 func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string, req entity_dashboard.PlannedVsActualRequest) ([]entity_dashboard.PlannedVsActualCategory, error) {
 	log.Printf("GetPlannedVsActual called for userID: %s, Month: %d, Year: %d", userID, req.Month, req.Year)
-
-	client, err := s.dbProvider.GetClient()
-	if err != nil {
-		log.Printf("Error getting Firestore client: %v", err)
-		return nil, fmt.Errorf("failed to get database client: %w", err)
-	}
 
 	// Determine Month and Year
 	currentMonth := req.Month
@@ -104,7 +111,16 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 
 	// Fetch Data
 	log.Printf("Fetching expense planning for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-	planningDoc, err := s.repo.GetExpensePlanning(ctx, client, userID, currentMonth, currentYear)
+
+	recors, err := s.expsene.GetExpenseRecords(ctx)
+	if err != nil {
+		log.Printf("Error fetching expense records: %v", err)
+		return nil, fmt.Errorf("failed to get expense records: %w", err)
+	}
+
+	log.Printf("Loaded %d expense records", len(recors))
+
+	planningDoc, err := s.repo.GetExpensePlanning(ctx, userID, currentMonth, currentYear)
 	if err != nil {
 		log.Printf("Error fetching expense planning for userID %s: %v", userID, err)
 		return nil, fmt.Errorf("failed to get expense planning: %w", err)
@@ -119,14 +135,14 @@ func (s *FinancialService) GetPlannedVsActual(ctx context.Context, userID string
 	}
 
 	log.Printf("Fetching actual expenses for userID: %s, Month: %d, Year: %d", userID, currentMonth, currentYear)
-	actualExpenseDocs, err := s.repo.GetExpenses(ctx, client, userID, currentMonth, currentYear)
+	actualExpenseDocs, err := s.repo.GetExpenses(ctx, userID, currentMonth, currentYear)
 	if err != nil {
 		log.Printf("Error fetching actual expenses for userID %s: %v", userID, err)
 		return nil, fmt.Errorf("failed to get actual expenses: %w", err)
 	}
 
 	log.Printf("Fetching expense categories definitions")
-	categoryDocs, err := s.repo.GetExpenseCategories(ctx, client)
+	categoryDocs, err := s.repo.GetExpenseCategories(ctx)
 	if err != nil {
 		log.Printf("Error fetching expense categories definitions: %v", err)
 		return nil, fmt.Errorf("failed to get expense categories: %w", err)
