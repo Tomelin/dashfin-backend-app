@@ -10,14 +10,17 @@ import (
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	entity_platform "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
+	repository_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard"
 	repository_finance "github.com/Tomelin/dashfin-backend-app/internal/core/repository/finance"
 	repository_platform "github.com/Tomelin/dashfin-backend-app/internal/core/repository/platform"
 	repository_profile "github.com/Tomelin/dashfin-backend-app/internal/core/repository/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/service"
+	service_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/service/dashboard"
 	service_finance "github.com/Tomelin/dashfin-backend-app/internal/core/service/finance"
 	service_platform "github.com/Tomelin/dashfin-backend-app/internal/core/service/platform"
 	service_profile "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
+	web_dashboard "github.com/Tomelin/dashfin-backend-app/internal/handler/web/dashboard"
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
@@ -63,9 +66,15 @@ func main() {
 	//	}
 	//	log.Fatal("finish")
 
-	svcProfile, err := initializeProfileServices(db)
+	svcProfilePerson, svcProfileProfession, svcProfileGoals, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Reconstruct the aggregate ProfileAllService for handlers that need it
+	svcProfileAll, err := service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+	if err != nil {
+		log.Fatalf("failed to initialize ProfileAllService: %v", err)
 	}
 
 	svcSupport, err := initializeSupportServices(db)
@@ -103,7 +112,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	web.InicializationProfileHandlerHttp(svcProfile, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialize Financial Repository & Service for PlannedVsActual
+	financialRepo, _ := repository_dashboard.NewFirebaseFinancialRepository(db)
+	financialSvc, _ := service_dashboard.NewFinancialService(financialRepo, cacheClient, svcExpenseRecord, svcSpendingRecord)
+	// No error is returned by NewFinancialService or NewFirebaseFinancialRepository, so no error check needed here.
+
+	web_dashboard.InitializeDashboardHandler(srvDashboard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_dashboard.InitializePlannedVsActualHandler(financialSvc, authClient, crypt, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web.InicializationProfileHandlerHttp(svcProfileAll, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
@@ -192,28 +213,28 @@ func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator
 	return authClient, db, nil
 }
 
-func initializeProfileServices(db database.FirebaseDBInterface) (service_profile.ProfileServiceInterface, error) {
+func initializeProfileServices(db database.FirebaseDBInterface) (service_profile.ProfilePersonServiceInterface, service_profile.ProfileProfessionServiceInterface, service_profile.ProfileGoalsServiceInterface, error) {
 	repoProfile, err := repository_profile.InicializeProfileRepository(db)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile repository: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile repository: %w", err)
 	}
 
 	svcProfilePerson, err := service_profile.InicializeProfileService(repoProfile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile person service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile person service: %w", err)
 	}
 
 	svcProfileProfession, err := service_profile.InicializeProfileProfessionService(repoProfile, svcProfilePerson)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile profession service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile profession service: %w", err)
 	}
 
 	svcProfileGoals, err := service_profile.InicializeProfileGoalsService(repoProfile, svcProfilePerson)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize profile goals service: %w", err)
+		return nil, nil, nil, fmt.Errorf("failed to initialize profile goals service: %w", err)
 	}
 
-	return service_profile.InicializeProfileAllService(svcProfilePerson, svcProfileProfession, svcProfileGoals)
+	return svcProfilePerson, svcProfileProfession, svcProfileGoals, nil
 }
 
 func initializeSupportServices(db database.FirebaseDBInterface) (service.SupportServiceInterface, error) {
@@ -289,3 +310,31 @@ func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache
 	}
 	return svcSpendingRecord, nil
 }
+
+func initializeDashboardServices(
+	bankAccountSvc entity_finance.BankAccountServiceInterface,
+	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
+	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
+	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
+) (*service_dashboard.DashboardService, error) {
+	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
+	// }
+
+	svcSpendingRecord := service_dashboard.NewDashboardService(
+		bankAccountSvc,
+		expenseRecordSvc,
+		incomeRecordSvc,
+		profileGoalsSvc,
+		repoSpendingRecord,
+	)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
+	// }
+	return svcSpendingRecord, nil
+}
+
+// too many arguments in call to service_dashboard.NewDashboardService
+// have (*"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository, cache.CacheService, entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, *"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository)
+// want (entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard".DashboardRepositoryInterface)compilerWrongArgCount
