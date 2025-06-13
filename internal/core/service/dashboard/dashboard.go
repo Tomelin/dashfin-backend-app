@@ -273,6 +273,8 @@ func (s *DashboardService) getUpcomingBills(
 	allUserRawExpenses []financeEntity.ExpenseRecord,
 ) ([]dashboardEntity.UpcomingBill, error) {
 	upcomingEndDate := fromDate.AddDate(0, 0, 30)
+	upcomingStartDate := fromDate.AddDate(0, 0, -60)
+
 	bills := make([]dashboardEntity.UpcomingBill, 0)
 	for _, exp := range allUserRawExpenses {
 		if exp.PaymentDate == nil || *exp.PaymentDate == "" {
@@ -281,16 +283,18 @@ func (s *DashboardService) getUpcomingBills(
 				fmt.Printf("Warning: Could not parse DueDate '%s' for expense ID %s: %v\n", exp.DueDate, exp.ID, errParse)
 				continue
 			}
-			if !dueDate.Before(fromDate) && !dueDate.After(upcomingEndDate) {
-				billName := exp.Description
-				if billName == nil || *billName == "" {
-					billName = &exp.Category
+			if !dueDate.Before(upcomingStartDate) && !dueDate.After(upcomingEndDate) {
+				if exp.PaymentDate != nil && *exp.PaymentDate != "" {
+					billName := exp.Description
+					if billName == nil || *billName == "" {
+						billName = &exp.Category
+					}
+					bills = append(bills, dashboardEntity.UpcomingBill{
+						BillName: *billName,
+						Amount:   exp.Amount,
+						DueDate:  dueDate,
+					})
 				}
-				bills = append(bills, dashboardEntity.UpcomingBill{
-					BillName: *billName,
-					Amount:   exp.Amount,
-					DueDate:  dueDate,
-				})
 			}
 		}
 	}
