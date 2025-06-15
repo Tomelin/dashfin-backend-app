@@ -205,22 +205,22 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 	}
 
 	results, err := h.service.GetIncomeRecords(ctx, &record)
-	if err != nil {
-		log.Printf("Error getting income records via service: %v", err)
-		if strings.Contains(err.Error(), "not found") { // Or other specific non-fatal errors
-			// Based on expenseRecord, "not found" for a list should be an empty list, not error.
-			// However, the service/repo might not distinguish "no records found" from other errors.
-			// For now, let's assume an empty list is handled by `results == nil` check below.
-			// If service explicitly returns "not found" for empty list matching criteria, this could be StatusOK with empty encrypted payload
-		}
-		if strings.Contains(err.Error(), "invalid query parameters") || strings.Contains(err.Error(), "invalid sortDirection value") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
-			return
-		} else if err != nil { // Catch-all for other errors
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
-			return
-		}
-	}
+	// if err != nil {
+	// 	log.Printf("Error getting income records via service: %v", err)
+	// 	if strings.Contains(err.Error(), "not found") { // Or other specific non-fatal errors
+	// 		// Based on expenseRecord, "not found" for a list should be an empty list, not error.
+	// 		// However, the service/repo might not distinguish "no records found" from other errors.
+	// 		// For now, let's assume an empty list is handled by `results == nil` check below.
+	// 		// If service explicitly returns "not found" for empty list matching criteria, this could be StatusOK with empty encrypted payload
+	// 	}
+	// 	if strings.Contains(err.Error(), "invalid query parameters") || strings.Contains(err.Error(), "invalid sortDirection value") {
+	// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
+	// 		return
+	// 	} else if err != nil { // Catch-all for other errors
+	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
+	// 		return
+	// 	}
+	// }
 
 	if results == nil { // Ensure we always return a list, even if empty
 		results = []entity_finance.IncomeRecord{}

@@ -92,12 +92,12 @@ func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 
-	result, err := h.service.CreateCreditCard(ctx, &creditCard)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	result, _ := h.service.CreateCreditCard(ctx, &creditCard)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	b, err := json.Marshal(result)
 	if err != nil {
@@ -133,12 +133,12 @@ func (h *CreditCardHandler) GetCreditCard(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 
-	result, err := h.service.GetCreditCardByID(ctx, &id)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
+	result, _ := h.service.GetCreditCardByID(ctx, &id)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	b, err := json.Marshal(result)
 	if err != nil {
@@ -168,12 +168,12 @@ func (h *CreditCardHandler) GetCreditCards(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userId)
 
-	results, err := h.service.GetCreditCards(ctx)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
+	results, _ := h.service.GetCreditCards(ctx)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	b, err := json.Marshal(results)
 	if err != nil {

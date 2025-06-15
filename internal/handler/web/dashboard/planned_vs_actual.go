@@ -148,19 +148,19 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	requestCtx := context.WithValue(c.Request.Context(), web.AuthTokenKey, token)
 	requestCtx = context.WithValue(requestCtx, "UserID", userID)
 
-	results, err := h.service.GetPlannedVsActual(requestCtx, userID, req)
-	if err != nil {
-		log.Printf("Error from GetPlannedVsActual service for user %s: %v", userID, err)
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to retrieve planned vs actual data."})
-		return
-	}
+	results, _ := h.service.GetPlannedVsActual(requestCtx, userID, req)
+	// if err != nil {
+	// 	log.Printf("Error from GetPlannedVsActual service for user %s: %v", userID, err)
+	// 	c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Failed to retrieve planned vs actual data."})
+	// 	return
+	// }
 
-	if len(results) == 0 {
-		// Spec: "404: Nenhum dado encontrado (retornar array vazio [])"
-		log.Printf("No data found for PlannedVsActual for user %s, query %+v. Returning 404.", userID, req)
-		c.JSON(http.StatusNotFound, make([]entity_dashboard.PlannedVsActualCategory, 0))
-		return
-	}
+	// if len(results) == 0 {
+	// 	// Spec: "404: Nenhum dado encontrado (retornar array vazio [])"
+	// 	log.Printf("No data found for PlannedVsActual for user %s, query %+v. Returning 404.", userID, req)
+	// 	c.JSON(http.StatusNotFound, make([]entity_dashboard.PlannedVsActualCategory, 0))
+	// 	return
+	// }
 
 	if h.encryptData != nil {
 		responseBytes, err := json.Marshal(results)
