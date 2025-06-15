@@ -3,7 +3,6 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -68,7 +67,6 @@ func (h *DashboardHandler) setupRoutes(
 func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -83,7 +81,6 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 	}
 
 	if results == nil {
-		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})
 		return
 	}
@@ -102,14 +99,12 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(results.SummaryCards)
 	if err != nil {
-		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
