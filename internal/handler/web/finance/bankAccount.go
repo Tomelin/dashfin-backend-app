@@ -144,12 +144,12 @@ func (h *BankAccountHandler) GetBankAccount(c *gin.Context) {
 		return
 	}
 
-	encryptedResult, err := h.encryptData.EncryptPayload(b)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	encryptedResult, _ := h.encryptData.EncryptPayload(b)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
@@ -179,12 +179,12 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 		return
 	}
 
-	encryptedResult, err := h.encryptData.EncryptPayload(b)
-	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	encryptedResult, _ := h.encryptData.EncryptPayload(b)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 }
