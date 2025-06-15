@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -114,21 +113,18 @@ func (h *PlannedVsActualHandler) setupRoutes(
 func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers for PlannedVsActual: %v", err)
 		c.JSON(http.StatusUnauthorized, ErrorResponse{Error: "Unauthorized: " + err.Error()})
 		return
 	}
 
 	var req entity_dashboard.PlannedVsActualRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		log.Printf("Error binding query for PlannedVsActual: %v", err)
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid request parameters: " + err.Error()})
 		return
 	}
 
 	// Validate struct tags
 	if err := h.validate.Struct(req); err != nil {
-		log.Printf("Validation error for PlannedVsActual request (tags): %v", err)
 		c.JSON(http.StatusBadRequest, ErrorResponse{Error: "Invalid data: " + err.Error()})
 		return
 	}
@@ -138,7 +134,6 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 		currentYear := time.Now().Year()
 		if req.Year < 2020 || req.Year > currentYear+1 {
 			errMsg := fmt.Sprintf("Year must be between 2020 and %d", currentYear+1)
-			log.Printf("Validation error for PlannedVsActual request (year range): %s for input year %d", errMsg, req.Year)
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: errMsg})
 			return
 		}
@@ -165,19 +160,16 @@ func (h *PlannedVsActualHandler) GetPlannedVsActual(c *gin.Context) {
 	if h.encryptData != nil {
 		responseBytes, err := json.Marshal(results)
 		if err != nil {
-			log.Printf("Error marshalling results for PlannedVsActual user %s: %v", userID, err)
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error preparing response."})
 			return
 		}
 		encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 		if err != nil {
-			log.Printf("Error encrypting response for PlannedVsActual user %s: %v", userID, err)
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Error: "Error securing response."})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"payload": encryptedResult})
 	} else {
-		log.Printf("Returning unencrypted response for PlannedVsActual for user %s.", userID)
 		c.JSON(http.StatusOK, results)
 	}
 }
