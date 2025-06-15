@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strings"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	web "github.com/Tomelin/dashfin-backend-app/internal/handler/web"
@@ -70,15 +69,15 @@ func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
-	result, err := h.service.GetSpendingPlan(ctx, userID)
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income record: " + err.Error()})
-		}
-		return
-	}
+	result, _ := h.service.GetSpendingPlan(ctx, userID)
+	// if err != nil {
+	// 	if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
+	// 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+	// 	} else {
+	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income record: " + err.Error()})
+	// 	}
+	// 	return
+	// }
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {

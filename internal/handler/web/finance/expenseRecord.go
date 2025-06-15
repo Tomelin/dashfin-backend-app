@@ -204,31 +204,31 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 			filter.EndDate = endDate
 		}
 		// Call the service method that handles filtering
-		results, err = h.service.GetExpenseRecordsByDate(ctx, &filter)
-		if err != nil {
-			log.Printf("Error getting expense records by filter via service: %v", err)
-			if strings.Contains(err.Error(), "not found") {
-				c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
-				return
-			}
-		}
+		results, _ = h.service.GetExpenseRecordsByDate(ctx, &filter)
+		// if err != nil {
+		// 	log.Printf("Error getting expense records by filter via service: %v", err)
+		// 	if strings.Contains(err.Error(), "not found") {
+		// 		c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+		// 		return
+		// 	}
+		// }
 		if results == nil {
 			results = []entity_finance.ExpenseRecord{}
 		}
 
 	} else {
 		// Existing code for getting all records if no filter
-		results, err = h.service.GetExpenseRecords(ctx)
-		if err != nil {
-			log.Printf("Error getting expense records via service: %v", err)
-			// If service returns "not found" for an empty list, handle it gracefully
-			if strings.Contains(err.Error(), "not found") {
-				c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records: " + err.Error()})
-			return
-		}
+		results, _ = h.service.GetExpenseRecords(ctx)
+		// if err != nil {
+		// 	log.Printf("Error getting expense records via service: %v", err)
+		// 	// If service returns "not found" for an empty list, handle it gracefully
+		// 	if strings.Contains(err.Error(), "not found") {
+		// 		c.JSON(http.StatusOK, gin.H{"payload": "[]"}) // Return empty JSON array
+		// 		return
+		// 	}
+		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense records: " + err.Error()})
+		// 	return
+		// }
 	}
 
 	responseBytes, err := json.Marshal(results)
