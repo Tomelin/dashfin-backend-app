@@ -49,11 +49,13 @@ func (p *ProfileProfessionService) UpdateProfileProfession(ctx context.Context, 
 	}
 
 	if profiles == nil {
-		return nil, errors.New("user not found")
+		return nil, nil
+		// return nil, errors.New("user not found")
 	}
 
 	if len(profiles) == 0 {
-		return nil, errors.New("user not found")
+		return nil, nil
+		// return nil, errors.New("user not found")
 	}
 
 	profile := profiles[0]
@@ -81,11 +83,13 @@ func (p *ProfileProfessionService) GetProfileProfession(ctx context.Context, use
 	}
 
 	if profiles == nil {
-		return entity.ProfileProfession{}, errors.New("user not found")
+		return entity.ProfileProfession{}, nil
+		// return entity.ProfileProfession{}, errors.New("user not found")
 	}
 
 	if len(profiles) == 0 {
-		return entity.ProfileProfession{}, errors.New("user not found")
+		return entity.ProfileProfession{}, nil
+		// return entity.ProfileProfession{}, errors.New("user not found")
 	}
 
 	return profiles[0].Profession, nil

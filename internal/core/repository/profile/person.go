@@ -115,7 +115,7 @@ func (r *ProfileRepository) GetProfileByID(ctx context.Context, id *string) (*en
 	}
 
 	if len(profiles) == 0 {
-		return nil, errors.New("user not found")
+		return nil, nil
 	}
 
 	return &profiles[0], nil

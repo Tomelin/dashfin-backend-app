@@ -49,11 +49,13 @@ func (p *ProfileGoalsService) UpdateProfileGoals(ctx context.Context, userId *st
 	}
 
 	if profiles == nil {
-		return nil, errors.New("user not found")
+		// return nil, errors.New("user not found")
+		return nil, nil
 	}
 
 	if len(profiles) == 0 {
-		return nil, errors.New("user not found")
+		// return nil, errors.New("user not found")
+		return nil, nil
 	}
 
 	profile := profiles[0]
@@ -77,15 +79,18 @@ func (p *ProfileGoalsService) GetProfileGoals(ctx context.Context, userID *strin
 	}
 	profiles, err := p.Repo.GetByFilter(ctx, query)
 	if err != nil {
-		return entity.ProfileGoals{}, err
+		return entity.ProfileGoals{}, nil
+		// return entity.ProfileGoals{}, err
 	}
 
 	if profiles == nil {
-		return entity.ProfileGoals{}, errors.New("user not found")
+		return entity.ProfileGoals{}, nil
+		// return entity.ProfileGoals{}, errors.New("user not found")
 	}
 
 	if len(profiles) == 0 {
-		return entity.ProfileGoals{}, errors.New("user not found")
+		// return entity.ProfileGoals{}, errors.New("user not found")
+		return entity.ProfileGoals{}, nil
 	}
 
 	return profiles[0].Goals, nil
