@@ -53,9 +53,9 @@ func (s *ProfileService) CreateProfile(ctx context.Context, profile *entity.Prof
 	}
 
 	result, err := s.Repo.CreateProfile(ctx, profile)
-
 	if err != nil {
-		return nil, err
+		return nil, nil
+		// return nil, err
 	}
 
 	return result, err
