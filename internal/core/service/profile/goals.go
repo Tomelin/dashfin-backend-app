@@ -79,7 +79,8 @@ func (p *ProfileGoalsService) GetProfileGoals(ctx context.Context, userID *strin
 	}
 	profiles, err := p.Repo.GetByFilter(ctx, query)
 	if err != nil {
-		return entity.ProfileGoals{}, err
+		return entity.ProfileGoals{}, nil
+		// return entity.ProfileGoals{}, err
 	}
 
 	if profiles == nil {

@@ -89,7 +89,7 @@ func (p *ProfileProfessionService) GetProfileProfession(ctx context.Context, use
 
 	if len(profiles) == 0 {
 		return entity.ProfileProfession{}, nil
-		return entity.ProfileProfession{}, errors.New("user not found")
+		// return entity.ProfileProfession{}, errors.New("user not found")
 	}
 
 	return profiles[0].Profession, nil

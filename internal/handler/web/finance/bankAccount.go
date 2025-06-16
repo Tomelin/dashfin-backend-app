@@ -132,9 +132,9 @@ func (h *BankAccountHandler) GetBankAccount(c *gin.Context) {
 
 	result, err := h.service.GetBankAccountByID(ctx, &id)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+		log.Println(http.StatusNoContent)
+		// c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		// return
 	}
 
 	b, err := json.Marshal(result)
@@ -167,9 +167,9 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 
 	results, err := h.service.GetBankAccounts(ctx)
 	if err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+		log.Println(http.StatusNoContent)
+		// c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
+		// return
 	}
 
 	b, err := json.Marshal(results)

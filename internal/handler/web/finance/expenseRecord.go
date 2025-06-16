@@ -153,11 +153,13 @@ func (h *ExpenseRecordHandler) GetExpenseRecordByID(c *gin.Context) {
 		log.Printf("Error getting expense record by ID via service (ID: %s): %v", id, err)
 		// Distinguish between "not found" and other errors if possible
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			// c.JSON(http.StatusNoContent, gin.H{"payload": err.Error()})
+			log.Println(http.StatusNoContent)
+			// c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve expense record: " + err.Error()})
+			return
 		}
-		return
 	}
 
 	responseBytes, err := json.Marshal(result)
@@ -361,11 +363,12 @@ func (h *ExpenseRecordHandler) UpdateExpenseRecord(c *gin.Context) {
 	if err != nil {
 		log.Printf("Error updating expense record via service (ID: %s): %v", id, err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			log.Println(http.StatusNotFound)
+			// c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update expense record: " + err.Error()})
+			return
 		}
-		return
 	}
 
 	responseBytes, err := json.Marshal(result)
@@ -407,11 +410,12 @@ func (h *ExpenseRecordHandler) DeleteExpenseRecord(c *gin.Context) {
 	if err != nil {
 		log.Printf("Error deleting expense record via service (ID: %s): %v", id, err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			// c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			log.Println(http.StatusNotFound)
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete expense record: " + err.Error()})
+			return
 		}
-		return
 	}
 
 	c.JSON(http.StatusNoContent, nil)
