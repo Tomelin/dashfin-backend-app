@@ -23,6 +23,7 @@ type ExpenseRecordHandlerInterface interface {
 	UpdateExpenseRecord(c *gin.Context)
 	DeleteExpenseRecord(c *gin.Context)
 	CreateExpenseByNfceUrl(c *gin.Context)
+	ProcessExpenseByNfceUrl(c *gin.Context)
 }
 
 // ExpenseRecordHandler handles HTTP requests for ExpenseRecords.
@@ -70,6 +71,28 @@ func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlew
 	financeRoutes.PUT("/:id", h.UpdateExpenseRecord)
 	financeRoutes.DELETE("/:id", h.DeleteExpenseRecord)
 	financeRoutes.POST("/process-nfce-url", h.CreateExpenseByNfceUrl)
+	financeRoutes.GET("/process", h.ProcessExpenseByNfceUrl)
+}
+
+func (h *ExpenseRecordHandler) ProcessExpenseByNfceUrl(c *gin.Context) {
+	ctx := context.WithValue(c.Request.Context(), "Authorization", "token")
+	ctx = context.WithValue(ctx, "UserID", "userID")
+
+	expenseNfceUrl := entity_finance.ExpenseByNfceUrl{
+		NfceUrl:    "https://dfe-portal.svrs.rs.gov.br/Dfe/QrCodeNFce?p=43250400776574163454653020000395661694784220%7C2%7C1%7C1%7Cb5bd8ab6f361bea7d94707cdcacfd96b44b4d42b",
+		UserID:     "userID",
+		ImportMode: entity_finance.NfceUrlItems,
+	}
+
+	result, err := h.service.CreateExpenseByNfceUrl(ctx, &expenseNfceUrl)
+	if err != nil {
+		log.Printf("Error creating expense record via service: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
+		return
+	}
+
+	log.Println(result)
+	c.JSON(http.StatusCreated, gin.H{"payload": "ok"})
 }
 
 func (h *ExpenseRecordHandler) CreateExpenseByNfceUrl(c *gin.Context) {
@@ -112,7 +135,7 @@ func (h *ExpenseRecordHandler) CreateExpenseByNfceUrl(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
 		return
 	}
-	
+
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
 		log.Printf("Error marshalling result to JSON: %v", err)
