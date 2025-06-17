@@ -270,7 +270,12 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		log.Fatalf("Status HTTP inválido: %d", resp.StatusCode)
 	}
 
+	data, err := resp.Request.GetBody()
+
+	log.Println(data, err)
+
 	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	log.Println(doc)
 	if err != nil {
 		log.Fatalf("Erro ao ler o HTML: %v", err)
 	}
