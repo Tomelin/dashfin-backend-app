@@ -262,6 +262,7 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 	})
 
 	resp, err := client.Get(ctx, "", nil)
+	log.Println(resp, err)
 	if err != nil {
 		return nil, err
 	}
