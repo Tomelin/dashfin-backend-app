@@ -5,10 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
+
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
-	"github.com/Tomelin/dashfin-backend-app/pkg/http_client"
 )
 
 // ExpenseRecordService provides business logic for expense records.
@@ -256,19 +259,47 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 
 	log.Println(url.NfceUrl)
 
-	client := http_client.New(http_client.Config{
-		BaseURL: url.NfceUrl,
-		Timeout: 15 * time.Second,
-	})
-
-	resp, err := client.Get(ctx, "", nil)
-	log.Println(resp, err)
+	resp, err := http.Get(url.NfceUrl)
 	if err != nil {
-		return nil, err
+		log.Fatalf("Erro ao acessar a URL: %v", err)
 	}
 
-	var i interface{}
-	err = resp.JSON(&i)
-	log.Println(i, err)
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Fatalf("Status HTTP inválido: %d", resp.StatusCode)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	if err != nil {
+		log.Fatalf("Erro ao ler o HTML: %v", err)
+	}
+
+	fmt.Println("Itens da Nota:")
+	doc.Find(".txtTit").Each(func(i int, s *goquery.Selection) {
+		itemName := s.Text()
+		itemValue := s.Parent().Find(".totalNumb").Text()
+		if strings.TrimSpace(itemValue) != "" {
+			fmt.Printf("- %s: %s\n", strings.TrimSpace(itemName), strings.TrimSpace(itemValue))
+		}
+	})
+
+	doc.Find(".item-da-nota").Each(func(i int, s *goquery.Selection) {
+		descricao := s.Find(".descricao-item").Text()
+		quantidade := s.Find(".quantidade-item").Text()
+		valorUnitario := s.Find(".valor-unitario-item").Text()
+		valorTotalItem := s.Find(".valor-total-item").Text()
+
+		fmt.Printf("Item %d:\n", i+1)
+		fmt.Printf("  Descrição: %s\n", strings.TrimSpace(descricao))
+		fmt.Printf("  Quantidade: %s\n", strings.TrimSpace(quantidade))
+		fmt.Printf("  Valor Unitário: %s\n", strings.TrimSpace(valorUnitario))
+		fmt.Printf("  Valor Total do Item: %s\n", strings.TrimSpace(valorTotalItem))
+		fmt.Println("---")
+	})
+
+	valorTotalNota := doc.Find("#valorTotal").Text() // Exemplo de seletor para o valor total
+	fmt.Printf("Valor Total da Nota: %s\n", strings.TrimSpace(valorTotalNota))
+
 	return nil, nil
 }
