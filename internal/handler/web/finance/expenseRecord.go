@@ -60,9 +60,9 @@ func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlew
 	// Example: financeRoutes := routerGroup.Group("/finance/expense-records", middleware...)
 
 	financeRoutes := routerGroup.Group("/finance/expenses")
-	for _, mw := range middleware {
-		financeRoutes.Use(mw)
-	}
+	// for _, mw := range middleware {
+	// 	financeRoutes.Use(mw)
+	// }
 
 	financeRoutes.POST("", h.CreateExpenseRecord)
 	financeRoutes.GET("/:id", h.GetExpenseRecordByID)
