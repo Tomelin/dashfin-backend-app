@@ -3,6 +3,7 @@ package entity_finance
 import (
 	"context"
 	"errors"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -26,6 +27,7 @@ type ExpenseRecordServiceInterface interface {
 	GetExpenseRecordsByDate(ctx context.Context, filter *ExpenseRecordQueryByDate) ([]ExpenseRecord, error)
 	UpdateExpenseRecord(ctx context.Context, id string, data *ExpenseRecord) (*ExpenseRecord, error)
 	DeleteExpenseRecord(ctx context.Context, id string) error
+	CreateExpenseByNfceUrl(ctx context.Context, url *ExpenseByNfceUrl) (*ExpenseByNfceUrl,error)
 }
 
 // ExpenseRecord defines the structure for an expense record.
@@ -64,6 +66,60 @@ func NewExpenseRecord(category, dueDate string, amount float64, userID string) *
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
+}
+
+type NfceUrl string
+
+const (
+	NfceUrlItems NfceUrl = "item-by-item"
+	NfceUrlTotal NfceUrl = "total-value"
+)
+
+type ExpenseByNfceUrl struct {
+	NfceUrl    string  `json:"nfceUrl" binding:"required"`
+	UserID     string  `json:"userId"`
+	ImportMode NfceUrl `json:"importMode" binding:"required"`
+}
+
+type NFCeItem struct {
+	Descricao  string
+	Quantidade float64
+	Valor      float64
+	Total      float64
+}
+
+type NFCe struct {
+	Itens      []NFCeItem
+	ValorTotal float64
+}
+
+func (ex *ExpenseByNfceUrl) Validate() error {
+	if strings.TrimSpace(ex.NfceUrl) == "" {
+		return errors.New("nfceUrl is required")
+	}
+
+	if strings.TrimSpace(ex.UserID) == "" {
+		return errors.New("userId is required")
+	}
+
+	if strings.TrimSpace(string(ex.ImportMode)) == "" {
+		return errors.New("importMode is required")
+	}
+
+	if ex.ImportMode != NfceUrlItems && ex.ImportMode != NfceUrlTotal {
+		return errors.New("importMode must be either 'item-by-item' or 'total-value'")
+	}
+
+	parsedURL, err := url.Parse(ex.NfceUrl)
+	if err != nil {
+		return errors.New("nfceUrl must be a valid URL")
+	}
+
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return errors.New("nfceUrl must use http or https protocol")
+	}
+
+	return nil
 }
 
 // Validate checks the ExpenseRecord fields for correctness.

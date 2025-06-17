@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/pkg/http_client"
 )
 
 // ExpenseRecordService provides business logic for expense records.
@@ -235,4 +237,37 @@ func (s *ExpenseRecordService) DeleteExpenseRecord(ctx context.Context, id strin
 	}
 
 	return s.Repo.DeleteExpenseRecord(ctx, id)
+}
+
+func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *entity_finance.ExpenseByNfceUrl) (*entity_finance.ExpenseByNfceUrl, error) {
+
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil || url.UserID != userIDFromCtx.(string) {
+		return nil, errors.New("user ID mismatch or not found in context for update")
+	}
+
+	if url == nil {
+		return nil, errors.New("expense record data is nil")
+	}
+
+	if err := url.Validate(); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	log.Println(url.NfceUrl)
+
+	client := http_client.New(http_client.Config{
+		BaseURL: url.NfceUrl,
+		Timeout: 15 * time.Second,
+	})
+
+	resp, err := client.Get(ctx, "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var i interface{}
+	err = resp.JSON(&i)
+	log.Println(i, err)
+	return nil, nil
 }
