@@ -272,9 +272,11 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 	if err != nil {
 		log.Fatalf("Erro ao ler o HTML: %v", err)
 	}
-
+	log.Println(doc)
 	fmt.Println("Itens da Nota:")
 	doc.Find(".txtTit").Each(func(i int, s *goquery.Selection) {
+		log.Println(s.Text())
+
 		itemName := s.Text()
 		itemValue := s.Parent().Find(".totalNumb").Text()
 		if strings.TrimSpace(itemValue) != "" {
