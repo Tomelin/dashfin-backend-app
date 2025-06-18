@@ -3,6 +3,7 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -86,7 +87,7 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	log.Println("AccountBalances > ", results.SummaryCards.AccountBalances)
+	log.Println("AccountBalances > ", fmt.Sprintf("%v", results.SummaryCards.AccountBalances))
 
 	bills := make([]dashboardEntity.UpcomingBillData, 0)
 
