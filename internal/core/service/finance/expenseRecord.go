@@ -2,6 +2,7 @@ package finance
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -256,8 +257,6 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		return nil, fmt.Errorf("validation failed: %w", err)
 	}
 
-	log.Println(url.NfceUrl)
-
 	body, err := s.getBody(ctx, url.NfceUrl)
 	if err != nil {
 		return nil, err
@@ -272,7 +271,13 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		return nil, err
 	}
 
-	log.Println(string(bResut))
+	var itens entity_finance.NFCe
+	err = json.Unmarshal(bResut, &itens)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(itens)
 
 	return nil, nil
 }

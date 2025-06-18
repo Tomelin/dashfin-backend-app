@@ -27,7 +27,7 @@ type ExpenseRecordServiceInterface interface {
 	GetExpenseRecordsByDate(ctx context.Context, filter *ExpenseRecordQueryByDate) ([]ExpenseRecord, error)
 	UpdateExpenseRecord(ctx context.Context, id string, data *ExpenseRecord) (*ExpenseRecord, error)
 	DeleteExpenseRecord(ctx context.Context, id string) error
-	CreateExpenseByNfceUrl(ctx context.Context, url *ExpenseByNfceUrl) (*ExpenseByNfceUrl,error)
+	CreateExpenseByNfceUrl(ctx context.Context, url *ExpenseByNfceUrl) (*ExpenseByNfceUrl, error)
 }
 
 // ExpenseRecord defines the structure for an expense record.
@@ -82,15 +82,13 @@ type ExpenseByNfceUrl struct {
 }
 
 type NFCeItem struct {
-	Descricao  string
-	Quantidade float64
-	Valor      float64
-	Total      float64
+	Descricao string  `json:"descricao_item"`
+	Valor     float64 `json:"valor_total_item"`
 }
 
 type NFCe struct {
-	Itens      []NFCeItem
-	ValorTotal float64
+	Itens []NFCeItem
+	CNPJ  string `json:"cnpj_estabelecimento"`
 }
 
 func (ex *ExpenseByNfceUrl) Validate() error {
