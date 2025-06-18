@@ -69,10 +69,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		// return cachedDashboard, nil
 	}
 
-	balanceCard := dashboardEntity.AccountBalanceCard{
-		TotalBalance:   7509.90,
-		MonthlyRevenue: 763.87,
-		AccountBalances: []dashboardEntity.AccountBalanceItem{
+	balanceCard := []dashboardEntity.AccountBalanceItem{
 			{
 				ID:          "0001",
 				AccountName: "Itau",
