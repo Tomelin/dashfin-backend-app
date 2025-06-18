@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/google/generative-ai-go/genai"
@@ -121,6 +122,8 @@ func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
 	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
 		return nil, errors.New("no response from model")
 	}
+
+	log.Println(resp.Candidates[0].Content.Parts)
 
 	response := fmt.Sprintf("%s", resp.Candidates[0].Content.Parts[0])
 
