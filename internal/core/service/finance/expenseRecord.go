@@ -263,8 +263,6 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		return nil, err
 	}
 
-	log.Println(string(body))
-
 	llmQuery, err := llm.NewAgent()
 	if err != nil {
 		return nil, err

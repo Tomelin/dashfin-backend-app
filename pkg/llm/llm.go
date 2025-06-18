@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/google/generative-ai-go/genai"
@@ -86,7 +85,7 @@ func NewAgent() (AgentInterface, error) {
 		{Category: genai.HarmCategorySexuallyExplicit, Threshold: genai.HarmBlockNone},
 	}
 
-	model.SetTemperature(0.5)
+	model.SetTemperature(0.0)
 	// model.SetCandidateCount(int32(100))
 	model.SystemInstruction = genai.NewUserContent(genai.Text(promptToParseNFCE))
 	model.ResponseMIMEType = "application/json"
@@ -125,7 +124,6 @@ func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
 	
 	The HTML body is %s`, query)
 
-	log.Println(message)
 	a.Session.History = append(a.Session.History, &genai.Content{
 		Parts: []genai.Part{genai.Text(message)},
 		Role:  "user",
@@ -142,8 +140,6 @@ func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
 	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
 		return nil, errors.New("no response from model")
 	}
-
-	log.Println(resp.Candidates[0].Content.Parts)
 
 	response := fmt.Sprintf("%s", resp.Candidates[0].Content.Parts[0])
 
