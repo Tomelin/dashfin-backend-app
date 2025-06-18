@@ -11,19 +11,24 @@ import (
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/llm"
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
 // ExpenseRecordService provides business logic for expense records.
 type ExpenseRecordService struct {
 	Repo entity_finance.ExpenseRecordRepositoryInterface
+	mq   message_queue.MessageQueue
 }
 
 // InitializeExpenseRecordService creates a new ExpenseRecordService.
-func InitializeExpenseRecordService(repo entity_finance.ExpenseRecordRepositoryInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
+func InitializeExpenseRecordService(repo entity_finance.ExpenseRecordRepositoryInterface, mq message_queue.MessageQueue) (entity_finance.ExpenseRecordServiceInterface, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil for ExpenseRecordService")
 	}
-	return &ExpenseRecordService{Repo: repo}, nil
+	return &ExpenseRecordService{
+		Repo: repo,
+		mq:   mq,
+	}, nil
 }
 
 // CreateExpenseRecord handles the creation of a new expense record.
