@@ -115,7 +115,20 @@ func NewAgent() (AgentInterface, error) {
 }
 
 func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
-	resp, err := a.Session.SendMessage(ctx, genai.Text(query))
+	message := fmt.Sprintf(`user: I'm need that you access this %s URL and folowing these steps:
+	1. Get the body of URL
+	2. Parse the body to get a CNPJ of the seller
+	3. Parse the body to get a itens, price of itens
+	4. Format the response to JSON
+	5. No create random message
+	6. Return the JSON`, query)
+
+	log.Println(message)
+	a.Session.History = append(a.Session.History, &genai.Content{
+		Parts: []genai.Part{genai.Text(message)},
+		Role:  "user",
+	})
+	resp, err := a.Session.SendMessage(ctx, genai.Text(message))
 	if err != nil {
 		return nil, fmt.Errorf("error sending message: %w", err)
 	}
