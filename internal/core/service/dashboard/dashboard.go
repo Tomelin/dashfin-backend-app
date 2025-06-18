@@ -9,7 +9,6 @@ import (
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
 
-	"github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
@@ -95,7 +94,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		},
 	}
 
-	
 	// 2. If not in cache or error during cache fetch, generate fresh data
 	dashboard, err := s.generateFreshDashboardData(ctx, userID)
 	if err != nil {
