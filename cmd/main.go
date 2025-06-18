@@ -190,7 +190,15 @@ func initializeMessageQueue(fields map[string]interface{}) (message_queue.Messag
 	if err != nil {
 		return nil, err
 	}
-	log.Println("queues >>>>>", fields["message_queues"].([]message_queue.MessageQueue))
+
+	b, _ = json.Marshal(fields["message_queues"])
+	var queues []message_queue.MessageQueue
+	err = json.Unmarshal(b, &queues)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println("queues >>>>>", queues)
 	log.Println("fields >>>>>", fields["message_queues"])
 	mq, err := message_queue.NewRabbitMQ(config)
 	if err != nil {
