@@ -5,12 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/pkg/llm"
 )
 
 // ExpenseRecordService provides business logic for expense records.
@@ -258,51 +256,16 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 
 	log.Println(url.NfceUrl)
 
-	resp, err := http.Get(url.NfceUrl)
+	llmQuery, err := llm.NewAgent()
 	if err != nil {
-		log.Fatalf("Erro ao acessar a URL: %v", err)
+		return nil, err
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		log.Fatalf("Status HTTP inválido: %d", resp.StatusCode)
-	}
-
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
+	bResut, err := llmQuery.Run(ctx, url.NfceUrl)
 	if err != nil {
-		log.Fatalf("Erro ao ler o HTML: %v", err)
+		return nil, err
 	}
-	log.Println(doc)
-	fmt.Println("Itens da Nota:")
-	doc.Find(".txtTit").Each(func(i int, s *goquery.Selection) {
-		log.Println("text > ", s.Text())
-		log.Println("parse > ", s.Parent())
 
-		itemName := s.Text()
-		itemValue := s.Parent().Find(".totalNumb").Text()
-		if strings.TrimSpace(itemValue) != "" {
-			fmt.Printf("- %s: %s\n", strings.TrimSpace(itemName), strings.TrimSpace(itemValue))
-		}
-	})
-
-	// Busca o valor total da nota
-	doc.Find(".linhaTotal").Each(func(i int, s *goquery.Selection) {
-		if strings.Contains(s.Text(), "Valor a Pagar") {
-			total := s.Find(".totalNumb").Text()
-			fmt.Printf("\nValor Total: %s\n", strings.TrimSpace(total))
-		}
-	})
-
-	// llmQuery, err := llm.NewAgent()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// bResut, err := llmQuery.Run(ctx, url.NfceUrl)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// log.Println(string(bResut))
+	log.Println(string(bResut))
 
 	return nil, nil
 }
