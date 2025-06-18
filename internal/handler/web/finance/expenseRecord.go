@@ -84,6 +84,7 @@ func (h *ExpenseRecordHandler) ProcessExpenseByNfceUrl(c *gin.Context) {
 		ImportMode: entity_finance.NfceUrlItems,
 	}
 
+	log.Println(expenseNfceUrl)
 	result, err := h.service.CreateExpenseByNfceUrl(ctx, &expenseNfceUrl)
 	if err != nil {
 		log.Printf("Error creating expense record via service: %v", err)
@@ -91,7 +92,7 @@ func (h *ExpenseRecordHandler) ProcessExpenseByNfceUrl(c *gin.Context) {
 		return
 	}
 
-	log.Println(result)
+	log.Println("result from service > ", result)
 	c.JSON(http.StatusCreated, gin.H{"payload": "ok"})
 }
 
