@@ -128,6 +128,11 @@ func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
 		Parts: []genai.Part{genai.Text(message)},
 		Role:  "user",
 	})
+
+	a.Session.History = append(a.Session.History, &genai.Content{
+		Parts: []genai.Part{genai.Text("Entendido. Estou pronto para processar as NFCe e extrair os dados solicitados no formato JSON.")},
+		Role:  "model",
+	})
 	resp, err := a.Session.SendMessage(ctx, genai.Text(message))
 	if err != nil {
 		return nil, fmt.Errorf("error sending message: %w", err)
