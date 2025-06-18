@@ -87,8 +87,8 @@ type NFCeItem struct {
 }
 
 type NFCe struct {
-	Itens []NFCeItem
-	CNPJ  string `json:"cnpj_estabelecimento"`
+	Itens []NFCeItem `json:"itens"`
+	CNPJ  string     `json:"cnpj_estabelecimento"`
 }
 
 func (ex *ExpenseByNfceUrl) Validate() error {
