@@ -11,56 +11,56 @@ import (
 
 // QueueConfig configuração de uma queue específica
 type QueueConfig struct {
-	Name       string                 `yaml:"name"`
-	Durable    bool                   `yaml:"durable"`
-	AutoDelete bool                   `yaml:"auto_delete"`
-	Exclusive  bool                   `yaml:"exclusive"`
-	NoWait     bool                   `yaml:"no_wait"`
-	Args       map[string]interface{} `yaml:"args"`
-	RouteKey   string                 `yaml:"route_key"`  // Para compatibilidade
-	RouteKeys  []string               `yaml:"route_keys"` // Múltiplas route keys
-	DeadLetter DeadLetterConfig       `yaml:"dead_letter"`
-	Consumer   ConsumerConfig         `yaml:"consumer"`
-	Publisher  PublisherConfig        `yaml:"publisher"`
+	Name       string                 `yaml:"name" json:"name"`
+	Durable    bool                   `yaml:"durable" json:"durable"`
+	AutoDelete bool                   `yaml:"auto_delete" json:"auto_delete"`
+	Exclusive  bool                   `yaml:"exclusive" json:"exclusive"`
+	NoWait     bool                   `yaml:"no_wait" json:"no_wait"`
+	Args       map[string]interface{} `yaml:"args" json:"args"`
+	RouteKey   string                 `yaml:"route_key" json:"route_key"`   // Para compatibilidade
+	RouteKeys  []string               `yaml:"route_keys" json:"route_keys"` // Múltiplas route keys
+	DeadLetter DeadLetterConfig       `yaml:"dead_letter" json:"dead_letter"`
+	Consumer   ConsumerConfig         `yaml:"consumer" json:"consumer"`
+	Publisher  PublisherConfig        `yaml:"publisher" json:"publisher"`
 }
 
 // DeadLetterConfig configuração de dead letter
 type DeadLetterConfig struct {
-	Exchange string `yaml:"exchange"`
-	Queue    string `yaml:"queue"`
-	RouteKey string `yaml:"route_key"`
+	Exchange string `yaml:"exchange" json:"exchange"`
+	Queue    string `yaml:"queue" json:"queue"`
+	RouteKey string `yaml:"route_key" json:"route_key"`
 }
 
 // ConsumerConfig configuração do consumer
 type ConsumerConfig struct {
-	Tag       string                 `yaml:"tag"`
-	AutoAck   bool                   `yaml:"auto_ack"`
-	Exclusive bool                   `yaml:"exclusive"`
-	NoLocal   bool                   `yaml:"no_local"`
-	NoWait    bool                   `yaml:"no_wait"`
-	Args      map[string]interface{} `yaml:"args"`
+	Tag       string                 `yaml:"tag" json:"tag"`
+	AutoAck   bool                   `yaml:"auto_ack" json:"auto_ack"`
+	Exclusive bool                   `yaml:"exclusive" json:"exclusive"`
+	NoLocal   bool                   `yaml:"no_local" json:"no_local"`
+	NoWait    bool                   `yaml:"no_wait" json:"no_wait"`
+	Args      map[string]interface{} `yaml:"args" json:"args"`
 }
 
 // PublisherConfig configuração do publisher
 type PublisherConfig struct {
-	Mandatory bool `yaml:"mandatory"`
-	Immediate bool `yaml:"immediate"`
+	Mandatory bool `yaml:"mandatory" json:"mandatory"`
+	Immediate bool `yaml:"immediate" json:"immediate"`
 }
 
 // ExchangeConfig configuração de uma exchange
 type ExchangeConfig struct {
-	Name    string        `yaml:"exchange"`
-	Type    string        `yaml:"type"`
-	Durable bool          `yaml:"durable"`
-	Queues  []QueueConfig `yaml:"queues"`
+	Name    string        `yaml:"exchange" json:"exchange"`
+	Type    string        `yaml:"type" json:"type"`
+	Durable bool          `yaml:"durable" json:"durable"`
+	Queues  []QueueConfig `yaml:"queues" json:"queues"`
 }
 
 // Config estrutura principal de configuração para RabbitMQ
 type Config struct {
-	URL              string           `yaml:"url"`
-	MessageQueues    []ExchangeConfig `yaml:"message_queues"`
-	DefaultConsumer  ConsumerConfig   `yaml:"default_consumer"`
-	DefaultPublisher PublisherConfig  `yaml:"default_publisher"`
+	URL              string           `yaml:"url" json:"url"`
+	MessageQueues    []ExchangeConfig `yaml:"message_queues" json:"message_queues"`
+	DefaultConsumer  ConsumerConfig   `yaml:"default_consumer" json:"default_consumer"`
+	DefaultPublisher PublisherConfig  `yaml:"default_publisher" json:"default_publisher"`
 }
 
 // MessageQueue interface principal da biblioteca
