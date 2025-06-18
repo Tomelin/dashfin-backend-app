@@ -19,7 +19,7 @@ Título do Prompt: Extração Estruturada de Dados de Nota Fiscal Eletrônica (N
 
 Instruções:
 
-Acesse a URL fornecida de uma Nota Fiscal Eletrônica (NF-e).
+Realize o parse no HTML fornecido de uma Nota Fiscal Eletrônica (NF-e).
 
 Extração:
 
@@ -98,7 +98,7 @@ func NewAgent() (AgentInterface, error) {
 	cs.History = []*genai.Content{
 		// A primeira entrada simula o "usuário" (orquestrador/sistema) dando a instrução de role
 		{
-			Parts: []genai.Part{genai.Text("I'm need that you access the URL send by user and execute the query to get a itens, price of itens and CNPJ of the seller")},
+			Parts: []genai.Part{genai.Text("I need that you execute the parse on HTML Body and get all itens and price of itens")},
 			Role:  "user",
 		},
 		// Uma resposta simulada do modelo para confirmar que entendeu a role
@@ -115,13 +115,15 @@ func NewAgent() (AgentInterface, error) {
 }
 
 func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
-	message := fmt.Sprintf(`user: I'm need that you access this %s URL and folowing these steps:
+	message := fmt.Sprintf(`user: I need you to extract the items and values from the HTML body.
 	1. Get the body of URL
 	2. Parse the body to get a CNPJ of the seller
 	3. Parse the body to get a itens, price of itens
 	4. Format the response to JSON
 	5. If you cannnot get itens, return nil
-	6. Return the JSON`, query)
+	6. Return the JSON
+	
+	The HTML body is %s`, query)
 
 	log.Println(message)
 	a.Session.History = append(a.Session.History, &genai.Content{

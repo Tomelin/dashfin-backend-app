@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -256,11 +258,18 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 
 	log.Println(url.NfceUrl)
 
+	body, err := s.getBody(ctx, url.NfceUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(string(body))
+
 	llmQuery, err := llm.NewAgent()
 	if err != nil {
 		return nil, err
 	}
-	bResut, err := llmQuery.Run(ctx, url.NfceUrl)
+	bResut, err := llmQuery.Run(ctx, string(body))
 	if err != nil {
 		return nil, err
 	}
@@ -268,4 +277,29 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 	log.Println(string(bResut))
 
 	return nil, nil
+}
+
+func (s *ExpenseRecordService) getBody(ctx context.Context, url string) ([]byte, error) {
+
+	// Suggested code may be subject to a license. Learn more: ~LicenseLog:3523473348.
+	// Suggested code may be subject to a license. Learn more: ~LicenseLog:2661324889.
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
 }
