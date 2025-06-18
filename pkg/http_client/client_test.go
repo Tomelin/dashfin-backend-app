@@ -172,7 +172,7 @@ func TestResponse_IsSuccess(t *testing.T) {
 
 func TestClient_BuildURL(t *testing.T) {
 	client := New(Config{BaseURL: "https://api.example.com"})
-	
+
 	url := client.buildURL("/users")
 	assert.Equal(t, "https://api.example.com/users", url)
 

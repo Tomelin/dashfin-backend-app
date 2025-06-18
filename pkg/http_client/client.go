@@ -23,9 +23,9 @@ type Config struct {
 }
 
 type Response struct {
-	StatusCode int
-	Body       []byte
-	Headers    http.Header
+	StatusCode  int
+	Body        []byte
+	Headers     http.Header
 	RawResponse *http.Response
 }
 
@@ -65,7 +65,7 @@ func (c *Client) Patch(ctx context.Context, path string, body interface{}, heade
 
 func (c *Client) doRequest(ctx context.Context, method, path string, body interface{}, headers map[string]string) (*Response, error) {
 	url := c.buildURL(path)
-	
+
 	var reqBody io.Reader
 	if body != nil {
 		jsonBody, err := json.Marshal(body)

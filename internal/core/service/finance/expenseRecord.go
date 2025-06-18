@@ -71,11 +71,21 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 			}
+
+			b, _ := json.Marshal(expensesCreated[i])
+			s.mq.PublisherWithRouteKey(mq_exchange, mq_rk_expense_create, b)
 		}
 		return &expensesCreated[0], nil // Return the first created expense record
 	}
 
-	return s.Repo.CreateExpenseRecord(ctx, data)
+	result, err := s.Repo.CreateExpenseRecord(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+
+	b, _ := json.Marshal(result)
+	s.mq.PublisherWithRouteKey(mq_exchange, mq_rk_expense_create, b)
+	return result, err
 }
 
 // GetExpenseRecordByID retrieves an expense record by its ID, ensuring user authorization.

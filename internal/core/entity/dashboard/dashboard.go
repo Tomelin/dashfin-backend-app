@@ -30,19 +30,19 @@ type AccountBalanceItem struct {
 }
 
 type MonthlyFinancialSummaryItem struct {
-	Month string `json:"month"`
-	TotalIncome float64 `json:"totalIncome"`
+	Month         string  `json:"month"`
+	TotalIncome   float64 `json:"totalIncome"`
 	TotalExpenses float64 `json:"totalExpenses"`
-  }
+}
 
 // SummaryCards holds the data for the summary cards at the top of the dashboard.
 type SummaryCards struct {
-	TotalBalance      float64              `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
-	MonthlyRevenue    float64              `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
-	MonthlyExpenses   float64              `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
-	GoalsProgress     string               `json:"goalsProgress"`   // Progresso geral das metas financeiras.
-	UpcomingBillsData []UpcomingBillData   `json:"upcomingBillsData"`
-	AccountBalances   []AccountBalanceItem `json:"accountBalances,omitempty"`
+	TotalBalance            float64                       `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
+	MonthlyRevenue          float64                       `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
+	MonthlyExpenses         float64                       `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
+	GoalsProgress           string                        `json:"goalsProgress"`   // Progresso geral das metas financeiras.
+	UpcomingBillsData       []UpcomingBillData            `json:"upcomingBillsData"`
+	AccountBalances         []AccountBalanceItem          `json:"accountBalances,omitempty"`
 	MonthlyFinancialSummary []MonthlyFinancialSummaryItem `json:"monthlyFinancialSummary,omitempty"`
 }
 
