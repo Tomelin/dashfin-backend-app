@@ -271,7 +271,7 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		return nil, err
 	}
 
-	var itens entity_finance.NFCe
+	var itens interface{}
 	log.Println(string(bResut))
 	err = json.Unmarshal(bResut, &itens)
 	if err != nil {
