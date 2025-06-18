@@ -69,6 +69,12 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		// return cachedDashboard, nil
 	}
 
+	// 2. If not in cache or error during cache fetch, generate fresh data
+	dashboard, err := s.generateFreshDashboardData(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
+	}
+
 	balanceCard := []dashboardEntity.AccountBalanceItem{
 		{
 			ID:          "0001",
@@ -90,13 +96,30 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		},
 	}
 
-	// 2. If not in cache or error during cache fetch, generate fresh data
-	dashboard, err := s.generateFreshDashboardData(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
-	}
+	monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
+		{
+			Month:         "202505",
+			TotalIncome:   5123.98,
+			TotalExpenses: 2345.00,
+		},
+		{
+			Month:         "202504",
+			TotalIncome:   6789.98,
+			TotalExpenses: 7865.75,
+		},
+		{
+			Month:         "202505",
+			TotalIncome:   9856.98,
+			TotalExpenses: 8764.00,
+		},
+		{
+			Month:         "202502",
+			TotalIncome:   9876.98,
+			TotalExpenses: 2345.00,
+		}}
 
 	dashboard.SummaryCards.AccountBalances = balanceCard
+	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
 
 	// 3. Save the newly generated dashboard to cache
 	// Use a default TTL, this could be configurable
