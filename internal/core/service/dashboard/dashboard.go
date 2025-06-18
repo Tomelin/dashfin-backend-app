@@ -70,24 +70,23 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	balanceCard := []dashboardEntity.AccountBalanceItem{
-			{
-				ID:          "0001",
-				AccountName: "Itau",
-				BankName:    "Itau",
-				Balance:     78232.00,
-			},
-			{
-				ID:          "0002",
-				AccountName: "Santander",
-				BankName:    "Santander",
-				Balance:     43.00,
-			},
-			{
-				ID:          "0003",
-				AccountName: "Caixa",
-				BankName:    "Caixa",
-				Balance:     782.00,
-			},
+		{
+			ID:          "0001",
+			AccountName: "Itau",
+			BankName:    "Itau",
+			Balance:     78232.00,
+		},
+		{
+			ID:          "0002",
+			AccountName: "Santander",
+			BankName:    "Santander",
+			Balance:     43.00,
+		},
+		{
+			ID:          "0003",
+			AccountName: "Caixa",
+			BankName:    "Caixa",
+			Balance:     782.00,
 		},
 	}
 
