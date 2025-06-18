@@ -152,6 +152,7 @@ func (mq *RabbitMQ) Setup() error {
 	}
 
 	log.Println("Setting up RabbitMQ")
+	log.Println(mq.config.MessageQueues)
 	// Declara todas as exchanges
 	for _, exchange := range mq.config.MessageQueues {
 		exchangeType := exchange.Type
