@@ -85,6 +85,8 @@ type RabbitMQ struct {
 
 // NewRabbitMQ cria uma nova instância do RabbitMQ
 func NewRabbitMQ(config Config) (MessageQueue, error) {
+	log.Println("Initializing RabbitMQ")
+	log.Println(config)
 	mq := &RabbitMQ{
 		config:    config,
 		closeChan: make(chan *amqp.Error),
