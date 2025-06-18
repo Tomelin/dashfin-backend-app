@@ -86,8 +86,8 @@ func NewAgent() (AgentInterface, error) {
 		{Category: genai.HarmCategorySexuallyExplicit, Threshold: genai.HarmBlockNone},
 	}
 
-	model.SetTemperature(0.0)
-	model.SetCandidateCount(int32(100))
+	model.SetTemperature(0.5)
+	// model.SetCandidateCount(int32(100))
 	model.SystemInstruction = genai.NewUserContent(genai.Text(promptToParseNFCE))
 	model.ResponseMIMEType = "application/json"
 
