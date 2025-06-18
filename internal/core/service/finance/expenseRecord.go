@@ -276,6 +276,7 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 	fmt.Println("Itens da Nota:")
 	doc.Find(".txtTit").Each(func(i int, s *goquery.Selection) {
 		log.Println("text > ", s.Text())
+		log.Println("parse > ", s.Parent())
 
 		itemName := s.Text()
 		itemValue := s.Parent().Find(".totalNumb").Text()
