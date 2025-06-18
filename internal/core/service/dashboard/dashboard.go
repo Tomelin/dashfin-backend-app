@@ -98,22 +98,22 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 
 	monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
 		{
-			Month:         "202505",
+			Month:         "2025-05",
 			TotalIncome:   5123.98,
 			TotalExpenses: 2345.00,
 		},
 		{
-			Month:         "202504",
+			Month:         "2025-04",
 			TotalIncome:   6789.98,
 			TotalExpenses: 7865.75,
 		},
 		{
-			Month:         "202505",
+			Month:         "2025-05",
 			TotalIncome:   9856.98,
 			TotalExpenses: 8764.00,
 		},
 		{
-			Month:         "202502",
+			Month:         "2025-02",
 			TotalIncome:   9876.98,
 			TotalExpenses: 2345.00,
 		}}
