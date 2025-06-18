@@ -190,7 +190,7 @@ func initializeMessageQueue(fields map[string]interface{}) (message_queue.Messag
 	if err != nil {
 		return nil, err
 	}
-	log.Println("config >>>>>", config)
+	log.Println("queues >>>>>", fields["message_queues"].([]message_queue.MessageQueue))
 	log.Println("fields >>>>>", fields["message_queues"])
 	mq, err := message_queue.NewRabbitMQ(config)
 	if err != nil {
