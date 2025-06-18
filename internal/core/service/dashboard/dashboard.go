@@ -73,19 +73,19 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		TotalBalance:   7509.90,
 		MonthlyRevenue: 763.87,
 		AccountBalances: []dashboardEntity.AccountBalanceItem{
-			dashboardEntity.AccountBalanceItem{
+			{
 				ID:          "0001",
 				AccountName: "Itau",
 				BankName:    "Itau",
 				Balance:     78232.00,
 			},
-			dashboardEntity.AccountBalanceItem{
+			{
 				ID:          "0002",
 				AccountName: "Santander",
 				BankName:    "Santander",
 				Balance:     43.00,
 			},
-			dashboardEntity.AccountBalanceItem{
+			{
 				ID:          "0003",
 				AccountName: "Caixa",
 				BankName:    "Caixa",
