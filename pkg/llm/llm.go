@@ -120,7 +120,7 @@ func (a *Agent) Run(ctx context.Context, query string) ([]byte, error) {
 	2. Parse the body to get a CNPJ of the seller
 	3. Parse the body to get a itens, price of itens
 	4. Format the response to JSON
-	5. No create random message
+	5. If you cannnot get itens, return nil
 	6. Return the JSON`, query)
 
 	log.Println(message)
