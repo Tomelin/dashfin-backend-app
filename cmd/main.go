@@ -28,6 +28,7 @@ import (
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/http_server" // Added Redis import
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 	"github.com/go-viper/mapstructure/v2"
 	// Ensure this is imported for adapters
 )
@@ -54,6 +55,11 @@ func main() {
 	}
 
 	cacheClient, err := initializeCache(cfg.Fields["cache"])
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mq, err := initializeMessageQueue(cfg.Fields["message_queue"])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +93,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcExpenseRecord, err := initializeExpenseRecordServices(db)
+	svcExpenseRecord, err := initializeExpenseRecordServices(db, mq)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -175,6 +181,29 @@ func initializeCache(fields interface{}) (cache.CacheService, error) {
 
 }
 
+func initializeMessageQueue(fields interface{}) (message_queue.MessageQueue, error) {
+
+	b, _ := json.Marshal(fields)
+
+	var config message_queue.Config
+	err := json.Unmarshal(b, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	mq, err := message_queue.NewRabbitMQ(config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = mq.Setup()
+	if err != nil {
+		return nil, err
+	}
+
+	return mq, nil
+}
+
 func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface, error) {
 	token := fmt.Sprintf("%v", encryptField)
 	return cryptdata.InicializationCryptData(&token)
@@ -255,13 +284,13 @@ func initializeFinancialInstitution(db database.FirebaseDBInterface) (entity_pla
 	return service_platform.NewFinancialInstitutionService(repoSupport)
 }
 
-func initializeExpenseRecordServices(db database.FirebaseDBInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
+func initializeExpenseRecordServices(db database.FirebaseDBInterface, mq message_queue.MessageQueue) (entity_finance.ExpenseRecordServiceInterface, error) {
 	repoExpenseRecord, err := repository_finance.InitializeExpenseRecordRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize expense record repository: %w", err)
 	}
 
-	svcExpenseRecord, err := service_finance.InitializeExpenseRecordService(repoExpenseRecord)
+	svcExpenseRecord, err := service_finance.InitializeExpenseRecordService(repoExpenseRecord, mq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize expense record service: %w", err)
 	}
