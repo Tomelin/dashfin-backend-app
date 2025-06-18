@@ -278,7 +278,7 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 		return nil, err
 	}
 
-	log.Println(itens)
+	log.Println(itens.(entity_finance.NFCe))
 
 	return nil, nil
 }
