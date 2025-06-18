@@ -260,12 +260,12 @@ func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *
 	if err != nil {
 		return nil, err
 	}
-	// bResut, err := llmQuery.Run(ctx, url.NfceUrl)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	bResut, err := llmQuery.Run(ctx, url.NfceUrl)
+	if err != nil {
+		return nil, err
+	}
 
-	log.Println(llmQuery)
+	log.Println(string(bResut))
 
 	return nil, nil
 }
