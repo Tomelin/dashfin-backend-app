@@ -3,8 +3,6 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -86,8 +84,6 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		c.JSON(http.StatusNoContent, gin.H{"message": "there are contents"})
 		return
 	}
-
-	log.Println("AccountBalances > ", fmt.Sprintf("%v", results.SummaryCards.AccountBalances))
 
 	bills := make([]dashboardEntity.UpcomingBillData, 0)
 

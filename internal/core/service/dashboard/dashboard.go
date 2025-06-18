@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -65,8 +64,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
 	}
 	if found && cachedDashboard != nil {
-		log.Println("Dashboard found in cache", cachedDashboard, found)
-		// return cachedDashboard, nil
+		return cachedDashboard, nil
 	}
 
 	// 2. If not in cache or error during cache fetch, generate fresh data
