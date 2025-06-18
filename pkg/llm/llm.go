@@ -89,7 +89,6 @@ func NewAgent() (AgentInterface, error) {
 	model.SetCandidateCount(int32(100))
 	model.SystemInstruction = genai.NewUserContent(genai.Text(promptToParseNFCE))
 	model.ResponseMIMEType = "application/json"
-	model.ResponseSchema.Format = "json"
 
 	// CORREÇÃO: Inicia uma nova sessão de chat SEM argumentos
 	cs := model.StartChat()
