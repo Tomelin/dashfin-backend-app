@@ -59,7 +59,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mq, err := initializeMessageQueue(cfg.Fields["message_queue"])
+	mq, err := initializeMessageQueue(cfg.Fields["message_queue"].(map[string]interface{}))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -181,7 +181,7 @@ func initializeCache(fields interface{}) (cache.CacheService, error) {
 
 }
 
-func initializeMessageQueue(fields interface{}) (message_queue.MessageQueue, error) {
+func initializeMessageQueue(fields map[string]interface{}) (message_queue.MessageQueue, error) {
 
 	b, _ := json.Marshal(fields)
 
