@@ -183,21 +183,13 @@ func initializeCache(fields interface{}) (cache.CacheService, error) {
 
 func initializeMessageQueue(fields map[string]interface{}) (message_queue.MessageQueue, error) {
 
-	log.Println("Raw fields received:", fields)
-
-	b, err := json.Marshal(fields)
-	log.Println("err >>>>>", err)
-	log.Println("JSON marshaled:", string(b))
+	b, _ := json.Marshal(fields)
 
 	var config message_queue.Config
-	err = json.Unmarshal(b, &config)
+	err := json.Unmarshal(b, &config)
 	if err != nil {
-		log.Println("Unmarshal error:", err)
 		return nil, err
 	}
-
-	log.Println("config >>>>>", config)
-	log.Println("config.MessageQueues length:", len(config.MessageQueues))
 
 	mq, err := message_queue.NewRabbitMQ(config)
 	if err != nil {

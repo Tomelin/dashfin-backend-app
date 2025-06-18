@@ -86,7 +86,6 @@ type RabbitMQ struct {
 // NewRabbitMQ cria uma nova instância do RabbitMQ
 func NewRabbitMQ(config Config) (MessageQueue, error) {
 	log.Println("Initializing RabbitMQ")
-	log.Println(config)
 	mq := &RabbitMQ{
 		config:    config,
 		closeChan: make(chan *amqp.Error),
@@ -153,8 +152,6 @@ func (mq *RabbitMQ) Setup() error {
 		return fmt.Errorf("not connected to RabbitMQ")
 	}
 
-	log.Println("Setting up RabbitMQ")
-	log.Println(mq.config.MessageQueues)
 	// Declara todas as exchanges
 	for _, exchange := range mq.config.MessageQueues {
 		exchangeType := exchange.Type
@@ -174,7 +171,6 @@ func (mq *RabbitMQ) Setup() error {
 		if err != nil {
 			return fmt.Errorf("failed to declare exchange %s: %w", exchange.Name, err)
 		}
-		log.Println("Exchange declared:", exchange.Name)
 
 		// Declara dead letter exchanges para cada queue
 		for _, queue := range exchange.Queues {
@@ -191,8 +187,6 @@ func (mq *RabbitMQ) Setup() error {
 				if err != nil {
 					return fmt.Errorf("failed to declare dead letter exchange %s: %w", queue.DeadLetter.Exchange, err)
 				}
-
-				log.Println("Dead letter exchange declared:", queue.DeadLetter.Exchange)
 
 				// Declara dead letter queue
 				if queue.DeadLetter.Queue != "" {
@@ -232,7 +226,6 @@ func (mq *RabbitMQ) Setup() error {
 				}
 			}
 
-			log.Println("Declaring queue:", queue.Name)
 			// Adiciona dead letter se configurado
 			if queue.DeadLetter.Exchange != "" {
 				queueArgs["x-dead-letter-exchange"] = queue.DeadLetter.Exchange
@@ -254,7 +247,6 @@ func (mq *RabbitMQ) Setup() error {
 				return fmt.Errorf("failed to declare queue %s: %w", queue.Name, err)
 			}
 
-			log.Println("Queue declared:", queue.Name)
 			// Bind queue ao exchange com múltiplas route keys
 			routeKeys := queue.getRouteKeys()
 			for _, routeKey := range routeKeys {
@@ -269,7 +261,6 @@ func (mq *RabbitMQ) Setup() error {
 					return fmt.Errorf("failed to bind queue %s to exchange %s with route key %s: %w",
 						queue.Name, exchange.Name, routeKey, err)
 				}
-				log.Println("Queue bound to exchange with route key:", queue.Name, exchange.Name, routeKey)
 			}
 		}
 	}
@@ -386,7 +377,6 @@ func (mq *RabbitMQ) Consumer(ctx context.Context, exchangeName, queueName string
 			return ctx.Err()
 		case err := <-mq.closeChan:
 			if err != nil {
-				log.Printf("RabbitMQ connection closed: %v", err)
 				return fmt.Errorf("connection closed: %w", err)
 			}
 			return nil
