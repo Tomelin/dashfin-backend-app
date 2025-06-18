@@ -82,13 +82,13 @@ type ExpenseByNfceUrl struct {
 }
 
 type NFCeItem struct {
-	Descricao string  `json:"descricao_item"`
-	Valor     float64 `json:"valor_total_item"`
+	ItemDescription string  `json:"item_description"`
+	ItemPrice       float64 `json:"item_price"`
 }
 
 type NFCe struct {
-	Itens []NFCeItem `json:"itens"`
-	CNPJ  string     `json:"cnpj_estabelecimento"`
+	Itens    []NFCeItem `json:"itens"`
+	IDSeller string     `json:"id_seller"`
 }
 
 func (ex *ExpenseByNfceUrl) Validate() error {

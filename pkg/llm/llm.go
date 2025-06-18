@@ -38,19 +38,19 @@ Retorne os dados em formato JSON, estruturado da seguinte forma:
 JSON
 
 {
-  "cnpj_estabelecimento": "12.345.678/0001-90",
+  "id_seller": "12.345.678/0001-90",
   ""itens": [
     {
-      "descricao_item": "Produto A",
-      "valor_total_item": 150.75
+      "item_description": "Produto A",
+      "item_price": 150.75
     },
     {
-      "descricao_item": "Serviço B",
-      "valor_total_item": 200.00
+      "item_description": "Serviço B",
+      "item_price": 200.00
     },
     {
-      "descricao_item": "Produto C",
-      "valor_total_item": 50.25
+      "item_description": "Produto C",
+      "item_price": 50.25
     }
   ]
 }
