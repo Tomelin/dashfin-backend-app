@@ -59,7 +59,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mq, err := initializeMessageQueue(cfg.Fields["message_queue"].(map[string]interface{}))
+	mq, err := initializeMessageQueue(cfg.Fields)
 	if err != nil {
 		log.Fatal(err)
 	}
