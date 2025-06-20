@@ -109,7 +109,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcIncomeRecord, err := initializeIncomeRecordServices(db)
+	svcIncomeRecord, err := initializeIncomeRecordServices(db, mq)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -315,13 +315,13 @@ func initializeCreditCardServices(db database.FirebaseDBInterface) (entity_finan
 
 }
 
-func initializeIncomeRecordServices(db database.FirebaseDBInterface) (entity_finance.IncomeRecordServiceInterface, error) {
+func initializeIncomeRecordServices(db database.FirebaseDBInterface, mq message_queue.MessageQueue) (entity_finance.IncomeRecordServiceInterface, error) {
 	repoIncomeRecord, err := repository_finance.InitializeIncomeRecordRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
 	}
 
-	svcIncomeRecord, err := service_finance.InitializeIncomeRecordService(repoIncomeRecord)
+	svcIncomeRecord, err := service_finance.InitializeIncomeRecordService(repoIncomeRecord, mq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	}
