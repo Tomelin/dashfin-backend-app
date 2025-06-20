@@ -546,7 +546,6 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 	// Start a goroutine to close the channel when all goroutines are done
 	go func() {
 		wg.Wait()
-		close(summaryChan)
 	}()
 
 	// Collect results from the channel
