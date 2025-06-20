@@ -485,7 +485,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	log.Println("userID > ", incomeRecord.Data.UserID)
 	log.Println("bankAccountID > ", incomeRecord.Data.BankAccountID)
 	log.Println("bankName > ", bankName)
-	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
+	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &bankName)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
 			return err
