@@ -92,7 +92,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	balanceCard, err := s.getBankAccountBalance(ctx)
-	log.Println("balanceCard > ", balanceCard, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
 			return nil, fmt.Errorf("getting bank account balance: %w", err)
@@ -150,9 +149,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboa
 		return nil, fmt.Errorf("userID in context is empty")
 	}
 
-	log.Println("userID > ", userID)
 	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
-	log.Println("GetBankAccountBalance> ", result, err)
 	if err != nil {
 		return nil, err
 	}
@@ -459,7 +456,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	default:
 		return errors.New("action did not match any case")
 	}
-
+	log.Println(balance, incomeRecord.Action)
 	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
@@ -501,7 +498,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	} else {
 		dashboard.Balance += balance
 	}
-
+	log.Println(dashboard)
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
 	return nil
