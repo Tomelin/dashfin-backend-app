@@ -23,7 +23,7 @@ type UpcomingBillData struct {
 }
 
 type AccountBalanceItem struct {
-	ID          string  `json:"id"`
+	ID          string  `json:"id,omitempty"`
 	AccountName string  `json:"accountName"`
 	BankName    string  `json:"bankName"`
 	Balance     float64 `json:"balance"`
