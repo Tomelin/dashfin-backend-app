@@ -22,6 +22,8 @@ type ExpenseRecordHandlerInterface interface {
 	GetExpenseRecordsByFilter(c *gin.Context) // Added for filtering
 	UpdateExpenseRecord(c *gin.Context)
 	DeleteExpenseRecord(c *gin.Context)
+	CreateExpenseByNfceUrl(c *gin.Context)
+	ProcessExpenseByNfceUrl(c *gin.Context)
 }
 
 // ExpenseRecordHandler handles HTTP requests for ExpenseRecords.
@@ -58,9 +60,9 @@ func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlew
 	// Example: financeRoutes := routerGroup.Group("/finance/expense-records", middleware...)
 
 	financeRoutes := routerGroup.Group("/finance/expenses")
-	for _, mw := range middleware {
-		financeRoutes.Use(mw)
-	}
+	// for _, mw := range middleware {
+	// 	financeRoutes.Use(mw)
+	// }
 
 	financeRoutes.POST("", h.CreateExpenseRecord)
 	financeRoutes.GET("/:id", h.GetExpenseRecordByID)
@@ -68,6 +70,88 @@ func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlew
 	financeRoutes.POST("/filter", h.GetExpenseRecordsByFilter) // Route for filtered GET
 	financeRoutes.PUT("/:id", h.UpdateExpenseRecord)
 	financeRoutes.DELETE("/:id", h.DeleteExpenseRecord)
+	financeRoutes.POST("/process-nfce-url", h.CreateExpenseByNfceUrl)
+	financeRoutes.GET("/process", h.ProcessExpenseByNfceUrl)
+}
+
+func (h *ExpenseRecordHandler) ProcessExpenseByNfceUrl(c *gin.Context) {
+	ctx := context.WithValue(c.Request.Context(), "Authorization", "token")
+	ctx = context.WithValue(ctx, "UserID", "userID")
+
+	expenseNfceUrl := entity_finance.ExpenseByNfceUrl{
+		NfceUrl:    "https://dfe-portal.svrs.rs.gov.br/Dfe/QrCodeNFce?p=43250400776574163454653020000395661694784220%7C2%7C1%7C1%7Cb5bd8ab6f361bea7d94707cdcacfd96b44b4d42b",
+		UserID:     "userID",
+		ImportMode: entity_finance.NfceUrlItems,
+	}
+
+	result, err := h.service.CreateExpenseByNfceUrl(ctx, &expenseNfceUrl)
+	if err != nil {
+		log.Printf("Error creating expense record via service: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
+		return
+	}
+
+	log.Println("result from service > ", result)
+	c.JSON(http.StatusCreated, gin.H{"payload": "ok"})
+}
+
+func (h *ExpenseRecordHandler) CreateExpenseByNfceUrl(c *gin.Context) {
+	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
+	if err != nil {
+		log.Printf("Error getting required headers: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var payload cryptdata.CryptData
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		log.Printf("Error binding JSON payload: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
+		return
+	}
+
+	decryptedData, err := h.encryptData.PayloadData(payload.Payload)
+	if err != nil {
+		log.Printf("Error decrypting payload data: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error processing request data: " + err.Error()})
+		return
+	}
+
+	var expenseNfceUrl entity_finance.ExpenseByNfceUrl
+	if err := json.Unmarshal(decryptedData, &expenseNfceUrl); err != nil {
+		log.Printf("Error unmarshalling decrypted data to ExpenseRecord: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
+		return
+	}
+
+	expenseNfceUrl.UserID = userID
+
+	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
+	ctx = context.WithValue(ctx, "UserID", userID)
+
+	result, err := h.service.CreateExpenseByNfceUrl(ctx, &expenseNfceUrl)
+	if err != nil {
+		log.Printf("Error creating expense record via service: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
+		return
+	}
+
+	responseBytes, err := json.Marshal(result)
+	if err != nil {
+		log.Printf("Error marshalling result to JSON: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
+		return
+	}
+
+	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
+	if err != nil {
+		log.Printf("Error encrypting response payload: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"payload": encryptedResult})
+
 }
 
 // CreateExpenseRecord handles the creation of a new expense record.

@@ -22,13 +22,33 @@ type UpcomingBillData struct {
 	DueDate string  `json:"dueDate"`
 }
 
+type AccountBalanceItem struct {
+	ID          string  `json:"id,omitempty"`
+	AccountName string  `json:"accountName"`
+	BankName    string  `json:"bankName"`
+	Balance     float64 `json:"balance"`
+	UserID      string  `json:"userId"`
+}
+
+type MonthlyFinancialSummaryItem struct {
+	ID            string    `json:"id,omitempty"`
+	Month         string    `json:"month"`         // Changed order to put ID first
+	TotalIncome   float64   `json:"totalIncome"`   // Removed extra space
+	TotalExpenses float64   `json:"totalExpenses"` // Removed extra space
+	UserID        string    `json:"userId"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+
 // SummaryCards holds the data for the summary cards at the top of the dashboard.
 type SummaryCards struct {
-	TotalBalance      float64            `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
-	MonthlyRevenue    float64            `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
-	MonthlyExpenses   float64            `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
-	GoalsProgress     string             `json:"goalsProgress"`   // Progresso geral das metas financeiras.
-	UpcomingBillsData []UpcomingBillData `json:"upcomingBillsData"`
+	TotalBalance            float64                       `json:"totalBalance"`    // Saldo total consolidado de todas as contas (R$).
+	MonthlyRevenue          float64                       `json:"monthlyRevenue"`  // Total de receitas no mês corrente (R$).
+	MonthlyExpenses         float64                       `json:"monthlyExpenses"` // Total de despesas no mês corrente (R$).
+	GoalsProgress           string                        `json:"goalsProgress"`   // Progresso geral das metas financeiras.
+	UpcomingBillsData       []UpcomingBillData            `json:"upcomingBillsData"`
+	AccountBalances         []AccountBalanceItem          `json:"accountBalances,omitempty"`
+	MonthlyFinancialSummary []MonthlyFinancialSummaryItem `json:"monthlyFinancialSummary,omitempty"`
 }
 
 // AccountSummary represents a summary of a single account.
@@ -80,4 +100,10 @@ type DashboardRepositoryInterface interface {
 
 	// DeleteDashboard explicitly removes dashboard data for a user, e.g., on logout or data reset.
 	DeleteDashboard(ctx context.Context, userID string) error
+
+	GetBankAccountBalanceByID(ctx context.Context, userID, bankName *string) (*AccountBalanceItem, error)
+	UpdateBankAccountBalance(ctx context.Context, userID *string, data *AccountBalanceItem) error
+	GetBankAccountBalance(ctx context.Context, userID *string) ([]AccountBalanceItem, error)
+	UpdateFinancialSummary(ctx context.Context, userID *string, data *MonthlyFinancialSummaryItem) error
+	GetFinancialSummary(ctx context.Context, userID *string) ([]MonthlyFinancialSummaryItem, error)
 }

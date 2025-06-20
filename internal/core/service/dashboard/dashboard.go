@@ -2,19 +2,26 @@ package dashboard
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"sort"
+	"strings"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
 
+	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	platformInstitution "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
-const defaultDashboardCacheTTL = 5 * time.Minute // Example TTL for dashboard cache
+const defaultDashboardCacheTTL = 1 * time.Minute // Example TTL for dashboard cache
 
 // DashboardService provides the logic for aggregating dashboard data.
 type DashboardService struct {
@@ -23,6 +30,8 @@ type DashboardService struct {
 	incomeRecordService  financeEntity.IncomeRecordServiceInterface
 	profileGoalsService  profileEntity.ProfileGoalsServiceInterface
 	dashboardRepository  dashboardEntity.DashboardRepositoryInterface // New dependency
+	messageQueue         message_queue.MessageQueue
+	platformInstitution  platformInstitution.FinancialInstitutionInterface
 }
 
 // NewDashboardService creates a new DashboardService.
@@ -32,14 +41,23 @@ func NewDashboardService(
 	incomeRecordSvc financeEntity.IncomeRecordServiceInterface,
 	profileGoalsSvc profileEntity.ProfileGoalsServiceInterface,
 	dashboardRepo dashboardEntity.DashboardRepositoryInterface, // New dependency
+	messageQueue message_queue.MessageQueue,
+	platformInstitution platformInstitution.FinancialInstitutionInterface,
 ) *DashboardService {
-	return &DashboardService{
+
+	dash := &DashboardService{
 		bankAccountService:   bankAccountSvc,
 		expenseRecordService: expenseRecordSvc,
 		incomeRecordService:  incomeRecordSvc,
 		profileGoalsService:  profileGoalsSvc,
 		dashboardRepository:  dashboardRepo, // Store the new dependency
+		messageQueue:         messageQueue,
+		platformInstitution:  platformInstitution,
 	}
+
+	go dash.accountBalance(context.Background())
+
+	return dash
 }
 
 // GetDashboardData aggregates all necessary data for the financial dashboard.
@@ -73,6 +91,43 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	}
 
+	balanceCard, err := s.getBankAccountBalance(ctx)
+	if err != nil {
+		if !strings.Contains(err.Error(), "not found") {
+			return nil, fmt.Errorf("getting bank account balance: %w", err)
+		}
+	}
+
+	// monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
+	// 	{
+	// 		Month:         "2025-05",
+	// 		TotalIncome:   5123.98,
+	// 		TotalExpenses: 2345.00,
+	// 	},
+	// 	{
+	// 		Month:         "2025-04",
+	// 		TotalIncome:   6789.98,
+	// 		TotalExpenses: 7865.75,
+	// 	},
+	// 	{
+	// 		Month:         "2025-05",
+	// 		TotalIncome:   9856.98,
+	// 		TotalExpenses: 8764.00,
+	// 	},
+	// 	{
+	// 		Month:         "2025-02",
+	// 		TotalIncome:   9876.98,
+	// 		TotalExpenses: 2345.00,
+	// 	}}
+
+	monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
+	for _, v := range monthlyFinancial {
+		log.Println("monthlyFinancial > month", v.Month, "income >", v.TotalIncome, "expense >", v.TotalExpenses)
+
+	}
+	dashboard.SummaryCards.AccountBalances = balanceCard
+	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
+
 	// 3. Save the newly generated dashboard to cache
 	// Use a default TTL, this could be configurable
 	err = s.dashboardRepository.SaveDashboard(ctx, userID, dashboard, defaultDashboardCacheTTL)
@@ -82,6 +137,29 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	return dashboard, nil
+}
+
+func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboardEntity.AccountBalanceItem, error) {
+
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil {
+		return nil, fmt.Errorf("userID not found in context")
+	}
+	userID, ok := userIDFromCtx.(string)
+	if !ok {
+		return nil, fmt.Errorf("userID in context is not a string")
+	}
+
+	if userID == "" {
+		return nil, fmt.Errorf("userID in context is empty")
+	}
+
+	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
@@ -198,10 +276,7 @@ func (s *DashboardService) calculateAllAccountBalances(
 	return accountBalances
 }
 
-func (s *DashboardService) calculateMonthlyRevenue(
-	incomes []financeEntity.IncomeRecord,
-	monthStart time.Time,
-) float64 {
+func (s *DashboardService) calculateMonthlyRevenue(incomes []financeEntity.IncomeRecord, monthStart time.Time) float64 {
 	var totalRevenue float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, income := range incomes {
@@ -215,10 +290,7 @@ func (s *DashboardService) calculateMonthlyRevenue(
 	return totalRevenue
 }
 
-func (s *DashboardService) calculateMonthlyExpenses(
-	paidExpenses []financeEntity.ExpenseRecord,
-	monthStart time.Time,
-) float64 {
+func (s *DashboardService) calculateMonthlyExpenses(paidExpenses []financeEntity.ExpenseRecord, monthStart time.Time) float64 {
 	var totalExpenses float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, expense := range paidExpenses {
@@ -323,7 +395,7 @@ func (s *DashboardService) getRevenueExpenseChartData(
 		monthlyRevenue := s.calculateMonthlyRevenue(incomes, monthStart)
 		monthlyExpenses := s.calculateMonthlyExpenses(paidExpenses, monthStart)
 		chartData[numberOfMonths-1-i] = dashboardEntity.RevenueExpenseChartItem{
-			Month:    monthStart.Format("Jan/06"),
+			Month:    monthStart.Format("2006-01"),
 			Revenue:  monthlyRevenue,
 			Expenses: monthlyExpenses,
 		}
@@ -362,4 +434,264 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 		return chartData[i].Value > chartData[j].Value
 	})
 	return chartData, nil
+}
+
+func (s *DashboardService) accountBalance(ctx context.Context) {
+
+	s.messageQueue.Consumer(ctx, mq_exchange, mq_queue_income, s.processIncomeRecord)
+}
+
+func (s *DashboardService) processIncomeRecord(body []byte, traceID string) error {
+	var incomeRecord financeEntity.IncomeRecordEvent
+	if err := json.Unmarshal(body, &incomeRecord); err != nil {
+		return fmt.Errorf("erro ao deserializar: %w", err)
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "UserID", incomeRecord.Data.UserID)
+
+	// Processar baseado no contexto ou adicionar campo Action na struct
+	var balance float64 = 0.0
+
+	switch {
+	case incomeRecord.Action == entity_common.ActionCreate:
+		balance += incomeRecord.Data.Amount
+	case incomeRecord.Action == entity_common.ActionDelete:
+		balance += (-incomeRecord.Data.Amount)
+	default:
+		return errors.New("action did not match any case")
+	}
+
+	platfotmInst, err := s.platformInstitution.GetAllFinancialInstitutions(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(platfotmInst) == 0 {
+		return errors.New("financial institution not found")
+	}
+
+	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
+	if err != nil {
+		return err
+	}
+
+	var bankName string
+	if len(bankAccount) > 0 && len(platfotmInst) > 0 {
+		for _, v := range platfotmInst {
+			if v.Code == bankAccount[0].BankCode {
+				bankName = v.Name
+				break
+			}
+		}
+	}
+
+	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &bankName)
+	if err != nil {
+		if !strings.Contains(err.Error(), "not found") {
+			return err
+		}
+	}
+
+	if dashboard == nil {
+		dashboard = &dashboardEntity.AccountBalanceItem{
+			UserID:      incomeRecord.Data.UserID,
+			AccountName: bankAccount[0].Description,
+			BankName:    bankName,
+			Balance:     0.0,
+		}
+	}
+	dashboard.Balance += balance
+	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
+
+	return nil
+}
+
+func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+	if userID == nil || *userID == "" {
+		return nil, fmt.Errorf("userID is nil or empty")
+	}
+
+	now := time.Now()
+	// Calculate the start date 12 months ago from the beginning of the current month
+	endDate := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond) // End of current month
+	startDate := endDate.AddDate(0, -12, 1)                                                                             // Start of the month 12 months ago
+
+	startDateStr := startDate.Format("2006-01-02")
+	endDateStr := endDate.Format("2006-01-02")
+
+	// Fetch all relevant income and expense records in one go
+	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
+		StartDate: &startDateStr,
+		EndDate:   &endDateStr,
+		UserID:    *userID,
+	})
+	if err != nil {
+		// Log the error and continue, perhaps with partial data or empty result
+		fmt.Printf("Warning: Error fetching income records for financial summary for user %s: %v\n", *userID, err)
+		allUserIncomes = []financeEntity.IncomeRecord{} // Ensure it's not nil
+	}
+
+	// Assuming ExpenseRecordService also has a method to get records by date range and UserID
+	// If not, you might need to fetch all and filter by UserID manually
+	allUserExpenses, err := s.expenseRecordService.GetExpenseRecordsByDate(ctx, &financeEntity.ExpenseRecordQueryByDate{
+		StartDate: startDateStr,
+		EndDate:   endDateStr,
+	})
+	if err != nil {
+		// Log the error and continue
+		fmt.Printf("Warning: Error fetching expense records for financial summary for user %s: %v\n", *userID, err)
+		allUserExpenses = []financeEntity.ExpenseRecord{} // Ensure it's not nil
+	}
+
+	// Aggregate data by month
+	monthlySummaryMap := make(map[string]*dashboardEntity.MonthlyFinancialSummaryItem)
+
+	// Process incomes
+	for _, income := range allUserIncomes {
+		receiptDate, err := time.Parse("2006-01-02", income.ReceiptDate)
+		if err != nil {
+			fmt.Printf("Warning: Could not parse Income ReceiptDate '%s' for income ID %s: %v\n", income.ReceiptDate, income.ID, err)
+			continue // Skip this income record if date is invalid
+		}
+		// Ensure date is within the desired range (should be covered by the initial fetch, but good practice)
+		if receiptDate.Before(startDate) || receiptDate.After(endDate) {
+			continue
+		}
+
+		monthLabel := receiptDate.Format("2006-01")
+		if item, exists := monthlySummaryMap[monthLabel]; exists {
+			item.TotalIncome += income.Amount
+		} else {
+			monthlySummaryMap[monthLabel] = &dashboardEntity.MonthlyFinancialSummaryItem{
+				Month:       monthLabel,
+				TotalIncome: income.Amount,
+			}
+		}
+	}
+
+	// Process expenses
+	for _, expense := range allUserExpenses {
+		// Only consider paid expenses for the monthly summary
+		if expense.PaymentDate != nil && *expense.PaymentDate != "" {
+			paymentDate, err := time.Parse("2006-01-02", *expense.PaymentDate)
+			if err != nil {
+				fmt.Printf("Warning: Could not parse Expense PaymentDate '%s' for expense ID %s: %v\n", *expense.PaymentDate, expense.ID, err)
+				continue // Skip this expense record if date is invalid
+			}
+			// Ensure date is within the desired range
+			if paymentDate.Before(startDate) || paymentDate.After(endDate) {
+				continue
+			}
+
+			monthLabel := paymentDate.Format("2006-01")
+			if item, exists := monthlySummaryMap[monthLabel]; exists {
+				item.TotalExpenses += expense.Amount
+			} else {
+				// This case might happen if there are expenses in a month with no income
+				monthlySummaryMap[monthLabel] = &dashboardEntity.MonthlyFinancialSummaryItem{
+					Month:         monthLabel,
+					TotalExpenses: expense.Amount,
+				}
+			}
+		}
+	}
+
+	// Convert map to slice and sort by month
+	monthlySummary := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0, len(monthlySummaryMap))
+	for _, item := range monthlySummaryMap {
+		monthlySummary = append(monthlySummary, *item)
+	}
+
+	// Sort the summary by month (chronologically)
+	sort.Slice(monthlySummary, func(i, j int) bool {
+		// Parse month labels back to time.Time for accurate sorting
+		dateI, errI := time.Parse("2006-01", monthlySummary[i].Month)
+		dateJ, errJ := time.Parse("2006-01", monthlySummary[j].Month)
+
+		// Handle parsing errors - if error, consider that item "later" in the sort
+		if errI != nil && errJ != nil {
+			return false
+		} // Both invalid, order doesn't matter for sorting
+		if errI != nil {
+			return false
+		} // i is invalid, j is valid, j comes first
+		if errJ != nil {
+			return true
+		} // j is invalid, i is valid, i comes first
+
+		return dateI.Before(dateJ)
+	})
+
+	// Optional: Update the repository with the calculated summary
+	// This part depends on whether you need to persist this aggregated summary.
+	// If so, you can iterate through the 'monthlySummary' slice and call a repository update method.
+	// For simplicity and avoiding potential race conditions, do this sequentially here
+	// instead of in separate goroutines as before.
+	for _, summaryItem := range monthlySummary {
+		// Implement a repository method to update/create the monthly summary record
+		s.updateMonthlyFinancialSummary(ctx, userID, &summaryItem)
+	}
+
+	return monthlySummary, nil
+}
+
+func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) []financeEntity.IncomeRecord {
+
+	allUserIncomes, _ := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
+		StartDate: startDate,
+		EndDate:   endDate,
+		UserID:    *userID,
+	})
+
+	return allUserIncomes
+}
+
+func (s *DashboardService) monthlyFinancialSummaryExpense(ctx context.Context, startDate, endDate, userID *string) []financeEntity.ExpenseRecord {
+	allUserExpenses, _ := s.expenseRecordService.GetExpenseRecordsByDate(ctx, &financeEntity.ExpenseRecordQueryByDate{
+		StartDate: *startDate,
+		EndDate:   *endDate,
+	})
+
+	return allUserExpenses
+}
+
+func (s *DashboardService) updateMonthlyFinancialSummary(ctx context.Context, userID *string, data *dashboardEntity.MonthlyFinancialSummaryItem) {
+
+	if userID == nil {
+		return
+	}
+
+	result, err := s.dashboardRepository.GetFinancialSummary(ctx, userID)
+	if err != nil {
+		return
+	}
+
+	needUpdate := false
+	exists := false
+	for _, v := range result {
+
+		if v.Month == data.Month {
+			exists = true
+			data.ID = v.ID
+			if v.TotalIncome != data.TotalIncome {
+				v.TotalIncome = data.TotalIncome
+				needUpdate = true
+			}
+			if v.TotalExpenses != data.TotalExpenses {
+				v.TotalExpenses = data.TotalExpenses
+				needUpdate = true
+			}
+			break
+		}
+	}
+
+	if needUpdate || !exists {
+		if !exists {
+			data.CreatedAt = time.Now()
+		}
+		data.UpdatedAt = time.Now()
+		data.UserID = *userID
+		s.dashboardRepository.UpdateFinancialSummary(ctx, userID, data)
+	}
+
 }

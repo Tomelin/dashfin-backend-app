@@ -28,6 +28,7 @@ import (
 	cryptdata "github.com/Tomelin/dashfin-backend-app/pkg/cryptData"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/http_server" // Added Redis import
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 	"github.com/go-viper/mapstructure/v2"
 	// Ensure this is imported for adapters
 )
@@ -58,13 +59,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Import data at firestore
-	//	iif := database.NewFirebaseInsert(db)
-	//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	log.Fatal("finish")
+	mq, err := initializeMessageQueue(cfg.Fields["message_queue"].(map[string]interface{}))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mq.Close()
 
 	svcProfilePerson, svcProfileProfession, svcProfileGoals, err := initializeProfileServices(db)
 	if err != nil {
@@ -87,7 +86,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcExpenseRecord, err := initializeExpenseRecordServices(db)
+	svcExpenseRecord, err := initializeExpenseRecordServices(db, mq)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +101,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	svcIncomeRecord, err := initializeIncomeRecordServices(db)
+	svcIncomeRecord, err := initializeIncomeRecordServices(db, mq)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -112,7 +111,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, svcFinancialInstitution, mq, db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -173,6 +172,29 @@ func initializeCache(fields interface{}) (cache.CacheService, error) {
 
 	return cacheClient, nil
 
+}
+
+func initializeMessageQueue(fields map[string]interface{}) (message_queue.MessageQueue, error) {
+
+	b, _ := json.Marshal(fields)
+
+	var config message_queue.Config
+	err := json.Unmarshal(b, &config)
+	if err != nil {
+		return nil, err
+	}
+
+	mq, err := message_queue.NewRabbitMQ(config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = mq.Setup()
+	if err != nil {
+		return nil, err
+	}
+
+	return mq, nil
 }
 
 func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface, error) {
@@ -255,13 +277,13 @@ func initializeFinancialInstitution(db database.FirebaseDBInterface) (entity_pla
 	return service_platform.NewFinancialInstitutionService(repoSupport)
 }
 
-func initializeExpenseRecordServices(db database.FirebaseDBInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
+func initializeExpenseRecordServices(db database.FirebaseDBInterface, mq message_queue.MessageQueue) (entity_finance.ExpenseRecordServiceInterface, error) {
 	repoExpenseRecord, err := repository_finance.InitializeExpenseRecordRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize expense record repository: %w", err)
 	}
 
-	svcExpenseRecord, err := service_finance.InitializeExpenseRecordService(repoExpenseRecord)
+	svcExpenseRecord, err := service_finance.InitializeExpenseRecordService(repoExpenseRecord, mq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize expense record service: %w", err)
 	}
@@ -285,13 +307,13 @@ func initializeCreditCardServices(db database.FirebaseDBInterface) (entity_finan
 
 }
 
-func initializeIncomeRecordServices(db database.FirebaseDBInterface) (entity_finance.IncomeRecordServiceInterface, error) {
+func initializeIncomeRecordServices(db database.FirebaseDBInterface, mq message_queue.MessageQueue) (entity_finance.IncomeRecordServiceInterface, error) {
 	repoIncomeRecord, err := repository_finance.InitializeIncomeRecordRepository(db)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
 	}
 
-	svcIncomeRecord, err := service_finance.InitializeIncomeRecordService(repoIncomeRecord)
+	svcIncomeRecord, err := service_finance.InitializeIncomeRecordService(repoIncomeRecord, mq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	}
@@ -316,8 +338,11 @@ func initializeDashboardServices(
 	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
 	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
 	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
+	platformInst entity_platform.FinancialInstitutionInterface,
+	messageQueue message_queue.MessageQueue,
+	db database.FirebaseDBInterface,
 ) (*service_dashboard.DashboardService, error) {
-	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository()
+	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository(db)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
 	// }
@@ -328,13 +353,11 @@ func initializeDashboardServices(
 		incomeRecordSvc,
 		profileGoalsSvc,
 		repoSpendingRecord,
+		messageQueue,
+		platformInst,
 	)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	// }
 	return svcSpendingRecord, nil
 }
-
-// too many arguments in call to service_dashboard.NewDashboardService
-// have (*"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository, cache.CacheService, entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, *"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository)
-// want (entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard".DashboardRepositoryInterface)compilerWrongArgCount
