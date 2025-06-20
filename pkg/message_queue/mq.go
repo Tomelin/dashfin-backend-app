@@ -65,9 +65,9 @@ type Config struct {
 
 // MessageQueue interface principal da biblioteca
 type MessageQueue interface {
-	Consumer(ctx context.Context, exchangeName, queueName string, handler func([]byte) error) error
-	Publisher(exchangeName, queueName string, message []byte) error
-	PublisherWithRouteKey(exchangeName, routeKey string, message []byte) error
+	Consumer(ctx context.Context, exchangeName, queueName string, handler func([]byte, string) error) error
+	Publisher(exchangeName, queueName string, message []byte, traceID string) error
+	PublisherWithRouteKey(exchangeName, routeKey string, message []byte, traceID string) error
 	Close() error
 	Setup() error
 }
@@ -269,7 +269,7 @@ func (mq *RabbitMQ) Setup() error {
 }
 
 // Publisher publica uma mensagem na queue especificada
-func (mq *RabbitMQ) Publisher(exchangeName, queueName string, message []byte) error {
+func (mq *RabbitMQ) Publisher(exchangeName, queueName string, message []byte, traceID string) error {
 	if !mq.isConnected {
 		return fmt.Errorf("not connected to RabbitMQ")
 	}
@@ -296,6 +296,12 @@ func (mq *RabbitMQ) Publisher(exchangeName, queueName string, message []byte) er
 	routeKeys := queueConfig.getRouteKeys()
 	routeKey := routeKeys[0] // Usa a primeira route key por padrão
 
+	// Cria headers incluindo X-TRACE-ID
+	headers := amqp.Table{}
+	if traceID != "" {
+		headers["X-TRACE-ID"] = traceID
+	}
+
 	return mq.channel.Publish(
 		exchangeConfig.Name,
 		routeKey,
@@ -306,12 +312,13 @@ func (mq *RabbitMQ) Publisher(exchangeName, queueName string, message []byte) er
 			Body:         message,
 			DeliveryMode: amqp.Persistent,
 			Timestamp:    time.Now(),
+			Headers:      headers,
 		},
 	)
 }
 
 // PublisherWithRouteKey publica mensagem usando route key específica
-func (mq *RabbitMQ) PublisherWithRouteKey(exchangeName, routeKey string, message []byte) error {
+func (mq *RabbitMQ) PublisherWithRouteKey(exchangeName, routeKey string, message []byte, traceID string) error {
 	if !mq.isConnected {
 		return fmt.Errorf("not connected to RabbitMQ")
 	}
@@ -325,6 +332,12 @@ func (mq *RabbitMQ) PublisherWithRouteKey(exchangeName, routeKey string, message
 	// Usa configuração padrão do publisher
 	publisherConfig := mq.config.DefaultPublisher
 
+	// Cria headers incluindo X-TRACE-ID
+	headers := amqp.Table{}
+	if traceID != "" {
+		headers["X-TRACE-ID"] = traceID
+	}
+
 	return mq.channel.Publish(
 		exchangeConfig.Name,
 		routeKey,
@@ -335,12 +348,13 @@ func (mq *RabbitMQ) PublisherWithRouteKey(exchangeName, routeKey string, message
 			Body:         message,
 			DeliveryMode: amqp.Persistent,
 			Timestamp:    time.Now(),
+			Headers:      headers,
 		},
 	)
 }
 
 // Consumer consome mensagens da queue especificada
-func (mq *RabbitMQ) Consumer(ctx context.Context, exchangeName, queueName string, handler func([]byte) error) error {
+func (mq *RabbitMQ) Consumer(ctx context.Context, exchangeName, queueName string, handler func([]byte, string) error) error {
 	if !mq.isConnected {
 		return fmt.Errorf("not connected to RabbitMQ")
 	}
@@ -385,7 +399,17 @@ func (mq *RabbitMQ) Consumer(ctx context.Context, exchangeName, queueName string
 				return fmt.Errorf("message channel closed")
 			}
 
-			err := handler(msg.Body)
+			// Extrai X-TRACE-ID dos headers
+			traceID := ""
+			if msg.Headers != nil {
+				if id, exists := msg.Headers["X-TRACE-ID"]; exists {
+					if idStr, ok := id.(string); ok {
+						traceID = idStr
+					}
+				}
+			}
+
+			err := handler(msg.Body, traceID)
 			if err != nil {
 				// Rejeita mensagem e envia para dead letter se configurado
 				msg.Nack(false, false)

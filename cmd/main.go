@@ -63,6 +63,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer mq.Close()
 
 	// Import data at firestore
 	//	iif := database.NewFirebaseInsert(db)

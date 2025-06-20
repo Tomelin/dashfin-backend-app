@@ -73,7 +73,7 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 			}
 
 			b, _ := json.Marshal(expensesCreated[i])
-			s.mq.PublisherWithRouteKey(mq_exchange, mq_rk_expense_create, b)
+			s.publishMessage(ctx, mq_rk_expense_create, b, "")
 		}
 		return &expensesCreated[0], nil // Return the first created expense record
 	}
@@ -84,7 +84,7 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 	}
 
 	b, _ := json.Marshal(result)
-	s.mq.PublisherWithRouteKey(mq_exchange, mq_rk_expense_create, b)
+	s.publishMessage(ctx, mq_rk_expense_create, b, "")
 	return result, err
 }
 
@@ -228,6 +228,13 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	data.CreatedAt = existingRecord.CreatedAt // Preserve original CreatedAt
 	data.UpdatedAt = time.Now()               // Update timestamp
 
+	if data.Amount != existingRecord.Amount {
+		old, _ := json.Marshal(existingRecord)
+		new, _ := json.Marshal(data)
+		s.publishMessage(ctx, mq_rk_expense_delete, old, "")
+		s.publishMessage(ctx, mq_rk_expense_create, new, "")
+	}
+
 	return s.Repo.UpdateExpenseRecord(ctx, id, data)
 }
 
@@ -253,7 +260,15 @@ func (s *ExpenseRecordService) DeleteExpenseRecord(ctx context.Context, id strin
 		return errors.New("expense record not found or access denied for delete")
 	}
 
-	return s.Repo.DeleteExpenseRecord(ctx, id)
+	err = s.Repo.DeleteExpenseRecord(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	b, _ := json.Marshal(*recordToVerify)
+	s.publishMessage(ctx, mq_rk_expense_delete, b, "")
+
+	return err
 }
 
 func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *entity_finance.ExpenseByNfceUrl) (*entity_finance.ExpenseByNfceUrl, error) {
@@ -317,4 +332,8 @@ func (s *ExpenseRecordService) getBody(ctx context.Context, url string) ([]byte,
 		return nil, err
 	}
 	return body, nil
+}
+
+func (s *ExpenseRecordService) publishMessage(ctx context.Context, routeKey string, body []byte, trace string) error {
+	return s.mq.PublisherWithRouteKey(mq_exchange, routeKey, body, trace)
 }

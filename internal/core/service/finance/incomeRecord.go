@@ -2,25 +2,34 @@ package finance
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
 // IncomeRecordService provides business logic for income records.
 type IncomeRecordService struct {
 	Repo entity_finance.IncomeRecordRepositoryInterface
+	mq   message_queue.MessageQueue
 }
 
 // InitializeIncomeRecordService creates a new IncomeRecordService.
-func InitializeIncomeRecordService(repo entity_finance.IncomeRecordRepositoryInterface) (entity_finance.IncomeRecordServiceInterface, error) {
+func InitializeIncomeRecordService(repo entity_finance.IncomeRecordRepositoryInterface, mq message_queue.MessageQueue) (entity_finance.IncomeRecordServiceInterface, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil for IncomeRecordService")
 	}
-	return &IncomeRecordService{Repo: repo}, nil
+	if mq == nil {
+		return nil, errors.New("message queue is nil for IncomeRecordService")
+	}
+	return &IncomeRecordService{
+		Repo: repo,
+		mq:   mq,
+	}, nil
 }
 
 // CreateIncomeRecord handles the creation of a new income record.
@@ -92,10 +101,14 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 				firstCreatedRecord = created
 			}
 		}
+		b, _ := json.Marshal(firstCreatedRecord)
+		s.publishMessage(ctx, mq_rk_income_create, b, "")
 		return firstCreatedRecord, err // Returns the first created record of the series
 	}
 
 	// For non-recurring income
+	b, _ := json.Marshal(data)
+	s.publishMessage(ctx, mq_rk_income_create, b, "")
 	return s.Repo.CreateIncomeRecord(ctx, data)
 }
 
@@ -248,7 +261,15 @@ func (s *IncomeRecordService) UpdateIncomeRecord(ctx context.Context, id string,
 	data.CreatedAt = existingRecord.CreatedAt
 	data.UpdatedAt = time.Now()
 
-	return s.Repo.UpdateIncomeRecord(ctx, id, data)
+	result, err := s.Repo.UpdateIncomeRecord(ctx, id, data)
+	if err != nil {
+		return nil, err
+	}
+
+	b, _ := json.Marshal(result)
+	s.publishMessage(ctx, mq_rk_income_update, b, "")
+
+	return result, err
 }
 
 // DeleteIncomeRecord handles deleting an income record.
@@ -281,5 +302,17 @@ func (s *IncomeRecordService) DeleteIncomeRecord(ctx context.Context, id string)
 		return errors.New("income record not found or access denied for delete")
 	}
 
-	return s.Repo.DeleteIncomeRecord(ctx, id)
+	err = s.Repo.DeleteIncomeRecord(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	b, _ := json.Marshal(recordToVerify)
+	s.publishMessage(ctx, mq_rk_income_delete, b, "")
+
+	return err
+}
+
+func (s *IncomeRecordService) publishMessage(ctx context.Context, routeKey string, body []byte, trace string) error {
+	return s.mq.PublisherWithRouteKey(mq_exchange, routeKey, body, trace)
 }
