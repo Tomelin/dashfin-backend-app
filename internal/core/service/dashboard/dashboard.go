@@ -90,25 +90,9 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	}
 
-	balanceCard := []dashboardEntity.AccountBalanceItem{
-		{
-			ID:          "0001",
-			AccountName: "Itau",
-			BankName:    "Itau",
-			Balance:     7822.00,
-		},
-		{
-			ID:          "0002",
-			AccountName: "Santander",
-			BankName:    "Santander",
-			Balance:     43.00,
-		},
-		{
-			ID:          "0003",
-			AccountName: "Caixa",
-			BankName:    "Caixa",
-			Balance:     782.00,
-		},
+	balanceCard, err := s.getBankAccountBalance(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting bank account balance: %w", err)
 	}
 
 	monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
@@ -145,6 +129,29 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	return dashboard, nil
+}
+
+func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboardEntity.AccountBalanceItem, error) {
+
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil {
+		return nil, fmt.Errorf("userID not found in context")
+	}
+	userID, ok := userIDFromCtx.(string)
+	if !ok {
+		return nil, fmt.Errorf("userID in context is not a string")
+	}
+
+	if userID == "" {
+		return nil, fmt.Errorf("userID in context is empty")
+	}
+
+	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.

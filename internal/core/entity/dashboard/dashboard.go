@@ -99,4 +99,5 @@ type DashboardRepositoryInterface interface {
 
 	GetBankAccountBalanceByID(ctx context.Context, userID, bankName *string) (*AccountBalanceItem, error)
 	UpdateBankAccountBalance(ctx context.Context, userID *string, data *AccountBalanceItem) error
+	GetBankAccountBalance(ctx context.Context, userID *string) ([]AccountBalanceItem, error)
 }
