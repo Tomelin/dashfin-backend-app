@@ -15,6 +15,7 @@ import (
 	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	platformInstitution "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
@@ -30,6 +31,7 @@ type DashboardService struct {
 	profileGoalsService  profileEntity.ProfileGoalsServiceInterface
 	dashboardRepository  dashboardEntity.DashboardRepositoryInterface // New dependency
 	messageQueue         message_queue.MessageQueue
+	platformInstitution  platformInstitution.FinancialInstitutionInterface
 }
 
 // NewDashboardService creates a new DashboardService.
@@ -40,6 +42,7 @@ func NewDashboardService(
 	profileGoalsSvc profileEntity.ProfileGoalsServiceInterface,
 	dashboardRepo dashboardEntity.DashboardRepositoryInterface, // New dependency
 	messageQueue message_queue.MessageQueue,
+	platformInstitution platformInstitution.FinancialInstitutionInterface,
 ) *DashboardService {
 
 	dash := &DashboardService{
@@ -451,11 +454,37 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
+	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
+	if err != nil {
+		return err
+	}
+
+	if len(bankAccount) == 0 {
+		return errors.New("bank account not found")
+	}
+
+	platfotmInst, err := s.platformInstitution.GetAllFinancialInstitutions(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(platfotmInst) == 0 {
+		return errors.New("financial institution not found")
+	}
+
+	var BankName string
+	for _, v := range platfotmInst {
+		if v.Code == bankAccount[0].BankCode {
+			BankName = v.Name
+			break
+		}
+	}
+
 	if dashboard == nil {
 		dashboard = &dashboardEntity.AccountBalanceItem{
 			UserID:      incomeRecord.Data.UserID,
-			AccountName: incomeRecord.Data.BankAccountID,
-			BankName:    incomeRecord.Data.BankAccountID,
+			AccountName: bankAccount[0].Description,
+			BankName:    BankName,
 			Balance:     balance,
 		}
 	} else {

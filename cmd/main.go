@@ -119,7 +119,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, mq, db)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, svcFinancialInstitution, mq, db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -346,6 +346,7 @@ func initializeDashboardServices(
 	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
 	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
 	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
+	platformInst entity_platform.FinancialInstitutionInterface,
 	messageQueue message_queue.MessageQueue,
 	db database.FirebaseDBInterface,
 ) (*service_dashboard.DashboardService, error) {
@@ -361,6 +362,7 @@ func initializeDashboardServices(
 		profileGoalsSvc,
 		repoSpendingRecord,
 		messageQueue,
+		platformInst,
 	)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
