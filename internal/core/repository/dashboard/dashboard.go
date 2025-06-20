@@ -150,7 +150,7 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalanceByID(ctx context.Cont
 	}
 
 	filters := map[string]interface{}{
-		"userID":   *userID,
+		"userId":   *userID,
 		"bankName": *bankName,
 		"type":     "accountBalance",
 	}
