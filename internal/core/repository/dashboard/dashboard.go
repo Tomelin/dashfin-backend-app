@@ -121,6 +121,8 @@ func (r *InMemoryDashboardRepository) UpdateBankAccountBalance(ctx context.Conte
 		return fmt.Errorf("%s collection is empty", r.collection)
 	}
 
+	toMap["type"] = "accountBalance"
+
 	err = r.db.Update(ctx, *userID, toMap, *collection)
 	if err != nil {
 		return err
@@ -150,6 +152,7 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalanceByID(ctx context.Cont
 	filters := map[string]interface{}{
 		"userID":   *userID,
 		"bankName": *bankName,
+		"type":     "accountBalance",
 	}
 
 	result, err := r.db.GetByFilter(ctx, filters, *collection)
@@ -168,4 +171,40 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalanceByID(ctx context.Cont
 	}
 
 	return &items[0], nil
+}
+
+func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context, userID *string) ([]dashboardEntity.AccountBalanceItem, error) {
+	if userID == nil || *userID == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
+
+	filters := map[string]interface{}{
+		"userID": *userID,
+		"type":   "accountBalance",
+	}
+
+	result, err := r.db.GetByFilter(ctx, filters, *collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []dashboardEntity.AccountBalanceItem
+	if err := json.Unmarshal(result, &items); err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, errors.New("bank account not found")
+	}
+
+	return items, nil
 }
