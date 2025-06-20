@@ -510,16 +510,16 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	currentMonthEnd := currentMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
-	previousMonthStart := currentMonthStart.AddDate(0, -1, 0)
+	previousMonthStart := currentMonthStart.AddDate(0, -limit, 0)
 	previousMonthEnd := previousMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 
 	var totalIncome float64
 	var totalExpenses float64
 
-	log.Println("currentMonthStart: ", currentMonthStart)
-	log.Println("currentMonthEnd: ", currentMonthEnd)
+	log.Println("currentMonthStart: ", currentMonthStart.Format("2006-01-02"))
+	log.Println("currentMonthEnd: ", currentMonthEnd.Format("2006-01-02"))
 	log.Println("previousMonthStart: ", previousMonthStart.Format("2006-01-02"))
-	log.Println("previousMonthEnd: ", previousMonthEnd)
+	log.Println("previousMonthEnd: ", previousMonthEnd.Format("2006-01-02"))
 	log.Println("limit: ", limit)
 	log.Println("totalIncome: ", totalIncome)
 	log.Println("totalExpenses: ", totalExpenses)
