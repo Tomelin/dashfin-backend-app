@@ -446,13 +446,13 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 
 	log.Printf("action is %s \n", incomeRecord.Action)
 	// Processar baseado no contexto ou adicionar campo Action na struct
-	var balance float64
+	var balance float64 = 0.0
 
 	switch {
 	case incomeRecord.Action == entity_common.ActionCreate:
-		balance = incomeRecord.Data.Amount
+		balance += incomeRecord.Data.Amount
 	case incomeRecord.Action == entity_common.ActionDelete:
-		balance = (-incomeRecord.Data.Amount)
+		balance += (-incomeRecord.Data.Amount)
 	default:
 		return errors.New("action did not match any case")
 	}
@@ -463,7 +463,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 			return err
 		}
 	}
-
 	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
 	if err != nil {
 		return err
@@ -488,7 +487,9 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
+	log.Println("amounts", dashboard.Balance, balance, incomeRecord.Data.Amount)
 	if dashboard == nil {
+		log.Println("dashboard nil", balance)
 		dashboard = &dashboardEntity.AccountBalanceItem{
 			UserID:      incomeRecord.Data.UserID,
 			AccountName: bankAccount[0].Description,
@@ -496,8 +497,10 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 			Balance:     balance,
 		}
 	} else {
+		log.Println("dashboard not nil", dashboard.Balance, balance)
 		dashboard.Balance += balance
 	}
+
 	log.Println(dashboard)
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
