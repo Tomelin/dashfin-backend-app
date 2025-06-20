@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
@@ -21,7 +20,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
-const defaultDashboardCacheTTL = 5 * time.Minute // Example TTL for dashboard cache
+const defaultDashboardCacheTTL = 1 * time.Minute // Example TTL for dashboard cache
 
 // DashboardService provides the logic for aggregating dashboard data.
 type DashboardService struct {
@@ -452,7 +451,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		balance += incomeRecord.Data.Amount
 	case incomeRecord.Action == entity_common.ActionDelete:
 		balance += (-incomeRecord.Data.Amount)
-		log.Println("Action delete", balance)
 	default:
 		return errors.New("action did not match any case")
 	}
@@ -481,7 +479,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("bankName > ", bankName)
 	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &bankName)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
@@ -489,7 +486,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("dashboard > ", dashboard)
 	if dashboard == nil {
 		dashboard = &dashboardEntity.AccountBalanceItem{
 			UserID:      incomeRecord.Data.UserID,
@@ -499,8 +495,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 	dashboard.Balance += balance
-	log.Println("dashboard balance > ", dashboard.Balance)
-
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
 	return nil
