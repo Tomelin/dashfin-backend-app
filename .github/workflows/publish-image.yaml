@@ -4,27 +4,74 @@ run-name: publish-image
 on:
   push:
     branches:
-      - "main"
-      - "develop"
-    paths:
-      - '**.go'
+      - "*"
+      # - "develop"
+    # paths:
+    #   - '**.go'
   # pull_request:
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GAR_LOCATION: us-central1
+  # CLOUD_RUN_REGION: ${{ secrets.CLOUD_RUN_REGION }}
+  # GAR_LOCATION: us-central1
   SERVICE: dashfin-backend-app
   REGION: us-central1
   REPOSITORY: cloud-run-source-deploy/dashfin-backend-app
 
+  # Base names for services and secrets - User needs to set these in GitHub Secrets
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GAR_LOCATION: ${{ vars.GAR_LOCATION }} 
+  CLOUD_RUN_REGION: ${{ vars.CLOUD_RUN_REGION }}
+  
+  # Base names for services and secrets - User needs to set these in GitHub Secrets
+  CLOUD_RUN_SERVICE_NAME_BASE: ${{ vars.CLOUD_RUN_SERVICE_NAME_BASE }} 
+  SECRET_NAME_IN_MANAGER_BASE: ${{ vars.SECRET_NAME_IN_MANAGER_BASE }}
+  ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
+
 jobs:
   deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
-    runs-on: ubuntu-latest
+    env: 
+      FINAL_CLOUD_RUN_SERVICE_NAME: ''
+      FINAL_SECRET_NAME_IN_MANAGER: ''
+      FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN: ''
+      ACTUAL_SECRET_VALUE: ''
+      IMAGE_TAG_SUFFIX: ''
+      ENVIRONMENT_NAME: ''
+
     steps:
+      - name: Determine Environment and Set Variables
+        run: |
+          if [ "${{ github.ref_name }}" == "develop" ]; then
+            echo "ENVIRONMENT_NAME=develop" >> $GITHUB_ENV
+            echo "FINAL_CLOUD_RUN_SERVICE_NAME=${{ env.CLOUD_RUN_SERVICE_NAME_BASE }}-dev" >> $GITHUB_ENV
+            echo "FINAL_SECRET_NAME_IN_MANAGER=${{ env.SECRET_NAME_IN_MANAGER_BASE }}_DEV" >> $GITHUB_ENV
+            echo "FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}_DEV" >> $GITHUB_ENV
+            echo "ACTUAL_SECRET_VALUE=${{ secrets.SECRET_VALUE_DEVELOP }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG_SUFFIX=-dev" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" == "main" ]; then
+            echo "ENVIRONMENT_NAME=production" >> $GITHUB_ENV
+            echo "FINAL_CLOUD_RUN_SERVICE_NAME=${{ env.CLOUD_RUN_SERVICE_NAME_BASE }}" >> $GITHUB_ENV
+            echo "FINAL_SECRET_NAME_IN_MANAGER=${{ env.SECRET_NAME_IN_MANAGER_BASE }}" >> $GITHUB_ENV
+            echo "FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}" >> $GITHUB_ENV
+            echo "ACTUAL_SECRET_VALUE=${{ secrets.SECRET_VALUE_MAIN }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG_SUFFIX=" >> $GITHUB_ENV # Or -prod / -main if desired
+          else
+            echo "Unsupported branch: ${{ github.ref_name }}. Exiting."
+            exit 0
+          fi
+          echo "--------------------------------------------------"
+          echo "Deploying for environment: $ENVIRONMENT_NAME"
+          echo "Cloud Run Service Name: $FINAL_CLOUD_RUN_SERVICE_NAME"
+          echo "Secret Name in Manager: $FINAL_SECRET_NAME_IN_MANAGER"
+          echo "Env Var for Secret in Run: $FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN"
+          echo "Image Tag Suffix: $IMAGE_TAG_SUFFIX"
+          echo "--------------------------------------------------"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -34,6 +81,11 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
+      - name: Set up GCloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
       - name: Docker Auth
         id: docker-auth
         uses: 'docker/login-action@v3'
@@ -42,18 +94,18 @@ jobs:
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Print 
-        run: |-
-          echo  "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" 
-          echo us-central1-docker.pkg.dev/prospere-app/cloud-run-source-deploy/dashfin-backend-app/dashfin-backend-app@sha256:58679c0d14102df150e08bbbc018588342b7a09b27b7aa4df5c656ad9c0c1b94
+      # - name: Print 
+      #   run: |-
+      #     echo  "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" 
+      #     echo us-central1-docker.pkg.dev/prospere-app/cloud-run-source-deploy/dashfin-backend-app/dashfin-backend-app@sha256:58679c0d14102df150e08bbbc018588342b7a09b27b7aa4df5c656ad9c0c1b94
 
-      - name: Build and Push Container
-        run: |-
-          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
+      # - name: Build and Push Container
+      #   run: |-
+      #     docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+      #     docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
           
-          # Also tag as latest if pushing to main
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            docker tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
-            docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
-          fi
+      #     # Also tag as latest if pushing to main
+      #     if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+      #       docker tag "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
+      #       docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest"
+      #     fi
