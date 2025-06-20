@@ -179,6 +179,7 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context,
 	}
 
 	collection, err := repository.SetCollection(ctx, r.collection)
+	log.Println("collection > ", collection)
 	if err != nil {
 		return nil, err
 	}
@@ -188,11 +189,13 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context,
 	}
 
 	filters := map[string]interface{}{
-		"userID": *userID,
+		"userId": *userID,
 		"type":   "accountBalance",
 	}
 
+	log.Println("filters > ", filters)
 	result, err := r.db.GetByFilter(ctx, filters, *collection)
+	log.Println("result > ", result, err)
 	if err != nil {
 		return nil, err
 	}

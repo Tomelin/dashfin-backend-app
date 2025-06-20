@@ -150,6 +150,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboa
 		return nil, fmt.Errorf("userID in context is empty")
 	}
 
+	log.Println("userID > ", userID)
 	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
 	log.Println("GetBankAccountBalance> ", result, err)
 	if err != nil {
