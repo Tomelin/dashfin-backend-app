@@ -91,6 +91,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	balanceCard, err := s.getBankAccountBalance(ctx)
+	log.Println(err)
 	if err != nil {
 		return nil, fmt.Errorf("getting bank account balance: %w", err)
 	}
