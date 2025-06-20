@@ -464,20 +464,16 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("GetBankAccountBalanceByID >", dashboard)
 	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
-	log.Println("GetByFilter >", bankAccount, err)
 	if err != nil {
 		return err
 	}
 
 	platfotmInst, err := s.platformInstitution.GetAllFinancialInstitutions(ctx)
-	log.Println(platfotmInst, err)
 	if err != nil {
 		return err
 	}
 
-	log.Println("platfotmInst >", platfotmInst)
 	if len(platfotmInst) == 0 {
 		return errors.New("financial institution not found")
 	}
