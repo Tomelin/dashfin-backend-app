@@ -487,7 +487,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("amounts", dashboard.Balance, balance, incomeRecord.Data.Amount)
+	log.Println("amounts", dashboard, balance, incomeRecord)
 	if dashboard == nil {
 		log.Println("dashboard nil", balance)
 		dashboard = &dashboardEntity.AccountBalanceItem{
