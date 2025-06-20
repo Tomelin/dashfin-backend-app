@@ -3,6 +3,7 @@ package dashboard
 import (
 	"context"
 	"fmt"
+	"log"
 	"sort"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
@@ -12,6 +13,7 @@ import (
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
 const defaultDashboardCacheTTL = 5 * time.Minute // Example TTL for dashboard cache
@@ -23,6 +25,7 @@ type DashboardService struct {
 	incomeRecordService  financeEntity.IncomeRecordServiceInterface
 	profileGoalsService  profileEntity.ProfileGoalsServiceInterface
 	dashboardRepository  dashboardEntity.DashboardRepositoryInterface // New dependency
+	messageQueue         message_queue.MessageQueue
 }
 
 // NewDashboardService creates a new DashboardService.
@@ -32,14 +35,21 @@ func NewDashboardService(
 	incomeRecordSvc financeEntity.IncomeRecordServiceInterface,
 	profileGoalsSvc profileEntity.ProfileGoalsServiceInterface,
 	dashboardRepo dashboardEntity.DashboardRepositoryInterface, // New dependency
+	messageQueue message_queue.MessageQueue,
 ) *DashboardService {
-	return &DashboardService{
+
+	dash := &DashboardService{
 		bankAccountService:   bankAccountSvc,
 		expenseRecordService: expenseRecordSvc,
 		incomeRecordService:  incomeRecordSvc,
 		profileGoalsService:  profileGoalsSvc,
 		dashboardRepository:  dashboardRepo, // Store the new dependency
+		messageQueue:         messageQueue,
 	}
+
+	go dash.accountBalance(context.Background())
+
+	return dash
 }
 
 // GetDashboardData aggregates all necessary data for the financial dashboard.
@@ -78,7 +88,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 			ID:          "0001",
 			AccountName: "Itau",
 			BankName:    "Itau",
-			Balance:     78232.00,
+			Balance:     7822.00,
 		},
 		{
 			ID:          "0002",
@@ -408,4 +418,14 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 		return chartData[i].Value > chartData[j].Value
 	})
 	return chartData, nil
+}
+
+func (s *DashboardService) accountBalance(ctx context.Context) {
+
+	smsHandler := func(body []byte, traceid string) error {
+		// Enviar SMS
+		log.Printf("Sending SMS: %s", string(body))
+		return nil
+	}
+	s.messageQueue.Consumer(ctx, mq_exchange, mq_queue_income, smsHandler)
 }

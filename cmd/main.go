@@ -119,7 +119,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, mq)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -346,6 +346,7 @@ func initializeDashboardServices(
 	expenseRecordSvc entity_finance.ExpenseRecordServiceInterface,
 	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
 	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
+	messageQueue message_queue.MessageQueue,
 ) (*service_dashboard.DashboardService, error) {
 	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository()
 	// if err != nil {
@@ -358,6 +359,7 @@ func initializeDashboardServices(
 		incomeRecordSvc,
 		profileGoalsSvc,
 		repoSpendingRecord,
+		messageQueue,
 	)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
