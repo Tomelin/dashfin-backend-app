@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -156,7 +155,6 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalanceByID(ctx context.Cont
 	}
 
 	result, err := r.db.GetByFilter(ctx, filters, *collection)
-	log.Println(result, err)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +177,6 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context,
 	}
 
 	collection, err := repository.SetCollection(ctx, r.collection)
-	log.Println("collection > ", collection)
 	if err != nil {
 		return nil, err
 	}
@@ -193,9 +190,7 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context,
 		"type":   "accountBalance",
 	}
 
-	log.Println("filters > ", filters)
 	result, err := r.db.GetByFilter(ctx, filters, *collection)
-	log.Println("result > ", result, err)
 	if err != nil {
 		return nil, err
 	}

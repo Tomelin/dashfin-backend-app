@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -118,6 +119,8 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 			TotalIncome:   9876.98,
 			TotalExpenses: 2345.00,
 		}}
+
+	s.monthlyFinancialSummary(ctx)
 
 	dashboard.SummaryCards.AccountBalances = balanceCard
 	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
@@ -498,4 +501,35 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
 	return nil
+}
+
+func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+
+	limit := 12
+
+	now := time.Now()
+	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	currentMonthEnd := currentMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
+	previousMonthStart := currentMonthStart.AddDate(0, -1, 0)
+	previousMonthEnd := previousMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
+
+	var totalIncome float64
+	var totalExpenses float64
+
+	log.Println("currentMonthStart: ", currentMonthStart)
+	log.Println("currentMonthEnd: ", currentMonthEnd)
+	log.Println("previousMonthStart: ", previousMonthStart)
+	log.Println("previousMonthEnd: ", previousMonthEnd)
+	log.Println("limit: ", limit)
+	log.Println("totalIncome: ", totalIncome)
+	log.Println("totalExpenses: ", totalExpenses)
+	return nil, nil
+}
+
+func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+	return nil, nil
+}
+
+func (s *DashboardService) monthlyFinancialSummaryExpense(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+	return nil, nil
 }
