@@ -120,7 +120,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 			TotalExpenses: 2345.00,
 		}}
 
-	s.monthlyFinancialSummary(ctx)
+	s.monthlyFinancialSummary(ctx, &userID)
 
 	dashboard.SummaryCards.AccountBalances = balanceCard
 	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
@@ -503,7 +503,12 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	return nil
 }
 
-func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+type monthlyFinancialValue struct {
+	month string
+	value float64
+}
+
+func (s *DashboardService) monthlyFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
 
 	limit := 12
 
@@ -513,6 +518,9 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 	previousMonthStart := currentMonthStart.AddDate(0, -limit, 0)
 	previousMonthEnd := previousMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 
+	for i := range limit {
+		log.Println("i > ", i)
+	}
 	var totalIncome float64
 	var totalExpenses float64
 
@@ -530,6 +538,7 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
 		StartDate: &startDate,
 		EndDate:   &endDate,
+		UserID:    *userID,
 	})
 	log.Println(allUserIncomes, err)
 	if err != nil {
@@ -540,7 +549,8 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 	return nil, nil
 }
 
-func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) ([]monthlyFinancialValue, error) {
+
 	return nil, nil
 }
 
