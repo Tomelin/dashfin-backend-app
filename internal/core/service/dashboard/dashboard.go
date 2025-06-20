@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
@@ -444,7 +443,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "UserID", incomeRecord.Data.UserID)
 
-	log.Printf("action is %s \n", incomeRecord.Action)
 	// Processar baseado no contexto ou adicionar campo Action na struct
 	var balance float64 = 0.0
 
@@ -456,7 +454,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	default:
 		return errors.New("action did not match any case")
 	}
-	log.Println(balance, incomeRecord.Action)
 
 	platfotmInst, err := s.platformInstitution.GetAllFinancialInstitutions(ctx)
 	if err != nil {
@@ -482,9 +479,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("userID > ", incomeRecord.Data.UserID)
-	log.Println("bankAccountID > ", incomeRecord.Data.BankAccountID)
-	log.Println("bankName > ", bankName)
 	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &bankName)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
@@ -492,21 +486,16 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 
-	log.Println("amounts", dashboard, balance, incomeRecord)
 	if dashboard == nil {
-		log.Println("dashboard nil", balance)
 		dashboard = &dashboardEntity.AccountBalanceItem{
 			UserID:      incomeRecord.Data.UserID,
 			AccountName: bankAccount[0].Description,
 			BankName:    bankName,
-			Balance:     balance,
+			Balance:     0.0,
 		}
-	} else {
-		log.Println("dashboard not nil", dashboard.Balance, balance)
-		dashboard.Balance += balance
 	}
+	dashboard.Balance += balance
 
-	log.Println(dashboard)
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
 	return nil
