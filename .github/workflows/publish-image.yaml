@@ -53,7 +53,7 @@ jobs:
             echo "FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}_DEV" >> $GITHUB_ENV
             echo "ACTUAL_SECRET_VALUE=${{ secrets.SECRET_VALUE_DEVELOP }}" >> $GITHUB_ENV
             echo "IMAGE_TAG_SUFFIX=-dev" >> $GITHUB_ENV
-          elif [ "${{ github.ref_name }}" == "main" ]; then
+          elif [ "${{ github.ref_name }}" == "jules_wip_13387545001984943234" ]; then
             echo "ENVIRONMENT_NAME=production" >> $GITHUB_ENV
             echo "FINAL_CLOUD_RUN_SERVICE_NAME=${{ env.CLOUD_RUN_SERVICE_NAME_BASE }}" >> $GITHUB_ENV
             echo "FINAL_SECRET_NAME_IN_MANAGER=${{ env.SECRET_NAME_IN_MANAGER_BASE }}" >> $GITHUB_ENV
