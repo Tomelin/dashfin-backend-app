@@ -91,9 +91,10 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	balanceCard, err := s.getBankAccountBalance(ctx)
-	log.Println(err)
 	if err != nil {
-		return nil, fmt.Errorf("getting bank account balance: %w", err)
+		if !strings.Contains(err.Error(), "not found") {
+			return nil, fmt.Errorf("getting bank account balance: %w", err)
+		}
 	}
 
 	monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
