@@ -392,7 +392,7 @@ func (s *DashboardService) getRevenueExpenseChartData(
 		monthlyRevenue := s.calculateMonthlyRevenue(incomes, monthStart)
 		monthlyExpenses := s.calculateMonthlyExpenses(paidExpenses, monthStart)
 		chartData[numberOfMonths-1-i] = dashboardEntity.RevenueExpenseChartItem{
-			Month:    monthStart.Format("Jan/06"),
+			Month:    monthStart.Format("2006-01"),
 			Revenue:  monthlyRevenue,
 			Expenses: monthlyExpenses,
 		}
@@ -555,7 +555,7 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 			continue
 		}
 
-		monthLabel := receiptDate.Format("Jan/06")
+		monthLabel := receiptDate.Format("2006-01")
 		if item, exists := monthlySummaryMap[monthLabel]; exists {
 			item.TotalIncome += income.Amount
 		} else {
@@ -580,7 +580,7 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 				continue
 			}
 
-			monthLabel := paymentDate.Format("Jan/06")
+			monthLabel := paymentDate.Format("2006-01")
 			if item, exists := monthlySummaryMap[monthLabel]; exists {
 				item.TotalExpenses += expense.Amount
 			} else {
@@ -602,8 +602,8 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 	// Sort the summary by month (chronologically)
 	sort.Slice(monthlySummary, func(i, j int) bool {
 		// Parse month labels back to time.Time for accurate sorting
-		dateI, errI := time.Parse("Jan/06", monthlySummary[i].Month)
-		dateJ, errJ := time.Parse("Jan/06", monthlySummary[j].Month)
+		dateI, errI := time.Parse("2006-01", monthlySummary[i].Month)
+		dateJ, errJ := time.Parse("2006-01", monthlySummary[j].Month)
 
 		// Handle parsing errors - if error, consider that item "later" in the sort
 		if errI != nil && errJ != nil {
@@ -624,14 +624,10 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 	// If so, you can iterate through the 'monthlySummary' slice and call a repository update method.
 	// For simplicity and avoiding potential race conditions, do this sequentially here
 	// instead of in separate goroutines as before.
-	// for _, summaryItem := range monthlySummary {
-	//     // Implement a repository method to update/create the monthly summary record
-	//     err := s.dashboardRepository.UpdateFinancialSummary(ctx, userID, &summaryItem)
-	//     if err != nil {
-	//         fmt.Printf("Warning: Error updating financial summary for user %s, month %s: %v\n", *userID, summaryItem.Month, err)
-	//         // Decide how to handle this error - continue or return?
-	//     }
-	// }
+	for _, summaryItem := range monthlySummary {
+		// Implement a repository method to update/create the monthly summary record
+		s.updateMonthlyFinancialSummary(ctx, userID, &summaryItem)
+	}
 
 	return monthlySummary, nil
 }
