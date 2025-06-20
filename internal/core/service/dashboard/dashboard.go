@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -451,6 +452,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		balance += incomeRecord.Data.Amount
 	case incomeRecord.Action == entity_common.ActionDelete:
 		balance += (-incomeRecord.Data.Amount)
+		log.Println("Action delete", balance)
 	default:
 		return errors.New("action did not match any case")
 	}
