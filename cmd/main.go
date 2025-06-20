@@ -65,14 +65,6 @@ func main() {
 	}
 	defer mq.Close()
 
-	// Import data at firestore
-	//	iif := database.NewFirebaseInsert(db)
-	//	err = iif.InsertBrazilianBanksFromJSON(context.Background())
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//	log.Fatal("finish")
-
 	svcProfilePerson, svcProfileProfession, svcProfileGoals, err := initializeProfileServices(db)
 	if err != nil {
 		log.Fatal(err)

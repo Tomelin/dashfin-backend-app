@@ -52,6 +52,7 @@ func NewDashboardService(
 		profileGoalsService:  profileGoalsSvc,
 		dashboardRepository:  dashboardRepo, // Store the new dependency
 		messageQueue:         messageQueue,
+		platformInstitution:  platformInstitution,
 	}
 
 	go dash.accountBalance(context.Background())
