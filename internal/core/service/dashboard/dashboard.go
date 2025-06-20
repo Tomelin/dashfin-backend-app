@@ -517,12 +517,26 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 	var totalExpenses float64
 
 	log.Println("currentMonthStart: ", currentMonthStart.Format("2006-01"))
-	log.Println("currentMonthEnd: ", currentMonthEnd.Format("2006-01"))
+	log.Println("currentMonthEnd: ", currentMonthEnd.Format("2006-01-02"))
 	log.Println("previousMonthStart: ", previousMonthStart.Format("2006-01"))
-	log.Println("previousMonthEnd: ", previousMonthEnd.Format("2006-01"))
+	log.Println("previousMonthEnd: ", previousMonthEnd.Format("2006-01-02"))
 	log.Println("limit: ", limit)
 	log.Println("totalIncome: ", totalIncome)
 	log.Println("totalExpenses: ", totalExpenses)
+
+	startDate := fmt.Sprintf("%v", previousMonthStart.Format("2006-01-02"))
+	endDate := fmt.Sprintf("%v", currentMonthEnd.Format("2006-01-02"))
+
+	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
+		StartDate: &startDate,
+		EndDate:   &endDate,
+	})
+	log.Println(allUserIncomes, err)
+	if err != nil {
+		fmt.Printf("Warning: Error fetching income records for user: %v\n", err)
+		allUserIncomes = []financeEntity.IncomeRecord{}
+	}
+
 	return nil, nil
 }
 
