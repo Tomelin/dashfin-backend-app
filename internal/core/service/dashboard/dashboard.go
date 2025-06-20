@@ -531,6 +531,7 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context, userID *
 	log.Println("limit: ", limit)
 	log.Println("totalIncome: ", totalIncome)
 	log.Println("totalExpenses: ", totalExpenses)
+	log.Println("current", currentMonthStart.AddDate(0, -0, 0))
 
 	startDate := fmt.Sprintf("%v", previousMonthStart.Format("2006-01-02"))
 	endDate := fmt.Sprintf("%v", currentMonthEnd.Format("2006-01-02"))
