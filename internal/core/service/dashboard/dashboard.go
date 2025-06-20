@@ -457,16 +457,6 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		return errors.New("action did not match any case")
 	}
 	log.Println(balance, incomeRecord.Action)
-	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
-	if err != nil {
-		if !strings.Contains(err.Error(), "not found") {
-			return err
-		}
-	}
-	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
-	if err != nil {
-		return err
-	}
 
 	platfotmInst, err := s.platformInstitution.GetAllFinancialInstitutions(ctx)
 	if err != nil {
@@ -477,13 +467,28 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		return errors.New("financial institution not found")
 	}
 
-	var BankName string
+	bankAccount, err := s.bankAccountService.GetByFilter(ctx, map[string]interface{}{"id": incomeRecord.Data.BankAccountID})
+	if err != nil {
+		return err
+	}
+
+	var bankName string
 	if len(bankAccount) > 0 && len(platfotmInst) > 0 {
 		for _, v := range platfotmInst {
 			if v.Code == bankAccount[0].BankCode {
-				BankName = v.Name
+				bankName = v.Name
 				break
 			}
+		}
+	}
+
+	log.Println("userID > ", incomeRecord.Data.UserID)
+	log.Println("bankAccountID > ", incomeRecord.Data.BankAccountID)
+	log.Println("bankName > ", bankName)
+	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
+	if err != nil {
+		if !strings.Contains(err.Error(), "not found") {
+			return err
 		}
 	}
 
