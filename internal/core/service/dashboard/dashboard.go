@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
@@ -445,7 +446,9 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 
 	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "not found") {
+			return err
+		}
 	}
 
 	if dashboard == nil {
