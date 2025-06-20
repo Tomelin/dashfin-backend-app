@@ -119,7 +119,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, mq)
+	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, mq, db)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -347,8 +347,9 @@ func initializeDashboardServices(
 	incomeRecordSvc entity_finance.IncomeRecordServiceInterface,
 	profileGoalsSvc service_profile.ProfileGoalsServiceInterface,
 	messageQueue message_queue.MessageQueue,
+	db database.FirebaseDBInterface,
 ) (*service_dashboard.DashboardService, error) {
-	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository()
+	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository(db)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
 	// }
@@ -366,7 +367,3 @@ func initializeDashboardServices(
 	// }
 	return svcSpendingRecord, nil
 }
-
-// too many arguments in call to service_dashboard.NewDashboardService
-// have (*"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository, cache.CacheService, entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, *"github.com/Tomelin/dashfin-backend-app/internal/core/repository/dashboard".InMemoryDashboardRepository)
-// want (entity_finance.BankAccountServiceInterface, entity_finance.ExpenseRecordServiceInterface, entity_finance.IncomeRecordServiceInterface, profile.ProfileGoalsServiceInterface, "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard".DashboardRepositoryInterface)compilerWrongArgCount

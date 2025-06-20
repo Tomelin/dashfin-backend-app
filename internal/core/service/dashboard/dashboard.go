@@ -2,6 +2,8 @@ package dashboard
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -9,6 +11,7 @@ import (
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
 
+	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
@@ -254,10 +257,7 @@ func (s *DashboardService) calculateAllAccountBalances(
 	return accountBalances
 }
 
-func (s *DashboardService) calculateMonthlyRevenue(
-	incomes []financeEntity.IncomeRecord,
-	monthStart time.Time,
-) float64 {
+func (s *DashboardService) calculateMonthlyRevenue(incomes []financeEntity.IncomeRecord, monthStart time.Time) float64 {
 	var totalRevenue float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, income := range incomes {
@@ -271,10 +271,7 @@ func (s *DashboardService) calculateMonthlyRevenue(
 	return totalRevenue
 }
 
-func (s *DashboardService) calculateMonthlyExpenses(
-	paidExpenses []financeEntity.ExpenseRecord,
-	monthStart time.Time,
-) float64 {
+func (s *DashboardService) calculateMonthlyExpenses(paidExpenses []financeEntity.ExpenseRecord, monthStart time.Time) float64 {
 	var totalExpenses float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, expense := range paidExpenses {
@@ -422,10 +419,47 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 
 func (s *DashboardService) accountBalance(ctx context.Context) {
 
-	smsHandler := func(body []byte, traceid string) error {
-		// Enviar SMS
-		log.Printf("Sending SMS: %s", string(body))
-		return nil
+	s.messageQueue.Consumer(ctx, mq_exchange, mq_queue_income, s.processIncomeRecord)
+}
+
+func (s *DashboardService) processIncomeRecord(body []byte, traceID string) error {
+	var incomeRecord financeEntity.IncomeRecordEvent
+	if err := json.Unmarshal(body, &incomeRecord); err != nil {
+		return fmt.Errorf("erro ao deserializar: %w", err)
 	}
-	s.messageQueue.Consumer(ctx, mq_exchange, mq_queue_income, smsHandler)
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "UserID", incomeRecord.Data.UserID)
+
+	log.Printf("action is %s \n", incomeRecord.Action)
+	// Processar baseado no contexto ou adicionar campo Action na struct
+	var balance float64
+
+	switch {
+	case incomeRecord.Action == entity_common.ActionCreate:
+		balance = incomeRecord.Data.Amount
+	case incomeRecord.Action == entity_common.ActionDelete:
+		balance = (-incomeRecord.Data.Amount)
+	default:
+		return errors.New("action did not match any case")
+	}
+
+	dashboard, err := s.dashboardRepository.GetBankAccountBalanceByID(ctx, &incomeRecord.Data.UserID, &incomeRecord.Data.BankAccountID)
+	if err != nil {
+		return err
+	}
+
+	if dashboard == nil {
+		dashboard = &dashboardEntity.AccountBalanceItem{
+			UserID:      incomeRecord.Data.UserID,
+			AccountName: incomeRecord.Data.BankAccountID,
+			BankName:    incomeRecord.Data.BankAccountID,
+			Balance:     balance,
+		}
+	} else {
+		dashboard.Balance += balance
+	}
+
+	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
+
+	return nil
 }

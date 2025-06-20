@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
 )
 
 // IncomeRecordRepositoryInterface defines the repository operations for IncomeRecord.
@@ -42,6 +44,11 @@ type IncomeRecord struct {
 	CreatedAt        time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt        time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 	// TotalValue might not be needed if it's always equal to Amount for incomes
+}
+
+type IncomeRecordEvent struct {
+	Action entity_common.ActionEvent `json:"action"` // "created", "updated", "deleted"
+	Data   IncomeRecord              `json:"data"`
 }
 
 // IncomeCategory represents the allowed categories for income.

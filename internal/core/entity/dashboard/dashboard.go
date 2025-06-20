@@ -27,6 +27,7 @@ type AccountBalanceItem struct {
 	AccountName string  `json:"accountName"`
 	BankName    string  `json:"bankName"`
 	Balance     float64 `json:"balance"`
+	UserID      string  `json:"userId"`
 }
 
 type MonthlyFinancialSummaryItem struct {
@@ -95,4 +96,7 @@ type DashboardRepositoryInterface interface {
 
 	// DeleteDashboard explicitly removes dashboard data for a user, e.g., on logout or data reset.
 	DeleteDashboard(ctx context.Context, userID string) error
+
+	GetBankAccountBalanceByID(ctx context.Context, userID, bankName *string) (*AccountBalanceItem, error)
+	UpdateBankAccountBalance(ctx context.Context, userID *string, data *AccountBalanceItem) error
 }

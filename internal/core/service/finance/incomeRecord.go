@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
@@ -101,14 +102,12 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 				firstCreatedRecord = created
 			}
 		}
-		b, _ := json.Marshal(firstCreatedRecord)
-		s.publishMessage(ctx, mq_rk_income_create, b, "")
+		s.publishMessage(ctx, mq_rk_income_create, firstCreatedRecord, "", entity_common.ActionCreate)
 		return firstCreatedRecord, err // Returns the first created record of the series
 	}
 
 	// For non-recurring income
-	b, _ := json.Marshal(data)
-	s.publishMessage(ctx, mq_rk_income_create, b, "")
+	s.publishMessage(ctx, mq_rk_income_create, data, "", entity_common.ActionCreate)
 	return s.Repo.CreateIncomeRecord(ctx, data)
 }
 
@@ -266,8 +265,8 @@ func (s *IncomeRecordService) UpdateIncomeRecord(ctx context.Context, id string,
 		return nil, err
 	}
 
-	b, _ := json.Marshal(result)
-	s.publishMessage(ctx, mq_rk_income_update, b, "")
+	s.publishMessage(ctx, mq_rk_income_delete, data, "", entity_common.ActionDelete)
+	s.publishMessage(ctx, mq_rk_income_create, result, "", entity_common.ActionCreate)
 
 	return result, err
 }
@@ -307,12 +306,22 @@ func (s *IncomeRecordService) DeleteIncomeRecord(ctx context.Context, id string)
 		return err
 	}
 
-	b, _ := json.Marshal(recordToVerify)
-	s.publishMessage(ctx, mq_rk_income_delete, b, "")
+	s.publishMessage(ctx, mq_rk_income_delete, recordToVerify, "", entity_common.ActionDelete)
 
 	return err
 }
 
-func (s *IncomeRecordService) publishMessage(ctx context.Context, routeKey string, body []byte, trace string) error {
+func (s *IncomeRecordService) publishMessage(ctx context.Context, routeKey string, income *entity_finance.IncomeRecord, trace string, action entity_common.ActionEvent) error {
+
+	if income == nil {
+		return errors.New("income record is nil")
+	}
+
+	i := entity_finance.IncomeRecordEvent{
+		Action: action,
+		Data:   *income,
+	}
+	body, _ := json.Marshal(i)
+
 	return s.mq.PublisherWithRouteKey(mq_exchange, routeKey, body, trace)
 }

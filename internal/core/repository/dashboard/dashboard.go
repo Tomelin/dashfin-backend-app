@@ -2,18 +2,26 @@ package dashboard
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
+	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
+	"github.com/Tomelin/dashfin-backend-app/pkg/database"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 // InMemoryDashboardRepository implements dashboardEntity.DashboardRepositoryInterface using an in-memory store.
 // This is suitable for single-instance deployments or testing. For multi-instance, a distributed cache (e.g., Redis) would be needed.
 type InMemoryDashboardRepository struct {
-	store map[string]cachedDashboardItem
-	mu    sync.RWMutex // To make operations safe for concurrent use
+	store      map[string]cachedDashboardItem
+	mu         sync.RWMutex // To make operations safe for concurrent use
+	collection string
+	db         database.FirebaseDBInterface
 }
 
 type cachedDashboardItem struct {
@@ -25,9 +33,11 @@ type cachedDashboardItem struct {
 var _ dashboardEntity.DashboardRepositoryInterface = (*InMemoryDashboardRepository)(nil)
 
 // NewInMemoryDashboardRepository creates a new InMemoryDashboardRepository.
-func NewInMemoryDashboardRepository() *InMemoryDashboardRepository {
+func NewInMemoryDashboardRepository(db database.FirebaseDBInterface) *InMemoryDashboardRepository {
 	return &InMemoryDashboardRepository{
-		store: make(map[string]cachedDashboardItem),
+		store:      make(map[string]cachedDashboardItem),
+		collection: "dashboard",
+		db:         db,
 	}
 }
 
@@ -93,4 +103,69 @@ func (r *InMemoryDashboardRepository) DeleteDashboard(ctx context.Context, userI
 
 	delete(r.store, userID)
 	return nil
+}
+
+func (r *InMemoryDashboardRepository) UpdateBankAccountBalance(ctx context.Context, userID *string, data *dashboardEntity.AccountBalanceItem) error {
+	if data == nil {
+		return errors.New("data is nil")
+	}
+
+	toMap, _ := utils.StructToMap(data)
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return err
+	}
+
+	if collection == nil || *collection == "" {
+		return fmt.Errorf("%s collection is empty", r.collection)
+	}
+
+	err = r.db.Update(ctx, *userID, toMap, *collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *InMemoryDashboardRepository) GetBankAccountBalanceByID(ctx context.Context, userID, bankName *string) (*dashboardEntity.AccountBalanceItem, error) {
+	if userID == nil || *userID == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	if bankName == nil || *bankName == "" {
+		return nil, errors.New("bankName is empty")
+	}
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
+
+	filters := map[string]interface{}{
+		"userID":   *userID,
+		"bankName": *bankName,
+	}
+
+	result, err := r.db.GetByFilter(ctx, filters, *collection)
+	log.Println(result, err)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []dashboardEntity.AccountBalanceItem
+	if err := json.Unmarshal(result, &items); err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, errors.New("bank account not found")
+	}
+
+	return &items[0], nil
 }
