@@ -498,7 +498,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		dashboard = &dashboardEntity.AccountBalanceItem{
 			UserID:      incomeRecord.Data.UserID,
 			AccountName: bankAccount[0].Description,
-			BankName:    BankName,
+			BankName:    bankName,
 			Balance:     balance,
 		}
 	} else {
