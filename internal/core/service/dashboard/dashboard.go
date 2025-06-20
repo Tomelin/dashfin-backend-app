@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
+	"sync"
 
 	// "strconv" // Was potentially for GoalsProgress, check if still needed
 	"time"
@@ -120,7 +120,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 			TotalExpenses: 2345.00,
 		}}
 
-	s.monthlyFinancialSummary(ctx, &userID)
+	s.getMonthlyFinancialSummary(ctx, &userID)
 
 	dashboard.SummaryCards.AccountBalances = balanceCard
 	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
@@ -503,65 +503,123 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	return nil
 }
 
-type monthlyFinancialValue struct {
-	month string
-	value float64
-}
-
-func (s *DashboardService) monthlyFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
-
-	limit := 12
+func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
 
 	now := time.Now()
 	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	currentMonthEnd := currentMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
-	previousMonthStart := currentMonthStart.AddDate(0, -limit, 0)
-	previousMonthEnd := previousMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 
-	for i := range limit {
-		log.Println("i > ", i)
-		previousMonthStart := currentMonthStart.AddDate(0, -(i + 1), 0)
-		previousMonthEnd := previousMonthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
-		startDate := fmt.Sprintf("%v", previousMonthStart.Format("2006-01-02"))
-		endDate := fmt.Sprintf("%v", previousMonthEnd.Format("2006-01-02"))
-		log.Println("startDate >", startDate, "endDate >", endDate)
-		s.monthlyFinancialSummaryIncome(ctx, &startDate, &endDate, userID)
-		//s.monthlyFinancialSummaryExpense(ctx)
+	numberOfMonthsToFetch := 12
+
+	// Use a WaitGroup to wait for all goroutines to complete
+	var wg sync.WaitGroup
+	// Use a channel to collect results safely
+	summaryChan := make(chan dashboardEntity.MonthlyFinancialSummaryItem, numberOfMonthsToFetch)
+	defer close(summaryChan)
+
+	for i := 0; i < numberOfMonthsToFetch; i++ {
+		wg.Add(1)
+
+		monthStart := currentMonthStart.AddDate(0, -i, 0)
+		monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		startDateStr := monthStart.Format("2006-01-02")
+		endDateStr := monthEnd.Format("2006-01-02")
+		monthLabel := monthStart.Format("Jan/06")
+
+		go func(start, end, label string, userID *string) {
+			defer wg.Done()
+
+			totalIncome := s.monthlyFinancialSummaryIncome(ctx, &start, &end, userID)
+
+			totalExpenses := s.monthlyFinancialSummaryExpense(ctx, &start, &end, userID)
+
+			data := dashboardEntity.MonthlyFinancialSummaryItem{
+				Month:         label,
+				TotalIncome:   totalIncome,
+				TotalExpenses: totalExpenses,
+			}
+
+			summaryChan <- data
+		}(startDateStr, endDateStr, monthLabel, userID)
+
 	}
-	var totalIncome float64
-	var totalExpenses float64
 
-	log.Println("currentMonthStart: ", currentMonthStart.Format("2006-01"))
-	log.Println("currentMonthEnd: ", currentMonthEnd.Format("2006-01-02"))
-	log.Println("previousMonthStart: ", previousMonthStart.Format("2006-01"))
-	log.Println("previousMonthEnd: ", previousMonthEnd.Format("2006-01-02"))
-	log.Println("limit: ", limit)
-	log.Println("totalIncome: ", totalIncome)
-	log.Println("totalExpenses: ", totalExpenses)
-	log.Println("current", currentMonthStart.AddDate(0, -0, 0))
+	// Start a goroutine to close the channel when all goroutines are done
+	go func() {
+		wg.Wait()
+		close(summaryChan)
+	}()
 
-	startDate := fmt.Sprintf("%v", previousMonthStart.Format("2006-01-02"))
-	endDate := fmt.Sprintf("%v", currentMonthEnd.Format("2006-01-02"))
+	// Collect results from the channel
+	monthlySummary := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0)
+	for summary := range summaryChan {
+		go s.updateMonthlyFinancialSummary(ctx, userID, &summary)
+		monthlySummary = append(monthlySummary, summary)
+	}
 
-	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
-		StartDate: &startDate,
-		EndDate:   &endDate,
+	return nil, nil
+}
+
+func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) float64 {
+
+	allUserIncomes, _ := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
+		StartDate: startDate,
+		EndDate:   endDate,
 		UserID:    *userID,
 	})
-	log.Println(allUserIncomes, err)
-	if err != nil {
-		fmt.Printf("Warning: Error fetching income records for user: %v\n", err)
-		allUserIncomes = []financeEntity.IncomeRecord{}
+
+	if len(allUserIncomes) == 0 {
+		return 0
 	}
 
-	return nil, nil
+	var totalIncome float64
+	for _, income := range allUserIncomes {
+		totalIncome += income.Amount
+	}
+
+	return totalIncome
 }
 
-func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) ([]monthlyFinancialValue, error) {
-
-	return nil, nil
+func (s *DashboardService) monthlyFinancialSummaryExpense(ctx context.Context, startDate, endDate, userID *string) float64 {
+	return 0
 }
 
-func (s *DashboardService) monthlyFinancialSummaryExpense(ctx context.Context) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
-	return nil, nil
+func (s *DashboardService) updateMonthlyFinancialSummary(ctx context.Context, userID *string, data *dashboardEntity.MonthlyFinancialSummaryItem) {
+
+	if userID == nil {
+		return
+	}
+
+	result, err := s.dashboardRepository.GetFinancialSummary(ctx, userID)
+	if err != nil {
+		return
+	}
+
+	needUpdate := false
+	exists := false
+	for _, v := range result {
+
+		if v.Month == data.Month {
+			exists = true
+			data.ID = v.ID
+			if v.TotalIncome != data.TotalIncome {
+				v.TotalIncome = data.TotalIncome
+				needUpdate = true
+			}
+			if v.TotalExpenses != data.TotalExpenses {
+				v.TotalExpenses = data.TotalExpenses
+				needUpdate = true
+			}
+			break
+		}
+	}
+
+	if needUpdate || !exists {
+		if !exists {
+			data.CreatedAt = time.Now()
+		}
+		data.UpdatedAt = time.Now()
+		data.UserID = *userID
+		s.dashboardRepository.UpdateFinancialSummary(ctx, userID, data)
+	}
+
 }

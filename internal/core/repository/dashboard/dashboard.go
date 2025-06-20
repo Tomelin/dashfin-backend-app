@@ -206,3 +206,65 @@ func (r *InMemoryDashboardRepository) GetBankAccountBalance(ctx context.Context,
 
 	return items, nil
 }
+
+func (r *InMemoryDashboardRepository) GetFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+	if userID == nil || *userID == "" {
+		return nil, errors.New("id is empty")
+	}
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return nil, err
+	}
+
+	if collection == nil || *collection == "" {
+		return nil, fmt.Errorf("%s collection is empty", r.collection)
+	}
+
+	filters := map[string]interface{}{
+		"userId": *userID,
+		"type":   "financialSummary",
+	}
+
+	result, err := r.db.GetByFilter(ctx, filters, *collection)
+	if err != nil {
+		return nil, err
+	}
+
+	var items []dashboardEntity.MonthlyFinancialSummaryItem
+	if err := json.Unmarshal(result, &items); err != nil {
+		return nil, err
+	}
+
+	if len(items) == 0 {
+		return nil, errors.New("bank account not found")
+	}
+
+	return items, nil
+}
+
+func (r *InMemoryDashboardRepository) UpdateFinancialSummary(ctx context.Context, userID *string, data *dashboardEntity.MonthlyFinancialSummaryItem) error {
+	if data == nil {
+		return errors.New("data is nil")
+	}
+
+	toMap, _ := utils.StructToMap(data)
+
+	collection, err := repository.SetCollection(ctx, r.collection)
+	if err != nil {
+		return err
+	}
+
+	if collection == nil || *collection == "" {
+		return fmt.Errorf("%s collection is empty", r.collection)
+	}
+
+	toMap["type"] = "financialSummary"
+
+	err = r.db.Update(ctx, *userID, toMap, *collection)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

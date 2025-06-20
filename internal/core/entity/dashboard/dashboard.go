@@ -31,9 +31,13 @@ type AccountBalanceItem struct {
 }
 
 type MonthlyFinancialSummaryItem struct {
-	Month         string  `json:"month"`
-	TotalIncome   float64 `json:"totalIncome"`
-	TotalExpenses float64 `json:"totalExpenses"`
+	ID            string    `json:"id,omitempty"`
+	Month         string    `json:"month"`         // Changed order to put ID first
+	TotalIncome   float64   `json:"totalIncome"`   // Removed extra space
+	TotalExpenses float64   `json:"totalExpenses"` // Removed extra space
+	UserID        string    `json:"userId"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
 // SummaryCards holds the data for the summary cards at the top of the dashboard.
@@ -100,4 +104,6 @@ type DashboardRepositoryInterface interface {
 	GetBankAccountBalanceByID(ctx context.Context, userID, bankName *string) (*AccountBalanceItem, error)
 	UpdateBankAccountBalance(ctx context.Context, userID *string, data *AccountBalanceItem) error
 	GetBankAccountBalance(ctx context.Context, userID *string) ([]AccountBalanceItem, error)
+	UpdateFinancialSummary(ctx context.Context, userID *string, data *MonthlyFinancialSummaryItem) error
+	GetFinancialSummary(ctx context.Context, userID *string) ([]MonthlyFinancialSummaryItem, error)
 }
