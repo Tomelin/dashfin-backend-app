@@ -92,6 +92,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	balanceCard, err := s.getBankAccountBalance(ctx)
+	log.Println("balanceCard > ", balanceCard, err)
 	if err != nil {
 		if !strings.Contains(err.Error(), "not found") {
 			return nil, fmt.Errorf("getting bank account balance: %w", err)
@@ -150,6 +151,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboa
 	}
 
 	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
+	log.Println("GetBankAccountBalance> ", result, err)
 	if err != nil {
 		return nil, err
 	}
