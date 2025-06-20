@@ -518,7 +518,7 @@ func (s *DashboardService) monthlyFinancialSummary(ctx context.Context) ([]dashb
 
 	log.Println("currentMonthStart: ", currentMonthStart)
 	log.Println("currentMonthEnd: ", currentMonthEnd)
-	log.Println("previousMonthStart: ", previousMonthStart)
+	log.Println("previousMonthStart: ", previousMonthStart.Format("2006-01-02"))
 	log.Println("previousMonthEnd: ", previousMonthEnd)
 	log.Println("limit: ", limit)
 	log.Println("totalIncome: ", totalIncome)
