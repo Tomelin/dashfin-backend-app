@@ -499,6 +499,7 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 		}
 	}
 	dashboard.Balance += balance
+	log.Println("dashboard balance > ", dashboard.Balance)
 
 	s.dashboardRepository.UpdateBankAccountBalance(ctx, &incomeRecord.Data.UserID, dashboard)
 
