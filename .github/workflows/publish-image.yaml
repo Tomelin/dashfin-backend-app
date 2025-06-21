@@ -13,6 +13,7 @@ on:
 env:
   # CLOUD_RUN_REGION: ${{ secrets.CLOUD_RUN_REGION }}
   # GAR_LOCATION: us-central1
+  env_vars: ${{ vars.production }}
   SERVICE: dashfin-backend-app
   REGION: us-central1
   REPOSITORY: cloud-run-source-deploy/dashfin-backend-app
@@ -23,7 +24,7 @@ env:
   CLOUD_RUN_REGION: ${{ vars.CLOUD_RUN_REGION }}
   
   # Base names for services and secrets - User needs to set these in GitHub Secrets
-  CLOUD_RUN_SERVICE_NAME_BASE: ${{ env.CLOUD_RUN_SERVICE_NAME_BASE }} 
+  CLOUD_RUN_SERVICE_NAME_BASE: ${{ vars.CLOUD_RUN_SERVICE_NAME_BASE }} 
   SECRET_NAME_IN_MANAGER_BASE: ${{ vars.SECRET_NAME_IN_MANAGER_BASE }}
   ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
 
@@ -59,6 +60,8 @@ jobs:
             echo "FINAL_SECRET_NAME_IN_MANAGER=${{ env.SECRET_NAME_IN_MANAGER_BASE }}" >> $GITHUB_ENV
             echo "FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}" >> $GITHUB_ENV
             echo "ACTUAL_SECRET_VALUE=${{ secrets.SECRET_VALUE_MAIN }}" >> $GITHUB_ENV
+            echo "TESTE1=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}" >> $GITHUB_ENV
+            echo "ENVVVARSV=${{ env.env_vars }}" >> $GITHUB_ENV
             echo "IMAGE_TAG_SUFFIX=" >> $GITHUB_ENV # Or -prod / -main if desired
           else
             echo "Unsupported branch: ${{ github.ref_name }}. Exiting."
@@ -70,6 +73,8 @@ jobs:
           echo "Secret Name in Manager: $FINAL_SECRET_NAME_IN_MANAGER"
           echo "Env Var for Secret in Run: $FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN"
           echo "Image Tag Suffix: $IMAGE_TAG_SUFFIX"
+          echo "THSOT: $TESTE1"
+          echo "ENVVVARSV: $ENVVVARSV"
           echo "--------------------------------------------------"
 
       - name: Checkout
