@@ -116,10 +116,11 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --add-volume name=config,secret=${{ env.SERVICE_NAME }} \
-            --add-volume-mount volume=config,mount-path=/app/config.yaml \
+            --update-secrets=PATH=projects/${{ env.GCP_PROJECT_ID }}/secrets/${{ env.SERVICE_NAME }}:latest \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
-          echo " --set-env-vars PATH_CONFIG=/app \"
-          echo "   --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \ "
+          echo " --set-env-vars PATH_CONFIG=/app \
+            --add-volume name=config,type=secret,secret=${{ env.SERVICE_NAME }} \
+            --add-volume-mount volume=config,mount-path=/app/config.yaml \
+            --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \ "
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
