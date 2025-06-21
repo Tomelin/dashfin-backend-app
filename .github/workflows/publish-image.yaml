@@ -116,9 +116,9 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --update-secrets=/app/config.yaml=projects/671107607354/secrets/dashfin-backend-app-prd:latest \
+            --update-secrets=/configs/config.yaml=projects/671107607354/secrets/dashfin-backend-app-prd:latest \
             --update-secrets=/app/auth.json=projects/671107607354/secrets/gcp-auth:latest \
-            --set-env-vars PATH_CONFIG=/app \
+            --set-env-vars PATH_CONFIG=/configs \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
           echo " --set-env-vars PATH_CONFIG=/app \
