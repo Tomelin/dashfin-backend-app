@@ -115,7 +115,7 @@ jobs:
             --region ${{ env.CLOUD_RUN_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --port 8080 \
+            --port "8080" \
             --update-secrets=/configs/config.yaml=projects/671107607354/secrets/dashfin-backend-app-prd:latest \
             --update-secrets=/app/auth.json=projects/671107607354/secrets/gcp-auth:latest \
             --set-env-vars PATH_CONFIG=/configs \
