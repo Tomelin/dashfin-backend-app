@@ -83,13 +83,13 @@ jobs:
 #        run: |
 #          echo "Building Docker image: $IMAGE_NAME"
 #          docker build -t $IMAGE_NAME -f Dockerfile .
-
-      - name: Push Docker image to Artifact Registry
-        env:
-          IMAGE_NAME: ${{ env.IMAGE_TAG_PATH }}
-        run: |
-          echo "Pushing Docker image: $IMAGE_NAME"
-          docker push $IMAGE_NAME
+#
+#      - name: Push Docker image to Artifact Registry
+#        env:
+#          IMAGE_NAME: ${{ env.IMAGE_TAG_PATH }}
+#        run: |
+#          echo "Pushing Docker image: $IMAGE_NAME"
+#          docker push $IMAGE_NAME
 
       - name: Create or Update Secret in Secret Manager
         run: |
