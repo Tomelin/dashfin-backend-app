@@ -27,6 +27,7 @@ env:
   CLOUD_RUN_SERVICE_NAME_BASE: ${{ vars.CLOUD_RUN_SERVICE_NAME_BASE }} 
   SECRET_NAME_IN_MANAGER_BASE: ${{ vars.SECRET_NAME_IN_MANAGER_BASE }}
   ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
+  API: ${{ vars.CLAUDE_API_KEY }}
   MY_VAR: ${{ vars.MY_VAR }} 
   production: ${{ vars.production }} 
 
@@ -52,6 +53,8 @@ jobs:
         run: |
           echo "Variável 1 do ambiente: ${{ vars.NOME_DA_PRIMEIRA_VARIAVEL }}"
           echo "Variável 2 do ambiente: ${{ vars.NOME_DA_SEGUNDA_VARIAVEL }}"
+          echo "Variável API: ${{ env.API }}"
+          echo "Variável CLAUDE_API_KEY: ${{ vars.CLAUDE_API_KEY }}"
         env:
           # Se você precisar que as variáveis do ambiente sejam acessíveis como variáveis de ambiente shell
           # você pode mapeá-las explicitamente aqui.
