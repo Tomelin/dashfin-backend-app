@@ -27,6 +27,8 @@ env:
   CLOUD_RUN_SERVICE_NAME_BASE: ${{ vars.CLOUD_RUN_SERVICE_NAME_BASE }} 
   SECRET_NAME_IN_MANAGER_BASE: ${{ vars.SECRET_NAME_IN_MANAGER_BASE }}
   ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
+  MY_VAR: ${{ vars.MY_VAR }} 
+  production: ${{ vars.production }} 
 
 jobs:
   deploy:
@@ -62,6 +64,8 @@ jobs:
             echo "ACTUAL_SECRET_VALUE=${{ secrets.SECRET_VALUE_MAIN }}" >> $GITHUB_ENV
             echo "TESTE1=${{ env.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}" >> $GITHUB_ENV
             echo "ENVVVARSV=${{ env.env_vars }}" >> $GITHUB_ENV
+            echo "MY_VAR=${{ env.MY_VAR }}" >> $GITHUB_ENV
+            echo "my_env=${{ env.production }}" >> $GITHUB_ENV
             echo "IMAGE_TAG_SUFFIX=" >> $GITHUB_ENV # Or -prod / -main if desired
           else
             echo "Unsupported branch: ${{ github.ref_name }}. Exiting."
@@ -74,6 +78,8 @@ jobs:
           echo "Env Var for Secret in Run: $FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN"
           echo "Image Tag Suffix: $IMAGE_TAG_SUFFIX"
           echo "THSOT: $TESTE1"
+          echo "MY_VAR: $MY_VAR"
+          echo "my_env: $my_env"
           echo "ENVVVARSV: $ENVVVARSV"
           echo "--------------------------------------------------"
 
