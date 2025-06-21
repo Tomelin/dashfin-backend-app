@@ -50,7 +50,7 @@ jobs:
           echo "IMAGE_TAG_PATH=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
           echo "IMAGE_LAST_PATH=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}/${{ env.GCP_SERVICE_NAME }}:latest" >> $GITHUB_ENV
           echo "SERVICE_NAME=${{ env.GCP_SERVICE_NAME }}-prd" >> $GITHUB_ENV
-          echo "ACTUAL_SECRET_VALUE=${{ secrets.CONFIG_YAML }}" >> $GITHUB_ENV
+          
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
           fi
           
           echo "Updating secret version for ${{ env.SERVICE_NAME }}"
-          echo -n "${{ env.ACTUAL_SECRET_VALUE }}" | gcloud secrets versions add ${{ env.SERVICE_NAME }} \
+          echo -n "${{ secrets.CONFIG_YAML }}" | gcloud secrets versions add ${{ env.SERVICE_NAME }} \
             --data-file=- \
             --project="${{ env.GCP_PROJECT_ID }}" --quiet
           echo "Latest version of secret ${{ env.SERVICE_NAME }} updated."
