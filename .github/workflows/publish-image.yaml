@@ -32,10 +32,31 @@ env:
   production: ${{ vars.production }} 
 
 jobs:
+  deploy-production:
+    # Este job será executado APENAS se a branch for 'main'
+    if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
+    runs-on: ubuntu-latest
+    environment: production # Ambiente 'production' para a branch 'main'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Lógica de deploy para Production
+        run: |
+          echo "Executando deploy para o ambiente de Production (Branch: ${{ github.ref_name }})"
+          # Aqui você usaria as variáveis/secrets do ambiente 'production'
+          echo "Variável de MY_VAR: ${{ vars.MY_VAR }}"
+          echo "Variável de ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}"
+
   deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
-    environment: production
+    environment: "${{ github.ref_name }}" == "develop" ] # <- se for main == production diferente disso develop
     permissions:
       contents: read
       id-token: write
