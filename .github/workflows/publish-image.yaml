@@ -34,6 +34,7 @@ jobs:
   deploy:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    environment: production
     permissions:
       contents: read
       id-token: write
@@ -47,6 +48,15 @@ jobs:
       ENVIRONMENT_NAME: ''
 
     steps:
+      - name: Imprimir variáveis do ambiente
+        run: |
+          echo "Variável 1 do ambiente: ${{ vars.NOME_DA_PRIMEIRA_VARIAVEL }}"
+          echo "Variável 2 do ambiente: ${{ vars.NOME_DA_SEGUNDA_VARIAVEL }}"
+        env:
+          # Se você precisar que as variáveis do ambiente sejam acessíveis como variáveis de ambiente shell
+          # você pode mapeá-las explicitamente aqui.
+          MINHA_VAR_AMBIENTE_1: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
+          MINHA_VAR_AMBIENTE_2: ${{ vars.MY_VAR }}
       - name: Determine Environment and Set Variables
         run: |
           if [ "${{ github.ref_name }}" == "develop" ]; then
