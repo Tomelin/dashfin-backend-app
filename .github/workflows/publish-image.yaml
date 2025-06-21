@@ -116,8 +116,8 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --add-volume-mount volume=config,mount-path=/etc/config-secrets \ # Mount the existing 'config' volume
-            --add-volume-mount volume=auth,mount-path=/etc/auth-secrets \   # Mount the existing 'auth' volume
+            --add-volume-mount volume=config,mount-path=/etc/config-secrets \
+            --add-volume-mount volume=auth,mount-path=/etc/auth-secrets \ 
             --set-env-vars PATH_CONFIG=/etc/config-secrets \ 
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
