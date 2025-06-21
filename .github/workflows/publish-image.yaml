@@ -116,8 +116,9 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \
-            --set-env-vars PATH_CONFIG=/app \
+            --add-volume name=config-volume,secret=${{ env.SERVICE_NAME }}:latest \
+            --add-volume-mount volume=config-volume,mount-path=/etc/config-secrets \
+            --set-env-vars PATH_CONFIG=/etc/config-secrets \ # Ajuste o PATH_CONFIG se necessário
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
