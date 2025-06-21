@@ -13,7 +13,6 @@ on:
 env:
   # CLOUD_RUN_REGION: ${{ secrets.CLOUD_RUN_REGION }}
   # GAR_LOCATION: us-central1
-  env_vars: ${{ vars.production }}
   SERVICE: dashfin-backend-app
   REGION: us-central1
   REPOSITORY: cloud-run-source-deploy/dashfin-backend-app
@@ -22,41 +21,22 @@ env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GAR_LOCATION: ${{ vars.GAR_LOCATION }} 
   CLOUD_RUN_REGION: ${{ vars.CLOUD_RUN_REGION }}
+  GCP_REPOSITORY: ${{ vars.GCP_REPOSITORY }} }}
+  GCP_SERVICE_IMAGE: ${{ vars.GCP_SERVICE_IMAGE }}
   
   # Base names for services and secrets - User needs to set these in GitHub Secrets
   CLOUD_RUN_SERVICE_NAME_BASE: ${{ vars.CLOUD_RUN_SERVICE_NAME_BASE }} 
   SECRET_NAME_IN_MANAGER_BASE: ${{ vars.SECRET_NAME_IN_MANAGER_BASE }}
   ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
-  API: ${{ vars.CLAUDE_API_KEY }}
-  MY_VAR: ${{ vars.MY_VAR }} 
-  production: ${{ vars.production }} 
 
 jobs:
   deploy-production:
     # Este job será executado APENAS se a branch for 'main'
-    if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
-    runs-on: ubuntu-latest
-    environment: production # Ambiente 'production' para a branch 'main'
-
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-
-      - name: Lógica de deploy para Production
-        run: |
-          echo "Executando deploy para o ambiente de Production (Branch: ${{ github.ref_name }})"
-          # Aqui você usaria as variáveis/secrets do ambiente 'production'
-          echo "Variável de MY_VAR: ${{ vars.MY_VAR }}"
-          echo "Variável de ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}"
-
-  deploy:
+  #  if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
     name: Build and Deploy
     runs-on: ubuntu-latest
-    environment: develop # <- se for main == production diferente disso develop
+    environment: production
+
     permissions:
       contents: read
       id-token: write
@@ -70,17 +50,31 @@ jobs:
       ENVIRONMENT_NAME: ''
 
     steps:
-      - name: Imprimir variáveis do ambiente
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Lógica de deploy para Production
         run: |
-          echo "Variável 1 do ambiente: ${{ vars.NOME_DA_PRIMEIRA_VARIAVEL }}"
-          echo "Variável 2 do ambiente: ${{ vars.NOME_DA_SEGUNDA_VARIAVEL }}"
-          echo "Variável API: ${{ env.API }}"
-          echo "Variável CLAUDE_API_KEY: ${{ vars.CLAUDE_API_KEY }}"
-        env:
-          # Se você precisar que as variáveis do ambiente sejam acessíveis como variáveis de ambiente shell
-          # você pode mapeá-las explicitamente aqui.
-          MINHA_VAR_AMBIENTE_1: ${{ vars.ENV_VAR_NAME_FOR_SECRET_IN_RUN_BASE }}
-          MINHA_VAR_AMBIENTE_2: ${{ vars.MY_VAR }}
+          echo "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_REPOSITORY }}/${{ vars.GCP_SERVICE_IMAGE }}:${{ github.sha }}"
+          echo "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_IMAGE }}:${{ github.sha }}"
+
+  deploy-develop:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    environment: develop
+    permissions:
+      contents: read
+      id-token: write
+
+    env: 
+      FINAL_CLOUD_RUN_SERVICE_NAME: ''
+      FINAL_SECRET_NAME_IN_MANAGER: ''
+      FINAL_ENV_VAR_NAME_FOR_SECRET_IN_RUN: ''
+      ACTUAL_SECRET_VALUE: ''
+      IMAGE_TAG_SUFFIX: ''
+      ENVIRONMENT_NAME: ''
+
+    steps:
       - name: Determine Environment and Set Variables
         run: |
           if [ "${{ github.ref_name }}" == "develop" ]; then
