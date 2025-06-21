@@ -110,6 +110,7 @@ jobs:
         run: |
           echo "Pushing Docker image: $IMAGE_NAME"
           docker push $IMAGE_NAME
+
       # - name: Print 
       #   run: |-
       #     echo  "${{ env.GAR_LOCATION }}-docker.pkg.dev/prospere-app/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" 
