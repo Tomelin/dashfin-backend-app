@@ -116,7 +116,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --add-volume name=config,type=secret,secret=${{ env.SERVICE_NAME }} \
+            --add-volume name=config,secret=${{ env.SERVICE_NAME }} \
             --add-volume-mount volume=config,mount-path=/app/config.yaml \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
