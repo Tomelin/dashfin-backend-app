@@ -116,9 +116,9 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --add-volume-mount volume=config,mount-path=/etc/config-secrets \
-            --add-volume-mount volume=auth,mount-path=/etc/auth-secrets \
+            --add-volume name=config,secret=${{ env.SERVICE_NAME }}:latest,mount-path=/etc/config-secrets \
+            --add-volume name=auth,secret=gcp-auth:latest,mount-path=/etc/auth-secrets \
             --set-env-vars PATH_CONFIG=/etc/config-secrets \
-            --project ${{ env.GCP_PROJECT_ID }} \
+            --project ${{ env.GCP_PROJECT_ID }}
             --quiet
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
