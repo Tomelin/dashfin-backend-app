@@ -117,7 +117,7 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --add-volume name=config,type=secret,secret=${{ env.SERVICE_NAME }} \
-            --volume-mount name=config,mount-path=/app/config.yaml \
+            --add-volume-mount name=config,mount-path=/app/config.yaml \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
           echo " --set-env-vars PATH_CONFIG=/app \"
