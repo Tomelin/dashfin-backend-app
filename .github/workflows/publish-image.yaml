@@ -119,7 +119,7 @@ jobs:
             --add-volume name=config-volume,secret=${{ env.SERVICE_NAME }} \
             --volume-mount name=config-volume,mount-path=/app/config.yaml \
             --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \
-            --set-env-vars PATH_CONFIG=/app \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
+          echo " --set-env-vars PATH_CONFIG=/app \"
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
