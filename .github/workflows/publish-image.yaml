@@ -48,6 +48,8 @@ jobs:
       ACTUAL_SECRET_VALUE: ''
       IMAGE_TAG_SUFFIX: ''
       IMAGE_PATH: ''
+      IMAGE_LAST_PATH: ''
+      IMAGE_TAG_PATH: ''
       ENVIRONMENT_NAME: ''
 
     steps:
@@ -58,11 +60,12 @@ jobs:
         run: |
           echo "${{ vars.GAR_LOCATION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.GCP_REPOSITORY }}/${{ vars.GCP_SERVICE_IMAGE }}:${{ github.sha }}"
           echo "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_IMAGE }}:${{ github.sha }}"
-          echo "IMAGE_PATH=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_IMAGE }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "IMAGE_TAG_PATH=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_IMAGE }}:${{ github.sha }}" >> $GITHUB_ENV
+          echo "IMAGE_LAST_PATH=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_REPOSITORY }}/${{ env.GCP_SERVICE_IMAGE }}:latest" >> $GITHUB_ENV
 
       - name: Validate Lógica de deploy para Production
         run: |
-          echo "${{ env.IMAGE_PATH }}"
+          echo "${{ env.IMAGE_TAG_PATH }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -91,14 +94,14 @@ jobs:
 
       - name: Build Docker image
         env:
-          IMAGE_NAME: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FINAL_CLOUD_RUN_SERVICE_NAME }}:${{ github.sha }}
+          IMAGE_NAME: ${{ env.IMAGE_TAG_PATH }}
         run: |
           echo "Building Docker image: $IMAGE_NAME"
           docker build -t $IMAGE_NAME -f Dockerfile .
 
       - name: Push Docker image to Artifact Registry
         env:
-          IMAGE_NAME: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.FINAL_CLOUD_RUN_SERVICE_NAME }}:${{ github.sha }}
+          IMAGE_NAME: ${{ env.IMAGE_TAG_PATH }}
         run: |
           echo "Pushing Docker image: $IMAGE_NAME"
           docker push $IMAGE_NAME
