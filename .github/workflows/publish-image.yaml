@@ -86,24 +86,24 @@ jobs:
 #        run: |
 #          echo "Pushing Docker image: $IMAGE_NAME"
 #          docker push $IMAGE_NAME
-
-      - name: Create or Update Config Secret in Secret Manager
-        run: |
-          echo "Checking for secret: ${{ env.SERVICE_NAME }} in project ${{ env.GCP_PROJECT_ID }}"
-          if ! gcloud secrets describe ${{ env.SERVICE_NAME }} --project="${{ env.GCP_PROJECT_ID }}" --quiet &> /dev/null; then
-            echo "Secret ${{ env.SERVICE_NAME }} does not exist. Creating..."
-            gcloud secrets create ${{ env.SERVICE_NAME }} \
-              --replication-policy="automatic" \
-              --project="${{ env.GCP_PROJECT_ID }}" --quiet
-          else
-            echo "Secret ${{ env.SERVICE_NAME }} already exists."
-          fi
-          
-          echo "Updating secret version for ${{ env.SERVICE_NAME }}"
-          echo -n "${{ secrets.CONFIG_YAML }}" | gcloud secrets versions add ${{ env.SERVICE_NAME }} \
-            --data-file=- \
-            --project="${{ env.GCP_PROJECT_ID }}" --quiet
-          echo "Latest version of secret ${{ env.SERVICE_NAME }} updated."
+#
+#      - name: Create or Update Config Secret in Secret Manager
+#        run: |
+#          echo "Checking for secret: ${{ env.SERVICE_NAME }} in project ${{ env.GCP_PROJECT_ID }}"
+#          if ! gcloud secrets describe ${{ env.SERVICE_NAME }} --project="${{ env.GCP_PROJECT_ID }}" --quiet &> /dev/null; then
+#            echo "Secret ${{ env.SERVICE_NAME }} does not exist. Creating..."
+#            gcloud secrets create ${{ env.SERVICE_NAME }} \
+#              --replication-policy="automatic" \
+#              --project="${{ env.GCP_PROJECT_ID }}" --quiet
+#          else
+#            echo "Secret ${{ env.SERVICE_NAME }} already exists."
+#          fi
+#          
+#          echo "Updating secret version for ${{ env.SERVICE_NAME }}"
+#          echo -n "${{ secrets.CONFIG_YAML }}" | gcloud secrets versions add ${{ env.SERVICE_NAME }} \
+#            --data-file=- \
+#            --project="${{ env.GCP_PROJECT_ID }}" --quiet
+#          echo "Latest version of secret ${{ env.SERVICE_NAME }} updated."
 
       - name: Deploy to Cloud Run
         env:
@@ -116,7 +116,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --update-secrets=PATH=projects/${{ env.GCP_PROJECT_ID }}/secrets/dashfin-backend-app-prd:29 \
+            --update-secrets=PATH=projects/671107607354/secrets/dashfin-backend-app-prd:29 \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
           echo " --set-env-vars PATH_CONFIG=/app \
