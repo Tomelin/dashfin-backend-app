@@ -43,11 +43,11 @@ type FirebaseConfig struct {
 	// Database URL (optional, for Realtime Database)
 	DatabaseURL string `json:"database" yaml:"database"`
 
-	APIKey        string `json:"apiKey" yaml:"apiKey"`
-	AuthDomain    string `json:"authDomain" yaml:"authDomain"`
-	StorageBucket string `json:"storageBucket" yaml:"storageBucket"`
-	// MessagingSenderID string `json:"messagingSenderId,omitempty" yaml:"messagingSenderId,omitempty"`
-	AppID string `json:"appId" yaml:"appId"`
+	APIKey            string      `json:"apiKey" yaml:"apiKey"`
+	AuthDomain        string      `json:"authDomain" yaml:"authDomain"`
+	StorageBucket     string      `json:"storageBucket" yaml:"storageBucket"`
+	MessagingSenderID interface{} `json:"messagingSenderId,omitempty" yaml:"messagingSenderId,omitempty"`
+	AppID             string      `json:"appId" yaml:"appId"`
 }
 
 // InitializeAuth initializes the Firebase application and returns an Authenticator.

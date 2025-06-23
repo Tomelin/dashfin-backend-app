@@ -11,11 +11,11 @@ type FirebaseConfig struct {
 	// Database URL (optional, for Realtime Database)
 	DatabaseURL string
 
-	APIKey            string `json:"apiKey" yaml:"apiKey"`
-	AuthDomain        string `json:"authDomain" yaml:"authDomain"`
-	StorageBucket     string `json:"storageBucket" yaml:"storageBucket"`
-	MessagingSenderID string `json:"messagingSenderId" yaml:"messagingSenderId"`
-	AppID             string `json:"appId" yaml:"appId"`
+	APIKey            string      `json:"apiKey" yaml:"apiKey"`
+	AuthDomain        string      `json:"authDomain" yaml:"authDomain"`
+	StorageBucket     string      `json:"storageBucket" yaml:"storageBucket"`
+	MessagingSenderID interface{} `json:"messagingSenderId" yaml:"messagingSenderId"`
+	AppID             string      `json:"appId" yaml:"appId"`
 }
 
 // MongoConfig holds the configuration for MongoDB connection

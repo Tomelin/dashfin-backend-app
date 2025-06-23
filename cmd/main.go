@@ -136,6 +136,7 @@ func main() {
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
+		log.Println("apiResponse.Run error", err.Error())
 		log.Fatal(err)
 	}
 }
@@ -228,8 +229,8 @@ func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator
 		StorageBucket:         fConfig.StorageBucket,
 		AppID:                 fConfig.AppID,
 		AuthDomain:            fConfig.AuthDomain,
+		MessagingSenderID:     fConfig.MessagingSenderID,
 		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
-		// MessagingSenderID:     fConfig.MessagingSenderID,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize firebase DB: %w", err)
