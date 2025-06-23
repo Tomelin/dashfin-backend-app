@@ -46,7 +46,7 @@ type FirebaseConfig struct {
 	APIKey            string `json:"apiKey" yaml:"apiKey"`
 	AuthDomain        string `json:"authDomain" yaml:"authDomain"`
 	StorageBucket     string `json:"storageBucket" yaml:"storageBucket"`
-	MessagingSenderID string `json:"messagingSenderId" yaml:"messagingSenderId"`
+	MessagingSenderID string `json:"messagingSenderId,omitempty" yaml:"messagingSenderId,omitempty"`
 	AppID             string `json:"appId" yaml:"appId"`
 }
 

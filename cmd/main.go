@@ -39,14 +39,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("starting webserver", cfg.Fields["webserver"])
 	apiResponse, err := loadWebServer(cfg.Fields["webserver"].(map[string]interface{}))
 	if err != nil {
-		log.Println("failed to load webserver", err.Error())
 		log.Fatal(err)
 	}
 
-	log.Println("starting encrypt", cfg.Fields["encrypt"])
 	crypt, err := initializeCryptData(cfg.Fields["encrypt"])
 	if err != nil {
 		log.Fatal(err)
@@ -55,6 +52,7 @@ func main() {
 	authClient, db, err := initializeFirebase(cfg.Fields["firebase"])
 	log.Println("starting firebase", cfg.Fields["firebase"])
 	if err != nil {
+		log.Println("error firebase", err.Error())
 		log.Fatal(err)
 	}
 
@@ -208,6 +206,7 @@ func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface
 
 func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator, database.FirebaseDBInterface, error) {
 	var fConfig authenticatior.FirebaseConfig
+	log.Println("firebaseConfig", firebaseField)
 	b, err := json.Marshal(firebaseField)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal firebase config: %w", err)
