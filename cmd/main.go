@@ -39,17 +39,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	log.Println("starting webserver", cfg.Fields["webserver"])
 	apiResponse, err := loadWebServer(cfg.Fields["webserver"].(map[string]interface{}))
 	if err != nil {
+		log.Println("failed to load webserver", err.Error())
 		log.Fatal(err)
 	}
 
+	log.Println("starting encrypt", cfg.Fields["encrypt"])
 	crypt, err := initializeCryptData(cfg.Fields["encrypt"])
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	authClient, db, err := initializeFirebase(cfg.Fields["firebase"])
+	log.Println("starting firebase", cfg.Fields["firebase"])
 	if err != nil {
 		log.Fatal(err)
 	}
