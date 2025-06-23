@@ -228,8 +228,8 @@ func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator
 		StorageBucket:         fConfig.StorageBucket,
 		AppID:                 fConfig.AppID,
 		AuthDomain:            fConfig.AuthDomain,
-		MessagingSenderID:     fConfig.MessagingSenderID,
 		ServiceAccountKeyPath: fConfig.ServiceAccountKeyPath,
+		// MessagingSenderID:     fConfig.MessagingSenderID,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to initialize firebase DB: %w", err)
