@@ -19,7 +19,6 @@ jobs:
   deploy-production:
     # Este job será executado APENAS se a branch for 'main'
     if: github.ref == 'refs/heads/main'
-
     name: Build TSHOT
     runs-on: ubuntu-latest
     environment: production
@@ -127,7 +126,6 @@ jobs:
   deploy-develop:
     # Este job será executado APENAS se a branch for 'main'
     if: github.ref == 'refs/heads/develop'
-
     name: Build TSHOT
     runs-on: ubuntu-latest
     environment: develop
