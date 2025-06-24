@@ -5,10 +5,6 @@ on:
   push:
     branches:
       - "*"
-      # - "develop"
-    # paths:
-    #   - '**.go'
-  # pull_request:
 
 env:
   # Base names for services and secrets - User needs to set these in GitHub Secrets
@@ -18,11 +14,9 @@ env:
   GCP_REPOSITORY: ${{ vars.GCP_REPOSITORY }}
   GCP_SERVICE_NAME: ${{ vars.GCP_SERVICE_IMAGE }}
   
-
 jobs:
   deploy-production:
     # Este job será executado APENAS se a branch for 'main'
-  #  if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
     name: Build TSHOT
     runs-on: ubuntu-latest
     environment: production

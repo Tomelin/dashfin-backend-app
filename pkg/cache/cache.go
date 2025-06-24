@@ -15,11 +15,11 @@ type CacheService interface {
 }
 
 type CacheConfig struct {
-	Address  string `mapstructure:"address" json:"address"`
-	Password string `mapstructure:"password" json:"password"`
-	DB       int    `mapstructure:"db" json:"db"`
-	Port     string `mapstructure:"port" json:"port"`
-	Username string `mapstructure:"username" json:"username"`
+	Address  string      `mapstructure:"address" json:"address"`
+	Password string      `mapstructure:"password" json:"password"`
+	DB       int         `mapstructure:"db" json:"db"`
+	Port     interface{} `mapstructure:"port" json:"port"`
+	Username string      `mapstructure:"username" json:"username"`
 }
 
 // ErrNotFound is returned when an item is not found in the cache.
