@@ -35,7 +35,7 @@ func prometheusHandler() gin.HandlerFunc {
 func (s *RestAPI) Run(handle http.Handler) error {
 
 	srv := http.Server{
-		Addr:    fmt.Sprintf(":%s", s.Config.Port),
+		Addr:    fmt.Sprintf(":%v", s.Config.Port),
 		Handler: s.Route.Handler(),
 	}
 
