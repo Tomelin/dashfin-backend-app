@@ -4,7 +4,8 @@ run-name: publish-image
 on:
   push:
     branches:
-      - "*"
+      - "main"
+      - "develop"
 
 env:
   # Base names for services and secrets - User needs to set these in GitHub Secrets
@@ -17,6 +18,7 @@ env:
 jobs:
   deploy-production:
     # Este job será executado APENAS se a branch for 'main'
+    if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
     name: Build TSHOT
     runs-on: ubuntu-latest
     environment: production
@@ -110,7 +112,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port "8080" \
-            --update-secrets=/configs/config.yaml=projects/671107607354/secrets/dashfin-backend-app-prd:latest \
+            --update-secrets=/configs/config.yaml=projects/671107607354/secrets/${{ env.SERVICE_NAME }}:latest \
             --update-secrets=/app/auth.json=projects/671107607354/secrets/gcp-auth:latest \
             --set-env-vars PATH_CONFIG=/configs \
             --project ${{ env.GCP_PROJECT_ID }} \
@@ -120,3 +122,5 @@ jobs:
             --add-volume-mount volume=config,mount-path=/app/config.yaml \
             --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \ "
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
+
+  
