@@ -6,6 +6,7 @@ on:
     branches:
       - "main"
       - "develop"
+      - "jules_wip_13387545001984943234"
 
 env:
   # Base names for services and secrets - User needs to set these in GitHub Secrets
@@ -19,6 +20,7 @@ jobs:
   deploy-production:
     # Este job será executado APENAS se a branch for 'main'
     if: github.ref == 'refs/heads/jules_wip_13387545001984943234'
+
     name: Build TSHOT
     runs-on: ubuntu-latest
     environment: production
