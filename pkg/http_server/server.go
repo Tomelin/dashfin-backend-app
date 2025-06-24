@@ -1,6 +1,7 @@
 package http_server
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -34,7 +35,7 @@ func prometheusHandler() gin.HandlerFunc {
 func (s *RestAPI) Run(handle http.Handler) error {
 
 	srv := http.Server{
-		Addr:    ":" + s.Config.Port,
+		Addr:    fmt.Sprintf(":%v", s.Config.Port),
 		Handler: s.Route.Handler(),
 	}
 

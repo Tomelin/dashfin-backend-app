@@ -50,7 +50,9 @@ func main() {
 	}
 
 	authClient, db, err := initializeFirebase(cfg.Fields["firebase"])
+	log.Println("starting firebase", cfg.Fields["firebase"])
 	if err != nil {
+		log.Println("error firebase", err.Error())
 		log.Fatal(err)
 	}
 
@@ -134,6 +136,7 @@ func main() {
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
+		log.Println("apiResponse.Run error", err.Error())
 		log.Fatal(err)
 	}
 }
@@ -204,6 +207,7 @@ func initializeCryptData(encryptField interface{}) (cryptdata.CryptDataInterface
 
 func initializeFirebase(firebaseField interface{}) (authenticatior.Authenticator, database.FirebaseDBInterface, error) {
 	var fConfig authenticatior.FirebaseConfig
+	log.Println("firebaseConfig", firebaseField)
 	b, err := json.Marshal(firebaseField)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to marshal firebase config: %w", err)

@@ -19,7 +19,7 @@ type Certificate struct {
 }
 
 type RestAPIConfig struct {
-	Port            string `mapstructure:"port"`
+	Port            interface{} `mapstructure:"port"`
 	SSLEnabled      bool   `mapstructure:"ssl_enabled"`
 	Host            string `mapstructure:"host"`
 	Version         string `mapstructure:"version"`
