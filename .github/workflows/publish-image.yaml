@@ -124,7 +124,7 @@ jobs:
             --set-secrets /app/config.yaml=${{ env.SERVICE_NAME }}:latest \ "
           echo "Deployment to ${{ env.SERVICE_NAME }} completed."
 
-    deploy-develop:
+  deploy-develop:
     # Este job será executado APENAS se a branch for 'main'
     if: github.ref == 'refs/heads/develop'
 
