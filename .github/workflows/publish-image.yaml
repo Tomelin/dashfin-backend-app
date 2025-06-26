@@ -223,7 +223,6 @@ jobs:
             --update-secrets=/app/auth.json=projects/671107607354/secrets/gcp-auth:latest \
             --set-env-vars PATH_CONFIG=/configs \
             --project ${{ env.GCP_PROJECT_ID }} \
-            --no-invoker-iam-check \
             --quiet
           echo " --set-env-vars PATH_CONFIG=/app \
             --add-volume name=config,type=secret,secret=${{ env.SERVICE_NAME }} \
