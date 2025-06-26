@@ -32,7 +32,7 @@ func NewFirebaseInsert(firebaseDB FirebaseDBInterface) FirebaseInsertInterface {
 	return &FirebaseInsert{
 		firebaseDB: firebaseDB,
 		collection: "platform_financial-institution",
-		filePath:   "/home/user/dashfin-backend-app/data/brazilian-banks.json",
+		filePath:   "/home/user/dashfin-backend-app/files/banks.json",
 	}
 }
 

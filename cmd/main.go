@@ -52,17 +52,16 @@ func main() {
 	authClient, db, err := initializeFirebase(cfg.Fields["firebase"])
 	log.Println("starting firebase", cfg.Fields["firebase"])
 	if err != nil {
-		log.Println("error firebase", err.Error())
 		log.Fatal(err)
 	}
 
 	// Import data at firestore
-	iif := database.NewFirebaseInsert(db)
-	err = iif.InsertBrazilianBanksFromJSON(context.Background())
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Fatal("finish")
+	// iif := database.NewFirebaseInsert(db)
+	// err = iif.InsertBrazilianBanksFromJSON(context.Background())
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Fatalln("finish")
 
 	cacheClient, err := initializeCache(cfg.Fields["cache"])
 	if err != nil {
@@ -144,7 +143,6 @@ func main() {
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
-		log.Println("apiResponse.Run error", err.Error())
 		log.Fatal(err)
 	}
 }
@@ -355,9 +353,6 @@ func initializeDashboardServices(
 	db database.FirebaseDBInterface,
 ) (*service_dashboard.DashboardService, error) {
 	repoSpendingRecord := repository_dashboard.NewInMemoryDashboardRepository(db)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to initialize income record repository: %w", err)
-	// }
 
 	svcSpendingRecord := service_dashboard.NewDashboardService(
 		bankAccountSvc,
@@ -368,8 +363,6 @@ func initializeDashboardServices(
 		messageQueue,
 		platformInst,
 	)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to initialize income record service: %w", err)
-	// }
+
 	return svcSpendingRecord, nil
 }

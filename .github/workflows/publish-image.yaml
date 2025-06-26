@@ -224,6 +224,7 @@ jobs:
             --set-env-vars PATH_CONFIG=/configs \
             --project ${{ env.GCP_PROJECT_ID }} \
             --quiet
+            
           echo " --set-env-vars PATH_CONFIG=/app \
             --add-volume name=config,type=secret,secret=${{ env.SERVICE_NAME }} \
             --add-volume-mount volume=config,mount-path=/app/config.yaml \
