@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -58,7 +57,7 @@ func (h *BankAccountHandler) setupRoutes(routerGroup *gin.RouterGroup, middlewar
 func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -66,14 +65,14 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	data, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -81,7 +80,7 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 	var bankAccount entity_finance.BankAccount
 	err = json.Unmarshal(data, &bankAccount)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -91,21 +90,21 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 
 	result, err := h.service.CreateBankAccount(ctx, &bankAccount)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -116,7 +115,7 @@ func (h *BankAccountHandler) CreateBankAccount(c *gin.Context) {
 func (h *BankAccountHandler) GetBankAccount(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -132,21 +131,20 @@ func (h *BankAccountHandler) GetBankAccount(c *gin.Context) {
 
 	result, err := h.service.GetBankAccountByID(ctx, &id)
 	if err != nil {
-		log.Println(http.StatusNoContent)
-		// c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		// return
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, _ := h.encryptData.EncryptPayload(b)
 	// if err != nil {
-	// 	log.Println(err.Error())
+	//
 	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	// 	return
 	// }
@@ -157,7 +155,7 @@ func (h *BankAccountHandler) GetBankAccount(c *gin.Context) {
 func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -167,21 +165,20 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 
 	results, err := h.service.GetBankAccounts(ctx)
 	if err != nil {
-		log.Println(http.StatusNoContent)
-		// c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
-		// return
+		c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
+		return
 	}
 
 	b, err := json.Marshal(results)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, _ := h.encryptData.EncryptPayload(b)
 	// if err != nil {
-	// 	log.Println(err.Error())
+	//
 	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	// 	return
 	// }
@@ -192,7 +189,7 @@ func (h *BankAccountHandler) GetBankAccounts(c *gin.Context) {
 func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHeader %s", err.Error())})
 		return
 	}
@@ -206,14 +203,14 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("cryptData %s", err.Error())})
 		return
 	}
 
 	data, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("payloadData %s", err.Error())})
 		return
 	}
@@ -221,7 +218,7 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 	var bankAccount entity_finance.BankAccountRequest
 	err = json.Unmarshal(data, &bankAccount)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHunmarshaleader %s", err.Error())})
 		return
 	}
@@ -231,21 +228,21 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 
 	result, err := h.service.UpdateBankAccount(ctx, &bankAccount)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Update %s", err.Error())})
 		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Marshal %s", err.Error())})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("encrypt %s", err.Error())})
 		return
 	}
@@ -256,7 +253,7 @@ func (h *BankAccountHandler) UpdateBankAccount(c *gin.Context) {
 func (h *BankAccountHandler) DeleteBankAccount(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -272,7 +269,7 @@ func (h *BankAccountHandler) DeleteBankAccount(c *gin.Context) {
 
 	err = h.service.DeleteBankAccount(ctx, &id)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

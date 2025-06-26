@@ -138,7 +138,6 @@ func (s *IncomeRecordService) GetIncomeRecordByID(ctx context.Context, id string
 	// Service layer authorization check
 	if record.UserID != userIDStr {
 		// Log this attempt, could be a security issue or bug
-		// log.Printf("Authorization failed (service): User %v attempted to access record %s owned by %s", userIDFromCtx, id, record.UserID)
 		return nil, errors.New("income record not found or access denied") // Generic message for security
 	}
 
@@ -166,7 +165,6 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, params *enti
 	// For now, enforce that the provided userID matches the one in context if both are present.
 	if params.UserID != "" && params.UserID != userIDStr {
 		// This indicates a potential misuse of the service method or an attempt to access unauthorized data.
-		// log.Printf("Warning: Mismatch between UserID in context (%s) and UserID parameter (%s) in GetIncomeRecords.", userIDFromCtx.(string), userID)
 		return nil, errors.New("user ID parameter mismatch with authenticated user")
 	}
 
@@ -251,7 +249,6 @@ func (s *IncomeRecordService) UpdateIncomeRecord(ctx context.Context, id string,
 	}
 
 	if existingRecord.UserID != userIDStr {
-		// log.Printf("Authorization failed for update (service): User %v attempted to update record %s owned by %s", userIDFromCtx, id, existingRecord.UserID)
 		return nil, errors.New("income record not found or access denied for update")
 	}
 
@@ -297,7 +294,6 @@ func (s *IncomeRecordService) DeleteIncomeRecord(ctx context.Context, id string)
 	}
 
 	if recordToVerify.UserID != userIDStr {
-		// log.Printf("Authorization failed for delete (service): User %v attempted to delete record %s owned by %s", userIDFromCtx, id, recordToVerify.UserID)
 		return errors.New("income record not found or access denied for delete")
 	}
 

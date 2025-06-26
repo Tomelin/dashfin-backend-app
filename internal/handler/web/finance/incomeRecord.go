@@ -3,7 +3,6 @@ package web_finance
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
@@ -67,41 +66,33 @@ func (h *IncomeRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlewa
 func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var payload cryptdata.CryptData
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Printf("Error binding JSON payload for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
 		return
 	}
 
 	decryptedData, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Printf("Error decrypting payload data for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error processing request data: " + err.Error()})
 		return
 	}
 
 	var incomeRecord entity_finance.IncomeRecord
 	if err := json.Unmarshal(decryptedData, &incomeRecord); err != nil {
-		log.Printf("Error unmarshalling decrypted data to IncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
 		return
 	}
-
-	// UserID will be set by the service from context.
-	// incomeRecord.UserID = userID // Service layer handles setting UserID from context
 
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
 	result, err := h.service.CreateIncomeRecord(ctx, &incomeRecord)
 	if err != nil {
-		log.Printf("Error creating income record via service: %v", err)
 		// Consider more specific error codes based on err type if possible
 		if strings.Contains(err.Error(), "validation failed") {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to create income record: " + err.Error()})
@@ -113,14 +104,12 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
-		log.Printf("Error marshalling result to JSON for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
@@ -132,7 +121,6 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 func (h *IncomeRecordHandler) GetIncomeRecordByID(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -158,14 +146,12 @@ func (h *IncomeRecordHandler) GetIncomeRecordByID(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
-		log.Printf("Error marshalling result to JSON for GetIncomeRecordByID: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for GetIncomeRecordByID: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
@@ -177,7 +163,6 @@ func (h *IncomeRecordHandler) GetIncomeRecordByID(c *gin.Context) {
 func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -192,9 +177,6 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
-	// The service's GetIncomeRecords expects userID as a parameter.
-	// We use the authenticated userID from headers.
-
 	record := entity_finance.GetIncomeRecordsQueryParameters{
 		UserID:        userID,
 		Description:   &description,
@@ -205,22 +187,6 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 	}
 
 	results, err := h.service.GetIncomeRecords(ctx, &record)
-	// if err != nil {
-	// 	log.Printf("Error getting income records via service: %v", err)
-	// 	if strings.Contains(err.Error(), "not found") { // Or other specific non-fatal errors
-	// 		// Based on expenseRecord, "not found" for a list should be an empty list, not error.
-	// 		// However, the service/repo might not distinguish "no records found" from other errors.
-	// 		// For now, let's assume an empty list is handled by `results == nil` check below.
-	// 		// If service explicitly returns "not found" for empty list matching criteria, this could be StatusOK with empty encrypted payload
-	// 	}
-	// 	if strings.Contains(err.Error(), "invalid query parameters") || strings.Contains(err.Error(), "invalid sortDirection value") {
-	// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
-	// 		return
-	// 	} else if err != nil { // Catch-all for other errors
-	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve income records: " + err.Error()})
-	// 		return
-	// 	}
-	// }
 
 	if results == nil { // Ensure we always return a list, even if empty
 		results = []entity_finance.IncomeRecord{}
@@ -228,14 +194,12 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(results)
 	if err != nil {
-		log.Printf("Error marshalling results to JSON for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for GetIncomeRecords: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
@@ -247,7 +211,6 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 func (h *IncomeRecordHandler) UpdateIncomeRecord(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -260,34 +223,27 @@ func (h *IncomeRecordHandler) UpdateIncomeRecord(c *gin.Context) {
 
 	var payload cryptdata.CryptData
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Printf("Error binding JSON payload for UpdateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload for update: " + err.Error()})
 		return
 	}
 
 	decryptedData, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Printf("Error decrypting payload data for UpdateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error processing request data for update: " + err.Error()})
 		return
 	}
 
 	var incomeRecord entity_finance.IncomeRecord
 	if err := json.Unmarshal(decryptedData, &incomeRecord); err != nil {
-		log.Printf("Error unmarshalling decrypted data to IncomeRecord for update: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format for update: " + err.Error()})
 		return
 	}
-
-	// UserID will be set by the service from context.
-	// incomeRecord.UserID = userID // Service handles setting UserID from context
 
 	ctx := context.WithValue(c.Request.Context(), "", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
 	result, err := h.service.UpdateIncomeRecord(ctx, id, &incomeRecord)
 	if err != nil {
-		log.Printf("Error updating income record via service (ID: %s): %v", id, err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else if strings.Contains(err.Error(), "validation failed") {
@@ -300,14 +256,12 @@ func (h *IncomeRecordHandler) UpdateIncomeRecord(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
-		log.Printf("Error marshalling updated result to JSON for UpdateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for UpdateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
@@ -319,7 +273,6 @@ func (h *IncomeRecordHandler) UpdateIncomeRecord(c *gin.Context) {
 func (h *IncomeRecordHandler) DeleteIncomeRecord(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -335,7 +288,6 @@ func (h *IncomeRecordHandler) DeleteIncomeRecord(c *gin.Context) {
 
 	err = h.service.DeleteIncomeRecord(ctx, id)
 	if err != nil {
-		log.Printf("Error deleting income record via service (ID: %s): %v", id, err)
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {

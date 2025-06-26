@@ -42,10 +42,7 @@ func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string
 		var plan entity_finance.SpendingPlan
 		if jsonErr := json.Unmarshal([]byte(cachedData), &plan); jsonErr == nil {
 			return &plan, nil
-		} else {
-			// Log unmarshal error and fall through to repository
-			log.Printf("Error unmarshalling cached spending plan for UserID %s: %v", userID, jsonErr)
-		}
+		} 
 	} else if err != cache.ErrNotFound { // Actual cache error
 		// Log cache error and fall through to repository
 		log.Printf("Cache error fetching spending plan for UserID %s: %v", userID, err)
