@@ -53,15 +53,11 @@ func InitializeExpenseRecordHandler(
 }
 
 func (h *ExpenseRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
-	// Apply provided middleware to the group or individual routes
-	// For simplicity, applying to all routes here.
-	// You might want more granular control.
-	// Example: financeRoutes := routerGroup.Group("/finance/expense-records", middleware...)
 
 	financeRoutes := routerGroup.Group("/finance/expenses")
-	// for _, mw := range middleware {
-	// 	financeRoutes.Use(mw)
-	// }
+	for _, mw := range middleware {
+		financeRoutes.Use(mw)
+	}
 
 	financeRoutes.POST("", h.CreateExpenseRecord)
 	financeRoutes.GET("/:id", h.GetExpenseRecordByID)
