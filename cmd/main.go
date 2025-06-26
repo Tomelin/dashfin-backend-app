@@ -56,6 +56,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Import data at firestore
+	iif := database.NewFirebaseInsert(db)
+	err = iif.InsertBrazilianBanksFromJSON(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Fatal("finish")
+
 	cacheClient, err := initializeCache(cfg.Fields["cache"])
 	if err != nil {
 		log.Fatal(err)
