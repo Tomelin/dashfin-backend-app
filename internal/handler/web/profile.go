@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	entity_profile "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
@@ -75,7 +74,6 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -84,7 +82,6 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -92,7 +89,7 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	//decrypt payload
 	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -101,7 +98,7 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	var profile entity_profile.Profile
 	err = json.Unmarshal(data, &profile)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -112,21 +109,21 @@ func (cat *ProfileHandlerHttp) UpdateProfile(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	user, err := cat.service.UpdateProfile(ctx, &profile)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(user)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -139,7 +136,7 @@ func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -148,21 +145,21 @@ func (cat *ProfileHandlerHttp) GetProfile(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	user, err := cat.service.GetProfileByID(ctx, &userId)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(user)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -177,21 +174,18 @@ func (cat *ProfileHandlerHttp) UpdateLogin(c *gin.Context) {
 	// Essa parte está funcionando 100%
 	err := c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Println("received payload", payload)
-
-	data, err := cat.encryptData.PayloadData(payload.Payload)
+	_, err = cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	log.Println("received data", data)
-	log.Println("received data string", string(data))
+
 	c.JSON(http.StatusOK, gin.H{"payload": "ok"})
 }
 
@@ -200,7 +194,7 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -209,7 +203,7 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -217,7 +211,7 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	//decrypt payload
 	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -226,7 +220,7 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	var profession entity_profile.ProfileProfession
 	err = json.Unmarshal(data, &profession)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -235,21 +229,21 @@ func (cat *ProfileHandlerHttp) UpdateProfessional(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	professionResult, err := cat.service.UpdateProfileProfession(ctx, &userId, &profession)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(professionResult)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -262,7 +256,7 @@ func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -271,21 +265,21 @@ func (cat *ProfileHandlerHttp) GetProfessional(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	profession, err := cat.service.GetProfileProfession(ctx, &userId)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(profession)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -298,7 +292,7 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -307,7 +301,7 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -315,7 +309,7 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	//decrypt payload
 	data, err := cat.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -324,7 +318,7 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	var goals entity_profile.ProfileGoals
 	err = json.Unmarshal(data, &goals)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -333,21 +327,21 @@ func (cat *ProfileHandlerHttp) UpdateGoals(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	professionResult, err := cat.service.UpdateProfileGoals(ctx, &userId, &goals)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(professionResult)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -360,7 +354,7 @@ func (cat *ProfileHandlerHttp) GetGoals(c *gin.Context) {
 	// Valida o header
 	userId, token, err := GetRequiredHeaders(cat.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -369,21 +363,21 @@ func (cat *ProfileHandlerHttp) GetGoals(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	profession, err := cat.service.GetProfileGoals(ctx, &userId)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	b, err := json.Marshal(profession)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	result, err := cat.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

@@ -104,7 +104,6 @@ func (s *ExpenseRecordService) GetExpenseRecordByID(ctx context.Context, id stri
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil || record.UserID != userIDFromCtx.(string) {
 		// Log this attempt, could be a security issue or bug
-		// log.Printf("Authorization failed: User %v attempted to access record %s owned by %s", userIDFromCtx, id, record.UserID)
 		return nil, errors.New("expense record not found or access denied") // Generic message for security
 	}
 
@@ -217,7 +216,6 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	}
 
 	if existingRecord.UserID != data.UserID { // Also check against UserID from context
-		// log.Printf("Authorization failed for update: User %v attempted to update record %s owned by %s", data.UserID, id, existingRecord.UserID)
 		return nil, errors.New("expense record not found or access denied for update")
 	}
 
@@ -256,7 +254,6 @@ func (s *ExpenseRecordService) DeleteExpenseRecord(ctx context.Context, id strin
 	}
 
 	if recordToVerify.UserID != userIDFromCtx.(string) {
-		// log.Printf("Authorization failed for delete: User %v attempted to delete record %s owned by %s", userIDFromCtx, id, recordToVerify.UserID)
 		return errors.New("expense record not found or access denied for delete")
 	}
 

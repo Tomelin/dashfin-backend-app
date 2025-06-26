@@ -4,7 +4,6 @@ import (
 	// "errors" // For placeholder function - removed as not used by current placeholder
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -61,7 +60,6 @@ func (h *SpendingPlanHandler) setupRoutes(routerGroup *gin.RouterGroup, middlewa
 func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -81,14 +79,12 @@ func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
-		log.Printf("Error marshalling result to JSON for GetIncomeRecordByID: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for GetIncomeRecordByID: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}
@@ -100,21 +96,18 @@ func (h *SpendingPlanHandler) GetSpendingPlan(c *gin.Context) {
 func (h *SpendingPlanHandler) SaveSpendingPlan(c *gin.Context) {
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Printf("Error getting required headers: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var payload cryptdata.CryptData
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Printf("Error binding JSON payload for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload: " + err.Error()})
 		return
 	}
 
 	decryptedData, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Printf("Error decrypting payload data for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error processing request data: " + err.Error()})
 		return
 	}
@@ -138,14 +131,12 @@ func (h *SpendingPlanHandler) SaveSpendingPlan(c *gin.Context) {
 
 	responseBytes, err := json.Marshal(savedPlan)
 	if err != nil {
-		log.Printf("Error marshalling result to JSON for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
-		log.Printf("Error encrypting response payload for CreateIncomeRecord: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})
 		return
 	}

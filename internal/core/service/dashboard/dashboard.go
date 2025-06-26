@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
@@ -121,10 +120,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 	}}
 
 	monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
-	for _, v := range monthlyFinancial {
-		log.Println("monthlyFinancial > month", v.Month, "income >", v.TotalIncome, "expense >", v.TotalExpenses)
 
-	}
 	dashboard.SummaryCards.AccountBalances = balanceCard
 	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
 
