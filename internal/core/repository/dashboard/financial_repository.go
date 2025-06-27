@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"fmt"
-	"log"
 
 	entity_dashboard "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
@@ -62,8 +61,7 @@ func NewFirebaseFinancialRepository(dbProvider database.FirebaseDBInterface) (Fi
 func (r *FirebaseFinancialRepository) GetExpensePlanning(ctx context.Context, userID string, month, year int) (*entity_dashboard.ExpensePlanningDoc, error) {
 	docID := fmt.Sprintf("%s_%d_%d", userID, year, month)
 
-	docSnap, err := r.dbProvider.Get(ctx, "expenses_planning")
-	log.Println(docSnap)
+	_, err := r.dbProvider.Get(ctx, "expenses_planning")
 	if err != nil {
 		if err.Error() == "rpc error: code = NotFound desc = document not found" || iterator.Done.Error() == err.Error() || err.Error() == "datastore: no such entity" { // Common ways NotFound is represented
 			// Check if the error indicates "not found". Firestore might return an error with code NotFound.

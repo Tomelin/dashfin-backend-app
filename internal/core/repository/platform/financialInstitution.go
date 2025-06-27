@@ -60,3 +60,5 @@ func (r *financialInstitutionRepository) GetAllFinancialInstitutions(ctx context
 	}
 	return institutions, nil
 }
+
+

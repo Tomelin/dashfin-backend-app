@@ -22,7 +22,7 @@ func NewRedisCacheService(cfg CacheConfig) (CacheService, error) {
 
 	var client redisCacheService
 	client.client = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", cfg.Address, cfg.Port),
+		Addr:     fmt.Sprintf("%s:%v", cfg.Address, cfg.Port),
 		Password: cfg.Password,
 		Username: cfg.Username,
 		DB:       cfg.DB,

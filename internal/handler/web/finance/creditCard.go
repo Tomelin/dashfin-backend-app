@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -61,7 +60,7 @@ func (h *CreditCardHandler) setupRoutes(middleware ...func(c *gin.Context)) {
 func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -69,14 +68,14 @@ func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	data, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -84,7 +83,7 @@ func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 	var creditCard entity_finance.CreditCard
 	err = json.Unmarshal(data, &creditCard)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -94,21 +93,21 @@ func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 
 	result, _ := h.service.CreateCreditCard(ctx, &creditCard)
 	// if err != nil {
-	// 	log.Println(err.Error())
+	//
 	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	// 	return
 	// }
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -119,7 +118,7 @@ func (h *CreditCardHandler) CreateCreditCard(c *gin.Context) {
 func (h *CreditCardHandler) GetCreditCard(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -135,21 +134,21 @@ func (h *CreditCardHandler) GetCreditCard(c *gin.Context) {
 
 	result, _ := h.service.GetCreditCardByID(ctx, &id)
 	// if err != nil {
-	// 	log.Println(err.Error())
+	//
 	// 	c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 	// 	return
 	// }
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -160,7 +159,7 @@ func (h *CreditCardHandler) GetCreditCard(c *gin.Context) {
 func (h *CreditCardHandler) GetCreditCards(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -170,21 +169,21 @@ func (h *CreditCardHandler) GetCreditCards(c *gin.Context) {
 
 	results, _ := h.service.GetCreditCards(ctx)
 	// if err != nil {
-	// 	log.Println(err.Error())
+	//
 	// 	c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 	// 	return
 	// }
 
 	b, err := json.Marshal(results)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -195,7 +194,7 @@ func (h *CreditCardHandler) GetCreditCards(c *gin.Context) {
 func (h *CreditCardHandler) UpdateCreditCard(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHeader %s", err.Error())})
 		return
 	}
@@ -209,14 +208,14 @@ func (h *CreditCardHandler) UpdateCreditCard(c *gin.Context) {
 	var payload cryptdata.CryptData
 	err = c.ShouldBindJSON(&payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("cryptData %s", err.Error())})
 		return
 	}
 
 	data, err := h.encryptData.PayloadData(payload.Payload)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("payloadData %s", err.Error())})
 		return
 	}
@@ -224,7 +223,7 @@ func (h *CreditCardHandler) UpdateCreditCard(c *gin.Context) {
 	var creditCard entity_finance.CreditCardRequest
 	err = json.Unmarshal(data, &creditCard)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("getHunmarshaleader %s", err.Error())})
 		return
 	}
@@ -234,21 +233,21 @@ func (h *CreditCardHandler) UpdateCreditCard(c *gin.Context) {
 
 	result, err := h.service.UpdateCreditCard(ctx, &creditCard)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Update %s", err.Error())})
 		return
 	}
 
 	b, err := json.Marshal(result)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Marshal %s", err.Error())})
 		return
 	}
 
 	encryptedResult, err := h.encryptData.EncryptPayload(b)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("encrypt %s", err.Error())})
 		return
 	}
@@ -259,7 +258,7 @@ func (h *CreditCardHandler) UpdateCreditCard(c *gin.Context) {
 func (h *CreditCardHandler) DeleteCreditCard(c *gin.Context) {
 	userId, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -275,7 +274,7 @@ func (h *CreditCardHandler) DeleteCreditCard(c *gin.Context) {
 
 	err = h.service.DeleteCreditCard(ctx, &id)
 	if err != nil {
-		log.Println(err.Error())
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

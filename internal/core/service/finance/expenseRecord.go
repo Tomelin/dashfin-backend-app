@@ -2,24 +2,33 @@ package finance
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	"github.com/Tomelin/dashfin-backend-app/pkg/llm"
+	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
 // ExpenseRecordService provides business logic for expense records.
 type ExpenseRecordService struct {
 	Repo entity_finance.ExpenseRecordRepositoryInterface
+	mq   message_queue.MessageQueue
 }
 
 // InitializeExpenseRecordService creates a new ExpenseRecordService.
-func InitializeExpenseRecordService(repo entity_finance.ExpenseRecordRepositoryInterface) (entity_finance.ExpenseRecordServiceInterface, error) {
+func InitializeExpenseRecordService(repo entity_finance.ExpenseRecordRepositoryInterface, mq message_queue.MessageQueue) (entity_finance.ExpenseRecordServiceInterface, error) {
 	if repo == nil {
 		return nil, errors.New("repository is nil for ExpenseRecordService")
 	}
-	return &ExpenseRecordService{Repo: repo}, nil
+	return &ExpenseRecordService{
+		Repo: repo,
+		mq:   mq,
+	}, nil
 }
 
 // CreateExpenseRecord handles the creation of a new expense record.
@@ -62,11 +71,21 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 			}
+
+			b, _ := json.Marshal(expensesCreated[i])
+			s.publishMessage(ctx, mq_rk_expense_create, b, "")
 		}
 		return &expensesCreated[0], nil // Return the first created expense record
 	}
 
-	return s.Repo.CreateExpenseRecord(ctx, data)
+	result, err := s.Repo.CreateExpenseRecord(ctx, data)
+	if err != nil {
+		return nil, err
+	}
+
+	b, _ := json.Marshal(result)
+	s.publishMessage(ctx, mq_rk_expense_create, b, "")
+	return result, err
 }
 
 // GetExpenseRecordByID retrieves an expense record by its ID, ensuring user authorization.
@@ -85,7 +104,6 @@ func (s *ExpenseRecordService) GetExpenseRecordByID(ctx context.Context, id stri
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil || record.UserID != userIDFromCtx.(string) {
 		// Log this attempt, could be a security issue or bug
-		// log.Printf("Authorization failed: User %v attempted to access record %s owned by %s", userIDFromCtx, id, record.UserID)
 		return nil, errors.New("expense record not found or access denied") // Generic message for security
 	}
 
@@ -198,7 +216,6 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	}
 
 	if existingRecord.UserID != data.UserID { // Also check against UserID from context
-		// log.Printf("Authorization failed for update: User %v attempted to update record %s owned by %s", data.UserID, id, existingRecord.UserID)
 		return nil, errors.New("expense record not found or access denied for update")
 	}
 
@@ -208,6 +225,13 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	data.UserID = existingRecord.UserID       // Preserve original UserID
 	data.CreatedAt = existingRecord.CreatedAt // Preserve original CreatedAt
 	data.UpdatedAt = time.Now()               // Update timestamp
+
+	if data.Amount != existingRecord.Amount {
+		old, _ := json.Marshal(existingRecord)
+		new, _ := json.Marshal(data)
+		s.publishMessage(ctx, mq_rk_expense_delete, old, "")
+		s.publishMessage(ctx, mq_rk_expense_create, new, "")
+	}
 
 	return s.Repo.UpdateExpenseRecord(ctx, id, data)
 }
@@ -230,9 +254,83 @@ func (s *ExpenseRecordService) DeleteExpenseRecord(ctx context.Context, id strin
 	}
 
 	if recordToVerify.UserID != userIDFromCtx.(string) {
-		// log.Printf("Authorization failed for delete: User %v attempted to delete record %s owned by %s", userIDFromCtx, id, recordToVerify.UserID)
 		return errors.New("expense record not found or access denied for delete")
 	}
 
-	return s.Repo.DeleteExpenseRecord(ctx, id)
+	err = s.Repo.DeleteExpenseRecord(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	b, _ := json.Marshal(*recordToVerify)
+	s.publishMessage(ctx, mq_rk_expense_delete, b, "")
+
+	return err
+}
+
+func (s *ExpenseRecordService) CreateExpenseByNfceUrl(ctx context.Context, url *entity_finance.ExpenseByNfceUrl) (*entity_finance.ExpenseByNfceUrl, error) {
+
+	userIDFromCtx := ctx.Value("UserID")
+	if userIDFromCtx == nil || url.UserID != userIDFromCtx.(string) {
+		return nil, errors.New("user ID mismatch or not found in context for update")
+	}
+
+	if url == nil {
+		return nil, errors.New("expense record data is nil")
+	}
+
+	if err := url.Validate(); err != nil {
+		return nil, fmt.Errorf("validation failed: %w", err)
+	}
+
+	body, err := s.getBody(ctx, url.NfceUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	llmQuery, err := llm.NewAgent()
+	if err != nil {
+		return nil, err
+	}
+	bResut, err := llmQuery.Run(ctx, string(body))
+	if err != nil {
+		return nil, err
+	}
+
+	var itens interface{}
+	err = json.Unmarshal(bResut, &itens)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (s *ExpenseRecordService) getBody(ctx context.Context, url string) ([]byte, error) {
+
+	// Suggested code may be subject to a license. Learn more: ~LicenseLog:3523473348.
+	// Suggested code may be subject to a license. Learn more: ~LicenseLog:2661324889.
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func (s *ExpenseRecordService) publishMessage(ctx context.Context, routeKey string, body []byte, trace string) error {
+	return s.mq.PublisherWithRouteKey(mq_exchange, routeKey, body, trace)
 }
