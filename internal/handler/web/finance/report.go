@@ -59,7 +59,6 @@ func (h *ReportHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...
 
 // GetSpendingPlan handles the GET /spending-plan request.
 func (h *ReportHandler) GetReport(c *gin.Context) {
-	log.Println("[HANDLER] start report >>>")
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -81,7 +80,6 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 	}
 
 	log.Println("[HANDLER] after service >>>")
-	log.Println("[HANDLER] >>>", result)
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {

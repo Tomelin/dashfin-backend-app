@@ -118,6 +118,15 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 	report.SummaryCards.NetWorth = last12Months
 	report.SummaryCards.NetWorthChangePercent = netWorthChangePct
 
+	log.Println("Report > ", report)
+	log.Println("SummaryCards > ", report.SummaryCards)
+	log.Println("CurrentMonthCashFlow > ", report.SummaryCards.CurrentMonthCashFlow)
+	log.Println("CurrentMonthCashFlowChangePct > ", report.SummaryCards.CurrentMonthCashFlowChangePct)
+	log.Println("NetWorth > ", report.SummaryCards.NetWorth)
+	log.Println("NetWorthChangePercent > ", report.SummaryCards.NetWorthChangePercent)
+	log.Println(fmt.Sprintf("CurrentMonthCashFlow: %.2f", report.SummaryCards.CurrentMonthCashFlow))
+	log.Println(fmt.Sprintf("CurrentMonthCashFlowChangePct: %.2f", *report.SummaryCards.CurrentMonthCashFlowChangePct))
+
 	return &report, nil
 }
 
