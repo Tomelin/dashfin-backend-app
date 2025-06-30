@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log" // For logging cache errors
-	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/cache" // Import cache package
@@ -31,8 +30,6 @@ func InitializeSpendingPlanService(repo entity_finance.SpendingPlanRepositoryInt
 	return &spendingPlanService{repo: repo, cache: cacheService}, nil
 }
 
-const spendingPlanCacheTTL = 1 * time.Minute
-
 // GetSpendingPlan retrieves a spending plan for a given user, using cache.
 func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string) (*entity_finance.SpendingPlan, error) {
 	cacheKey := fmt.Sprintf("spending_plan:%s", userID)
@@ -42,7 +39,7 @@ func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string
 		var plan entity_finance.SpendingPlan
 		if jsonErr := json.Unmarshal([]byte(cachedData), &plan); jsonErr == nil {
 			return &plan, nil
-		} 
+		}
 	} else if err != cache.ErrNotFound { // Actual cache error
 		// Log cache error and fall through to repository
 		log.Printf("Cache error fetching spending plan for UserID %s: %v", userID, err)
@@ -57,7 +54,7 @@ func (s *spendingPlanService) GetSpendingPlan(ctx context.Context, userID string
 	if plan != nil { // Found in repo, store in cache
 		jsonData, jsonErr := json.Marshal(plan)
 		if jsonErr == nil {
-			if cacheSetErr := s.cache.Set(ctx, cacheKey, string(jsonData), spendingPlanCacheTTL); cacheSetErr != nil {
+			if cacheSetErr := s.cache.Set(ctx, cacheKey, string(jsonData), serviceCacheTTL); cacheSetErr != nil {
 				log.Printf("Error setting cache for spending plan UserID %s: %v", userID, cacheSetErr)
 			}
 		} else {
@@ -103,7 +100,7 @@ func (s *spendingPlanService) UpdateSpendingPlan(ctx context.Context, planData *
 		return existingPlan, nil
 	}
 
-	s.cache.Set(ctx, cacheKey, *planData, spendingPlanCacheTTL)
+	s.cache.Set(ctx, cacheKey, *planData, serviceCacheTTL)
 
 	err = json.Unmarshal([]byte(dataByCache), &existingPlan)
 	if err != nil {
@@ -139,5 +136,5 @@ func (s *spendingPlanService) CreateSpendingPlan(ctx context.Context, planData *
 
 func (s *spendingPlanService) setCacheSpendingPlan(ctx context.Context, cacheKey string, planData *entity_finance.SpendingPlan) {
 
-	s.cache.Set(ctx, cacheKey, *planData, spendingPlanCacheTTL)
+	s.cache.Set(ctx, cacheKey, *planData, serviceCacheTTL)
 }
