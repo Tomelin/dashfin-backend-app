@@ -114,7 +114,6 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 				Name:  "Transporte",
 				Value: 99.99,
 			},
-
 			entity.CategoryExpenseItem{
 				Name:  "Saúde",
 				Value: 79.99,
@@ -192,6 +191,35 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 					entity.ExpenseSubCategoryItem{
 						Name:  "Outros",
 						Value: 99.99,
+					},
+				},
+			},
+
+			entity.ExpenseCategoryWithSubItems{
+				Name:  "Saúde",
+				Value: 99.99,
+				Children: []entity.ExpenseSubCategoryItem{
+					entity.ExpenseSubCategoryItem{
+						Name:  "Dentista",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Farmácia",
+						Value: 299.99,
+					},
+				},
+			},
+			entity.ExpenseCategoryWithSubItems{
+				Name:  "Educação",
+				Value: 99.99,
+				Children: []entity.ExpenseSubCategoryItem{
+					entity.ExpenseSubCategoryItem{
+						Name:  "Udemy",
+						Value: 139.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Curso AI",
+						Value: 299.99,
 					},
 				},
 			},
