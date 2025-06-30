@@ -148,19 +148,19 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Condomínio",
-						Value: 99.99,
+						Value: 59.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Luz",
-						Value: 99.99,
+						Value: 0.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Água",
-						Value: 69.99,
+						Value: 11169.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Gás",
-						Value: 89.99,
+						Value: 15189.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Outros",
