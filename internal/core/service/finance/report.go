@@ -71,22 +71,22 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		},
 		MonthlyCashFlow: []entity.MonthlySummaryItem{
 			entity.MonthlySummaryItem{
-				Month:    "Dez/2024",
+				Month:    "2024-12",
 				Revenue:  99.99,
 				Expenses: 99.99,
 			},
 			entity.MonthlySummaryItem{
-				Month:    "Jan/2025",
+				Month:    "2025-01",
 				Revenue:  99.99,
 				Expenses: 99.99,
 			},
 			entity.MonthlySummaryItem{
-				Month:    "Abr/2025",
+				Month:    "2025-04",
 				Revenue:  199.99,
 				Expenses: 199.99,
 			},
 			entity.MonthlySummaryItem{
-				Month:    "Mai/2025",
+				Month:    "2025-05",
 				Revenue:  99.99,
 				Expenses: 99.99,
 			},
@@ -122,19 +122,19 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		},
 		NetWorthEvolution: []entity.NetWorthHistoryItem{
 			entity.NetWorthHistoryItem{
-				Date:  "Jan/2025",
+				Date:  "2025-01",
 				Value: 99.99,
 			},
 			entity.NetWorthHistoryItem{
-				Date:  "Fev/2025",
+				Date:  "2025-02",
 				Value: 99.99,
 			},
 			entity.NetWorthHistoryItem{
-				Date:  "Mai/2025",
+				Date:  "2025-03",
 				Value: 199.99,
 			},
 			entity.NetWorthHistoryItem{
-				Date:  "Jun/2025",
+				Date:  "2025-05",
 				Value: 59.99,
 			},
 		},
@@ -142,7 +142,6 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 			entity.ExpenseCategoryWithSubItems{
 				Name:  "Moradia",
 				Value: 99.99,
-				Fill:  "blue",
 				Children: []entity.ExpenseSubCategoryItem{
 					entity.ExpenseSubCategoryItem{
 						Name:  "Aluguel",
@@ -173,7 +172,6 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 			entity.ExpenseCategoryWithSubItems{
 				Name:  "Transporte",
 				Value: 99.99,
-				Fill:  "green",
 				Children: []entity.ExpenseSubCategoryItem{
 					entity.ExpenseSubCategoryItem{
 						Name:  "Combustível",
