@@ -81,6 +81,11 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 				Expenses: 99.99,
 			},
 			entity.MonthlySummaryItem{
+				Month:    "Abr/2025",
+				Revenue:  199.99,
+				Expenses: 199.99,
+			},
+			entity.MonthlySummaryItem{
 				Month:    "Mai/2025",
 				Revenue:  99.99,
 				Expenses: 99.99,
@@ -97,6 +102,11 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 				Value: 99.99,
 				Fill:  "green",
 			},
+			entity.CategoryExpenseItem{
+				Name:  "Saúde",
+				Value: 199.99,
+				Fill:  "blue",
+			},
 		},
 		ExpenseByCategoryLast12Months: []entity.CategoryExpenseItem{
 			entity.CategoryExpenseItem{
@@ -109,6 +119,12 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 				Value: 99.99,
 				Fill:  "green",
 			},
+
+			entity.CategoryExpenseItem{
+				Name:  "Saúde",
+				Value: 79.99,
+				Fill:  "green",
+			},
 		},
 		NetWorthEvolution: []entity.NetWorthHistoryItem{
 			entity.NetWorthHistoryItem{
@@ -118,6 +134,10 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 			entity.NetWorthHistoryItem{
 				Date:  "Fev/2025",
 				Value: 99.99,
+			},
+			entity.NetWorthHistoryItem{
+				Date:  "Mai/2025",
+				Value: 199.99,
 			},
 		},
 		ExpenseBreakdown: []entity.ExpenseCategoryWithSubItems{
@@ -137,6 +157,14 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 					entity.ExpenseSubCategoryItem{
 						Name:  "Luz",
 						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Água",
+						Value: 69.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Gás",
+						Value: 89.99,
 					},
 				},
 			},
