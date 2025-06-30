@@ -202,7 +202,6 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 						Value: 99.99,
 					},
 				},
-				},
 			},
 		},
 	}
