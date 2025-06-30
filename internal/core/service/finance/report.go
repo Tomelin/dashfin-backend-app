@@ -95,35 +95,29 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 			entity.CategoryExpenseItem{
 				Name:  "Moradia",
 				Value: 99.99,
-				Fill:  "red",
 			},
 			entity.CategoryExpenseItem{
 				Name:  "Transporte",
 				Value: 99.99,
-				Fill:  "green",
 			},
 			entity.CategoryExpenseItem{
 				Name:  "Saúde",
 				Value: 199.99,
-				Fill:  "blue",
 			},
 		},
 		ExpenseByCategoryLast12Months: []entity.CategoryExpenseItem{
 			entity.CategoryExpenseItem{
 				Name:  "Moradia",
 				Value: 99.99,
-				Fill:  "red",
 			},
 			entity.CategoryExpenseItem{
 				Name:  "Transporte",
 				Value: 99.99,
-				Fill:  "green",
 			},
 
 			entity.CategoryExpenseItem{
 				Name:  "Saúde",
 				Value: 79.99,
-				Fill:  "green",
 			},
 		},
 		NetWorthEvolution: []entity.NetWorthHistoryItem{
