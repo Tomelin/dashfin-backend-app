@@ -135,6 +135,7 @@ func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, 
 	var report []entity.IncomeRecord
 	var amount float64
 	if err == nil { // Found in cache
+		log.Println("[INCOME] cache hit")
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			return nil, amount, nil
 		}
@@ -155,6 +156,7 @@ func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, 
 	})
 
 	if err != nil {
+		log.Println("error getting income records", err)
 		return nil, amount, err
 	}
 
@@ -185,6 +187,10 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 	var report []entity.ExpenseRecord
 	var amount float64
 	if err == nil { // Found in cache
+		log.Println("[EXPENSE] cache hit")
+		if err == cache.ErrNotFound {
+			log.Println("cache miss")
+		}
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			return nil, amount, nil
 		}
@@ -199,12 +205,13 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 		log.Printf("Cache error fetching spending plan for UserID %s: %v", *userId, err)
 	}
 
-	s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
+	report, err = s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
 		StartDate: startDate,
 		EndDate:   endDate,
 	})
 
 	if err != nil {
+		log.Println("error getting expense records", err)
 		return nil, amount, err
 	}
 
