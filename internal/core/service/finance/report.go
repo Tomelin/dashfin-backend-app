@@ -62,7 +62,105 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
-	report := entity.FinancialReportData{}
+	report := entity.FinancialReportData{
+		SummaryCards: entity.ReportSummaryCards{
+			CurrentMonthCashFlow:          99.99,
+			CurrentMonthCashFlowChangePct: 99.99,
+			NetWorth:                      99.99,
+			NetWorthChangePercent:         99.99,
+		},
+		MonthlyCashFlow: []entity.MonthlySummaryItem{
+			entity.MonthlySummaryItem{
+				Month:    "Dez/2024",
+				Revenue:  99.99,
+				Expenses: 99.99,
+			},
+			entity.MonthlySummaryItem{
+				Month:    "Jan/2025",
+				Revenue:  99.99,
+				Expenses: 99.99,
+			},
+			entity.MonthlySummaryItem{
+				Month:    "Mai/2025",
+				Revenue:  99.99,
+				Expenses: 99.99,
+			},
+		},
+		ExpenseByCategory: []entity.CategoryExpenseItem{
+			entity.CategoryExpenseItem{
+				Name:  "Moradia",
+				Value: 99.99,
+				Fill:  "red",
+			},
+			entity.CategoryExpenseItem{
+				Name:  "Transporte",
+				Value: 99.99,
+				Fill:  "green",
+			},
+		},
+		ExpenseByCategoryLast12Months: []entity.CategoryExpenseItem{
+			entity.CategoryExpenseItem{
+				Name:  "Moradia",
+				Value: 99.99,
+				Fill:  "red",
+			},
+			entity.CategoryExpenseItem{
+				Name:  "Transporte",
+				Value: 99.99,
+				Fill:  "green",
+			},
+		},
+		NetWorthEvolution: []entity.NetWorthHistoryItem{
+			entity.NetWorthHistoryItem{
+				Date:  "Jan/2025",
+				Value: 99.99,
+			},
+			entity.NetWorthHistoryItem{
+				Date:  "Fev/2025",
+				Value: 99.99,
+			},
+		},
+		ExpenseBreakdown: []entity.ExpenseCategoryWithSubItems{
+			entity.ExpenseCategoryWithSubItems{
+				Name:  "Moradia",
+				Value: 99.99,
+				Fill:  "blue",
+				Children: []entity.ExpenseSubCategoryItem{
+					entity.ExpenseSubCategoryItem{
+						Name:  "Aluguel",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Condomínio",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Luz",
+						Value: 99.99,
+					},
+				},
+			},
+			entity.ExpenseCategoryWithSubItems{
+				Name:  "Transporte",
+				Value: 99.99,
+				Fill:  "green",
+				Children: []entity.ExpenseSubCategoryItem{
+					entity.ExpenseSubCategoryItem{
+						Name:  "Combustível",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Manutenção",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Uber",
+						Value: 99.99,
+					},
+				},
+			},
+		},
+	}
 
 	incomeReportMonth, incomeAmountMonth, err := s.getMonthIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth, cacheKeyIncomeReportByMonth)
 	if err != nil {
@@ -143,7 +241,6 @@ func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, 
 	var report []entity.IncomeRecord
 	var amount float64
 	if err == nil { // Found in cache
-		log.Println("[INCOME] cache hit")
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			return nil, amount, nil
 		}
@@ -153,9 +250,6 @@ func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, 
 			}
 			return report, amount, nil
 		}
-	} else if err != cache.ErrNotFound { // Actual cache error
-		// Log cache error and fall through to repository
-		log.Printf("Cache error fetching spending plan for UserID %s: %v", *userId, err)
 	}
 
 	report, err = s.income.GetIncomeRecords(ctx, &entity.GetIncomeRecordsQueryParameters{
@@ -164,7 +258,6 @@ func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, 
 	})
 
 	if err != nil {
-		log.Println("error getting income records", err)
 		return nil, amount, err
 	}
 
@@ -195,7 +288,6 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 	var report []entity.ExpenseRecord
 	var amount float64
 	if err == nil { // Found in cache
-		log.Println("[EXPENSE] cache hit")
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			return nil, amount, nil
 		}
@@ -205,11 +297,7 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 			}
 			return report, amount, nil
 		}
-	} else if err != cache.ErrNotFound { // Actual cache error
-		// Log cache error and fall through to repository
-		log.Printf("Cache error fetching spending plan for UserID %s: %v", *userId, err)
 	}
-
 	report, err = s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
 		StartDate: startDate,
 		EndDate:   endDate,
