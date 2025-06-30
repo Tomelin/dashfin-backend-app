@@ -108,7 +108,7 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 	}
 
 	report.SummaryCards.CurrentMonthCashFlow = currentMonthCashFlow
-	report.SummaryCards.CurrentMonthCashFlowChangePct = &cacheFlowPct
+	report.SummaryCards.CurrentMonthCashFlowChangePct = cacheFlowPct
 
 	// Calculate the Net Worth change percentage over the last 12 months.
 	var netWorthChangePct float64
@@ -120,12 +120,11 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 
 	log.Println("Report > ", report)
 	log.Println("SummaryCards > ", report.SummaryCards)
+	log.Println(fmt.Sprintf("SummaryCards: %s", report.SummaryCards))
 	log.Println("CurrentMonthCashFlow > ", report.SummaryCards.CurrentMonthCashFlow)
 	log.Println("CurrentMonthCashFlowChangePct > ", report.SummaryCards.CurrentMonthCashFlowChangePct)
 	log.Println("NetWorth > ", report.SummaryCards.NetWorth)
 	log.Println("NetWorthChangePercent > ", report.SummaryCards.NetWorthChangePercent)
-	log.Println(fmt.Sprintf("CurrentMonthCashFlow: %.2f", report.SummaryCards.CurrentMonthCashFlow))
-	log.Println(fmt.Sprintf("CurrentMonthCashFlowChangePct: %.2f", *report.SummaryCards.CurrentMonthCashFlowChangePct))
 
 	return &report, nil
 }
