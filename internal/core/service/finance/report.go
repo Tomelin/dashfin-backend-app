@@ -94,7 +94,9 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
+	log.Println(">>>>> <<<<<")
 	log.Println(incomeReportMonth, incomeReportYear, expenseReportMonth, expenseReportYear, incomeAmountYear, expenseAmountYear, incomeAmountMonth, incomeAmountLastMonth, incomeReportLastMonth, expenseReportLastMonth, expenseAmountLastMonth)
+	log.Println(">>>>> <<<<<")
 
 	// cacheFlowPct represents the percentage change in cash flow for the current month compared to the previous month's cash flow.
 	lastMonthCashFlow := incomeAmountLastMonth - expenseAmountLastMonth

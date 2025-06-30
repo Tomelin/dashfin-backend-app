@@ -120,6 +120,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcReportFinance, err := initializeReportFinanceServices(svcIncomeRecord, svcExpenseRecord, cacheClient, mq)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	srvDashboard, err := initializeDashboardServices(svcBankAccount, svcExpenseRecord, svcIncomeRecord, svcProfileGoals, svcFinancialInstitution, mq, db)
 	if err != nil {
 		log.Fatal(err)
@@ -140,6 +145,7 @@ func main() {
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeSpendingPlanHandler(svcSpendingRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance.InitializeReportHandler(svcReportFinance, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -341,6 +347,16 @@ func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache
 		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	}
 	return svcSpendingRecord, nil
+}
+
+func initializeReportFinanceServices(income entity_finance.IncomeRecordServiceInterface, expense entity_finance.ExpenseRecordServiceInterface, cacheService cache.CacheService, messageQueue message_queue.MessageQueue) (entity_finance.FinancialReportDataServiceInterface, error) {
+
+	report, err := service_finance.InitializeFinancialReportDataService(income, expense, cacheService, messageQueue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
+	}
+
+	return report, nil
 }
 
 func initializeDashboardServices(

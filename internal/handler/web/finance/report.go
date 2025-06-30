@@ -3,6 +3,7 @@ package web_finance
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -58,15 +59,16 @@ func (h *ReportHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...
 
 // GetSpendingPlan handles the GET /spending-plan request.
 func (h *ReportHandler) GetReport(c *gin.Context) {
+	log.Println("start report >>>")
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
+	log.Println("[HANDLER] before service >>>")
 	result, err := h.service.GetFinancialReportData(ctx)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
@@ -76,6 +78,9 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 		}
 		return
 	}
+
+	log.Println("[HANDLER] after service >>>")
+	log.Println("[HANDLER] >>>", result)
 
 	responseBytes, err := json.Marshal(result)
 	if err != nil {
