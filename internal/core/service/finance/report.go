@@ -87,7 +87,7 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 			},
 			entity.MonthlySummaryItem{
 				Month:    "2025-05",
-				Revenue:  12199.99,
+				Revenue:  1299.99,
 				Expenses: 2199.99,
 			},
 		},
@@ -156,11 +156,11 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Água",
-						Value: 11169.99,
+						Value: 1169.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Gás",
-						Value: 15189.99,
+						Value: 1589.99,
 					},
 					entity.ExpenseSubCategoryItem{
 						Name:  "Outros",
