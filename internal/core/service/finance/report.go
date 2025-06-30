@@ -196,9 +196,6 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 	var amount float64
 	if err == nil { // Found in cache
 		log.Println("[EXPENSE] cache hit")
-		if err == cache.ErrNotFound {
-			log.Println("cache miss")
-		}
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			return nil, amount, nil
 		}
