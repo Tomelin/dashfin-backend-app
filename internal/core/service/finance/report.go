@@ -139,6 +139,10 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 				Date:  "Mai/2025",
 				Value: 199.99,
 			},
+			entity.NetWorthHistoryItem{
+				Date:  "Jun/2025",
+				Value: 59.99,
+			},
 		},
 		ExpenseBreakdown: []entity.ExpenseCategoryWithSubItems{
 			entity.ExpenseCategoryWithSubItems{
@@ -166,6 +170,10 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 						Name:  "Gás",
 						Value: 89.99,
 					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Outros",
+						Value: 99.99,
+					},
 				},
 			},
 			entity.ExpenseCategoryWithSubItems{
@@ -185,6 +193,15 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 						Name:  "Uber",
 						Value: 99.99,
 					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Ônibus",
+						Value: 99.99,
+					},
+					entity.ExpenseSubCategoryItem{
+						Name:  "Outros",
+						Value: 99.99,
+					},
+				},
 				},
 			},
 		},
