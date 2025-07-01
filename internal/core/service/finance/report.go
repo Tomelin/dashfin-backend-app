@@ -302,18 +302,19 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 			Expenses: expenseAmount,
 		}
 
-		// Although we fetched records, we only need the total amount for this summary item.
-		// The individual records are not stored in the MonthlySummaryItem.
-		_ = incomeRecords  // Avoid unused variable warning
-		_ = expenseRecords // Avoid unused variable warning
-		incomeAmount = 0   // Avoid unused variable warning
-		_ = expenseAmount  // Avoid unused variable warning
-
 		monthlySummary = append(monthlySummary, entity.MonthlySummaryItem{
 			Month:    monthYearFormat,
 			Revenue:  incomeAmount,
 			Expenses: expenseAmount,
 		})
+
+		// Although we fetched records, we only need the total amount for this summary item.
+		// The individual records are not stored in the MonthlySummaryItem.
+		incomeRecords = nil
+		expenseRecords = nil
+		incomeAmount = 0
+		expenseAmount = 0
+
 	}
 
 	return monthlySummary
