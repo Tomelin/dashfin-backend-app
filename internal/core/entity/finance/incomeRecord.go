@@ -118,7 +118,6 @@ func (ir *IncomeRecord) Validate() error {
 	}
 
 	// Validate ReceiptDate format (YYYY-MM-DD)
-	ir.ReceiptDate, _ = time.Parse("2006-01-02", ir.ReceiptDate)
 	if ir.ReceiptDate.IsZero() {
 		return errors.New("invalid receiptDate format, expected YYYY-MM-DD")
 	}
