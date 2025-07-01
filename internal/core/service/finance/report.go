@@ -310,8 +310,6 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 
 		// Although we fetched records, we only need the total amount for this summary item.
 		// The individual records are not stored in the MonthlySummaryItem.
-		incomeRecords = nil
-		expenseRecords = nil
 		incomeAmount = 0
 		expenseAmount = 0
 	}
