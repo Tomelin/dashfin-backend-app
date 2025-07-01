@@ -158,14 +158,14 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			query = query.Where("description", "==", *params.Description)
 		}
 		if params.StartDate != nil && *params.StartDate != "" {
-			parsedStartDate, err := time.Parse("2006-01-02", *params.StartDate)
+			parsedStartDate, err := utils.StringToTime("2006-01-02", *params.StartDate)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse StartDate: %w", err)
 			}
 			query = query.Where("receiptDate", ">=", parsedStartDate)
 		}
 		if params.EndDate != nil && *params.EndDate != "" {
-			parsedEndDate, err := time.Parse("2006-01-02", *params.EndDate)
+			parsedEndDate, err := utils.StringToTime("2006-01-02", *params.EndDate)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse StartDate: %w", err)
 			}

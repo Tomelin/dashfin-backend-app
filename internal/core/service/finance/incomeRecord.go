@@ -200,14 +200,9 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, params *enti
 
 	records, err := s.Repo.GetIncomeRecords(ctx, queryParams)
 	if err != nil {
-		// Repository might return specific "not found" errors or empty slices.
-		// Service layer can decide if "no records found" is an error or just an empty result.
-		// Based on ExpenseRecordService, it seems we propagate the error.
 		return nil, err
 	}
-	// if len(records) == 0 { // This check might be redundant if repo returns specific "not found" error or handles empty slice
-	// 	return []entity_finance.IncomeRecord{}, nil // Or return error as per API contract
-	// }
+
 	return records, nil
 }
 
