@@ -9,7 +9,6 @@ import (
 	"time"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
-	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
@@ -237,7 +236,7 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 	}
 
 	log.Println("################ CalculateMonthlyCashFlow ###############")
-	log.Println(s.CalculateMonthlyCashFlow(ctx, incomeReportYear, expenseReportYear))
+	log.Println(s.CalculateMonthlyCashFlow(ctx))
 	log.Println(">>>>> <<<<<")
 	log.Println(incomeReportMonth, incomeReportYear, expenseReportMonth, expenseReportYear, incomeAmountYear, expenseAmountYear, incomeAmountMonth, incomeAmountLastMonth, incomeReportLastMonth, expenseReportLastMonth, expenseAmountLastMonth)
 	log.Println(">>>>> <<<<<")
