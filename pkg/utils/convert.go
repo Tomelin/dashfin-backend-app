@@ -1,6 +1,9 @@
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 func StructToMap(data interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}
@@ -16,5 +19,12 @@ func StructToMap(data interface{}) (map[string]interface{}, error) {
 	}
 
 	return result, nil
+}
 
+func StringToTime(format string, date string) (time.Time, error) {
+	t, err := time.Parse(format, date)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return t, nil
 }
