@@ -281,7 +281,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		lastDayOfMonth := time.Date(month.Year(), month.Month()+1, 0, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
 		monthYearFormat := month.Format("2006-01")
 
-		incomeRecords, incomeAmount, err := s.getIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth)
+		_, incomeAmount, err := s.getIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth)
 		if err != nil {
 			log.Printf("Error getting income records for %s: %v", monthYearFormat, err)
 			continue
@@ -289,7 +289,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 
 		log.Printf("incomeAmount %v %v %v> %v \n", firstDayOfMonth, lastDayOfMonth, monthYearFormat, incomeAmount)
 
-		expenseRecords, expenseAmount, err := s.getExpenseRecords(ctx, firstDayOfMonth, lastDayOfMonth, cacheKeyExpenseReportByLastMonth)
+		_, expenseAmount, err := s.getExpenseRecords(ctx, firstDayOfMonth, lastDayOfMonth, cacheKeyExpenseReportByLastMonth)
 		if err != nil {
 			log.Printf("Error getting expense records for %s: %v", monthYearFormat, err)
 			continue
@@ -314,7 +314,6 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		expenseRecords = nil
 		incomeAmount = 0
 		expenseAmount = 0
-
 	}
 
 	return monthlySummary
