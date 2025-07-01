@@ -304,8 +304,8 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 
 		monthlySummary = append(monthlySummary, entity.MonthlySummaryItem{
 			Month:    monthYearFormat,
-			Revenue:  incomeAmount,
-			Expenses: expenseAmount,
+			Revenue:  0,
+			Expenses: 123,
 		})
 
 		// Although we fetched records, we only need the total amount for this summary item.
