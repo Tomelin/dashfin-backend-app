@@ -154,22 +154,11 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			query = query.Where("description", "==", *params.Description)
 		}
 		if params.StartDate != nil && *params.StartDate != "" {
-			parsedStartDate, err := utils.StringToTime("2006-01-02", *params.StartDate)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse StartDate: %w", err)
-			}
-			// The type stored in Firestore for `receiptDate` is likely a Timestamp (Go's time.Time).
-			// Comparing a string field with a time.Time object in the query will not work as expected.
-			// The `receiptDate` field in the database needs to be a time.Time/Firestore Timestamp to support range queries.
-			// Assuming `receiptDate` in the database is stored as a Timestamp:
-			query = query.Where("receiptDate", ">=", parsedStartDate) // This assumes `receiptDate` in Firestore is Timestamp
+
+			query = query.Where("receiptDate", ">=", *params.StartDate) // This assumes `receiptDate` in Firestore is Timestamp
 		}
 		if params.EndDate != nil && *params.EndDate != "" {
-			parsedEndDate, err := utils.StringToTime("2006-01-02", *params.EndDate)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse StartDate: %w", err)
-			}
-			query = query.Where("receiptDate", ">=", parsedEndDate)
+			query = query.Where("receiptDate", ">=", *params.EndDate)
 		}
 
 		iter := query.Documents(ctx)
