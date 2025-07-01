@@ -3,10 +3,12 @@ package entity_finance
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 // IncomeRecordRepositoryInterface defines the repository operations for IncomeRecord.
@@ -116,10 +118,9 @@ func (ir *IncomeRecord) Validate() error {
 	if ir.Amount <= 0 {
 		return errors.New("amount must be greater than 0")
 	}
-	// Validate ReceiptDate format (YYYY-MM-DD)
-	// Although ReceiptDate is a time.Time, we can check if it can be formatted
-	// to the desired YYYY-MM-DD format without error, implying it's a valid date.
-	// The time.Time zero value check also covers empty cases.
+
+	ir.ReceiptDate, _ = utils.StringToTime("2006-01-02", fmt.Sprintf("%v", ir.ReceiptDate))
+
 	if ir.ReceiptDate.IsZero() {
 		return errors.New("receiptDate is required or invalid")
 	}
