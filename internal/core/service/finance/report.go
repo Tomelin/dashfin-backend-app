@@ -390,6 +390,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		for _, v := range incomeRecords {
 			incomeAmount += v.Amount
 		}
+		log.Printf("incomeAmount %v > %v ", monthYearFormat, incomeAmount)
 
 		expenseRecords, err := s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
 			StartDate: firstDayOfMonth,
@@ -404,7 +405,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		for _, v := range expenseRecords {
 			expenseAmount += v.Amount
 		}
-
+		log.Printf("expenseAmount %v > %v ", monthYearFormat, expenseAmount)
 		dataPoints[monthYearFormat] = &entity.MonthlySummaryItem{
 			Month:    monthYearFormat,
 			Revenue:  incomeAmount,
