@@ -3,7 +3,6 @@ package entity_finance
 import (
 	"context"
 	"errors"
-	"regexp"
 	"strings"
 	"time"
 
@@ -35,7 +34,7 @@ type IncomeRecord struct {
 	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
 	BankAccountID    string    `json:"bankAccountId" bson:"bankAccountId"`
 	Amount           float64   `json:"amount" bson:"amount"`
-	ReceiptDate      string    `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
+	ReceiptDate      time.Time `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
 	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
 	RecurrenceCount  *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`   // Pointer to allow null
 	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
@@ -84,7 +83,7 @@ func isValidIncomeCategory(category string) bool {
 
 // NewIncomeRecord creates a new IncomeRecord with default values.
 // Required fields must be set separately.
-func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate, userID string) *IncomeRecord {
+func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate time.Time, userID string) *IncomeRecord {
 	return &IncomeRecord{
 		Category:      category,
 		BankAccountID: bankAccountID,
@@ -119,14 +118,10 @@ func (ir *IncomeRecord) Validate() error {
 	}
 
 	// Validate ReceiptDate format (YYYY-MM-DD)
-	if matched, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, ir.ReceiptDate); !matched {
-		return errors.New("receiptDate must be in YYYY-MM-DD format")
+	ir.ReceiptDate, _ = time.Parse("2006-01-02", ir.ReceiptDate.Format("2006-01-02"))
+	if ir.ReceiptDate.IsZero() {
+		return errors.New("invalid receiptDate format, expected YYYY-MM-DD")
 	}
-	parsedReceiptDate, err := time.Parse("2006-01-02", ir.ReceiptDate)
-	if err != nil {
-		return errors.New("invalid receiptDate: " + err.Error())
-	}
-	ir.ReceiptDate = parsedReceiptDate.Format("2006-01-02") // Ensure consistent format
 
 	if ir.IsRecurring {
 		if ir.RecurrenceCount == nil {
