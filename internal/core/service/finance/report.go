@@ -388,7 +388,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 
 		var incomeAmount float64
 		for _, v := range incomeRecords {
-			log.Printf("income Amount %v Category %v Description %v Total", v.Amount, v.Category, v.Description, incomeAmount)
+			log.Printf("income Amount %v Category %s Description %v Total %v", v.Amount, v.Category, *v.Description, incomeAmount)
 			incomeAmount += v.Amount
 		}
 		log.Printf("incomeAmount %v %v %v> %v \n", firstDayOfMonth, lastDayOfMonth, monthYearFormat, incomeAmount)
