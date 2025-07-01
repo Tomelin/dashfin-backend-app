@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"time"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -271,6 +270,8 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Context) []entity.MonthlySummaryItem {
 
 	dataPoints := make(map[string]*entity.MonthlySummaryItem)
+	// Convert map to slice and sort by month
+	var monthlySummary []entity.MonthlySummaryItem
 
 	// Get records for the last 12 months
 	now := time.Now()
@@ -308,27 +309,11 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		incomeAmount = 0   // Avoid unused variable warning
 		_ = expenseAmount  // Avoid unused variable warning
 
-	}
-
-	// Convert map to slice and sort by month
-	var monthlySummary []entity.MonthlySummaryItem
-	keys := make([]string, 0, len(dataPoints))
-	for k := range dataPoints {
-		keys = append(keys, k)
-	}
-
-	// Custom sort function to sort by month/year
-	sort.SliceStable(keys, func(i, j int) bool {
-		t1, err1 := time.Parse("2006-01", keys[i])
-		t2, err2 := time.Parse("2006-01", keys[j])
-		if err1 != nil || err2 != nil {
-			return false // Handle parsing errors if necessary
-		}
-		return t1.Before(t2)
-	})
-
-	for _, k := range keys {
-		monthlySummary = append(monthlySummary, *dataPoints[k])
+		monthlySummary = append(monthlySummary, entity.MonthlySummaryItem{
+			Month:    monthYearFormat,
+			Revenue:  incomeAmount,
+			Expenses: expenseAmount,
+		})
 	}
 
 	return monthlySummary
