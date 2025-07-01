@@ -116,10 +116,12 @@ func (ir *IncomeRecord) Validate() error {
 	if ir.Amount <= 0 {
 		return errors.New("amount must be greater than 0")
 	}
-
 	// Validate ReceiptDate format (YYYY-MM-DD)
+	// Although ReceiptDate is a time.Time, we can check if it can be formatted
+	// to the desired YYYY-MM-DD format without error, implying it's a valid date.
+	// The time.Time zero value check also covers empty cases.
 	if ir.ReceiptDate.IsZero() {
-		return errors.New("invalid receiptDate format, expected YYYY-MM-DD")
+		return errors.New("receiptDate is required or invalid")
 	}
 
 	if ir.IsRecurring {
