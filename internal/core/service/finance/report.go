@@ -415,7 +415,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		// The individual records are not stored in the MonthlySummaryItem.
 		_ = incomeRecords  // Avoid unused variable warning
 		_ = expenseRecords // Avoid unused variable warning
-		_ = incomeAmount   // Avoid unused variable warning
+		 incomeAmount = 0   // Avoid unused variable warning
 		_ = expenseAmount  // Avoid unused variable warning
 
 	}
