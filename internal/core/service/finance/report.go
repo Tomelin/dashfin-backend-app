@@ -275,7 +275,6 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		month := now.AddDate(0, -i, 0)
 		firstDayOfMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
 		lastDayOfMonth := time.Date(month.Year(), month.Month()+1, 0, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
-		log.Printf("[MONTH] start %v end %v", firstDayOfMonth, lastDayOfMonth)
 		monthYearFormat := month.Format("2006-01")
 
 		_, incomeAmount, err := s.getIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth)
@@ -301,6 +300,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 			Revenue:  0,
 			Expenses: 123,
 		})
+		log.Printf("[MONTH] start %v end %v income %v expense %v", firstDayOfMonth, lastDayOfMonth, incomeAmount, expenseAmount)
 
 		// Although we fetched records, we only need the total amount for this summary item.
 		// The individual records are not stored in the MonthlySummaryItem.
