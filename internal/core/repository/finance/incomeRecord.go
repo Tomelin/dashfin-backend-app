@@ -13,6 +13,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
 	"github.com/Tomelin/dashfin-backend-app/pkg/database"
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
+	"google.golang.org/api/iterator"
 )
 
 // IncomeRecordRepository handles database operations for IncomeRecords.
@@ -132,10 +133,14 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 	}
 
 	var result []byte
+	var records []entity_finance.IncomeRecord
 
 	if params == nil {
 		result, err = r.DB.Get(ctx, *collection)
 		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(result, &records); err != nil {
 			return nil, err
 		}
 	} else {
@@ -144,17 +149,40 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			return nil, fmt.Errorf("invalid query parameters: %w", err)
 		}
 
-		toMap, _ := utils.StructToMap(params)
-
-		result, err = r.DB.GetByFilter(ctx, toMap, *collection)
+		query := r.DB.GetByQuery(ctx, *collection)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(result, &records); err != nil {
-		return nil, err
+		if params.Description != nil && *params.Description != "" {
+			query = query.Where("description", "==", *params.Description)
+		}
+		if params.StartDate != nil && *params.StartDate != "" {
+			query = query.Where("receiptDate", ">=", *params.StartDate)
+		}
+		if params.EndDate != nil && *params.EndDate != "" {
+			query = query.Where("receiptDate", "<=", *params.EndDate)
+		}
+
+		iter := query.Documents(ctx)
+		defer iter.Stop()
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return nil, fmt.Errorf("failed to iterate income records: %w", err)
+			}
+
+			var record entity_finance.IncomeRecord
+			if err := doc.DataTo(&record); err != nil {
+				// Log error and continue if one record fails, or return error immediately
+				return nil, fmt.Errorf("failed to map Firestore document to IncomeRecord: %w", err)
+			}
+			record.ID = doc.Ref.ID
+			records = append(records, record)
+		}
 	}
 
 	log.Println("[REPOSITORY] total itens", len(records))

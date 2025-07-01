@@ -19,6 +19,7 @@ type FirebaseDBInterface interface {
 	Update(ctx context.Context, id string, data interface{}, collection string) error
 	Delete(ctx context.Context, id, collection string) error
 	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error)
+	GetByQuery(ctx context.Context, collection string) firestore.Query
 }
 
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
@@ -201,6 +202,14 @@ func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 	_, err := db.client.Collection(collection).Doc(id).Delete(ctx)
 
 	return err
+}
+
+func (db *FirebaseDB) GetByQuery(ctx context.Context, collection string) firestore.Query {
+
+	query := db.client.Collection(collection).Query
+
+	return query
+
 }
 
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.
