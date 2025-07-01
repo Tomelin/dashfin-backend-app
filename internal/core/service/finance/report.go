@@ -388,9 +388,10 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 
 		var incomeAmount float64
 		for _, v := range incomeRecords {
+			log.Printf("income Amount %v Category %v Description %v Total", v.Amount, v.Category, v.Description, incomeAmount)
 			incomeAmount += v.Amount
 		}
-		log.Printf("incomeAmount %v > %v ", monthYearFormat, incomeAmount)
+		log.Printf("incomeAmount %v %v %v> %v \n", firstDayOfMonth, lastDayOfMonth, monthYearFormat, incomeAmount)
 
 		expenseRecords, err := s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
 			StartDate: firstDayOfMonth,
@@ -416,7 +417,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		// The individual records are not stored in the MonthlySummaryItem.
 		_ = incomeRecords  // Avoid unused variable warning
 		_ = expenseRecords // Avoid unused variable warning
-		 incomeAmount = 0   // Avoid unused variable warning
+		incomeAmount = 0   // Avoid unused variable warning
 		_ = expenseAmount  // Avoid unused variable warning
 
 	}
