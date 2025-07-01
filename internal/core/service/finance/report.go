@@ -203,16 +203,8 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		},
 	}
 
-	expenseReportLastMonth, expenseAmountLastMonth, err := s.getExpenseRecords(ctx, firstDayOfLastMonth, lastDayOfLastMonth, cacheKeyExpenseReportByLastMonth)
-	if err != nil {
-		return nil, err
-	}
-
 	log.Println("################ CalculateMonthlyCashFlow ###############")
 	log.Println(s.CalculateMonthlyCashFlow(ctx))
-	log.Println(">>>>> <<<<<")
-	log.Println(expenseReportLastMonth, expenseAmountLastMonth)
-	log.Println(">>>>> <<<<<")
 
 	// cacheFlowPct represents the percentage change in cash flow for the current month compared to the previous month's cash flow.
 	log.Println("Report > ", report)
