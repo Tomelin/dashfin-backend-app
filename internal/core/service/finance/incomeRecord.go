@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -198,6 +199,7 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, params *enti
 		return nil, fmt.Errorf("invalid query parameters for GetIncomeRecords: %w", err)
 	}
 
+	log.Println("queryParams => ", queryParams)
 	records, err := s.Repo.GetIncomeRecords(ctx, queryParams)
 	if err != nil {
 		// Repository might return specific "not found" errors or empty slices.
