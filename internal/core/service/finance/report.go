@@ -377,16 +377,32 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		lastDayOfMonth := time.Date(month.Year(), month.Month()+1, 0, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
 		monthYearFormat := month.Format("2006-01")
 
-		incomeRecords, incomeAmount, err := s.getMonthIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth, fmt.Sprintf("income_report_month_%d_%d", month.Year(), month.Month()))
+		incomeRecords, err := s.income.GetIncomeRecords(ctx, &entity.GetIncomeRecordsQueryParameters{
+			StartDate: &firstDayOfMonth,
+			EndDate:   &lastDayOfMonth,
+		})
 		if err != nil {
 			log.Printf("Error getting income records for %s: %v", monthYearFormat, err)
 			continue
 		}
 
-		expenseRecords, expenseAmount, err := s.getExpenseRecords(ctx, firstDayOfMonth, lastDayOfMonth, fmt.Sprintf("expense_report_month_%d_%d", month.Year(), month.Month()))
+		var incomeAmount float64
+		for _, v := range incomeRecords {
+			incomeAmount += v.Amount
+		}
+
+		expenseRecords, err := s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
+			StartDate: firstDayOfMonth,
+			EndDate:   lastDayOfMonth,
+		})
 		if err != nil {
 			log.Printf("Error getting expense records for %s: %v", monthYearFormat, err)
 			continue
+		}
+
+		var expenseAmount float64
+		for _, v := range expenseRecords {
+			expenseAmount += v.Amount
 		}
 
 		dataPoints[monthYearFormat] = &entity.MonthlySummaryItem{
