@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
+	"time"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
+	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
@@ -57,40 +60,17 @@ func InitializeFinancialReportDataService(
 }
 
 func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context) (*entity.FinancialReportData, error) {
-	_, err := utils.GetUserID(ctx)
+	userId, err := utils.GetUserID(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	if userId == nil || *userId == "" {
+		return nil, fmt.Errorf("userId is nil")
+	}
+
 	report := entity.FinancialReportData{
-		SummaryCards: entity.ReportSummaryCards{
-			CurrentMonthCashFlow:          99.99,
-			CurrentMonthCashFlowChangePct: 99.99,
-			NetWorth:                      99.99,
-			NetWorthChangePercent:         99.99,
-		},
-		MonthlyCashFlow: []entity.MonthlySummaryItem{
-			entity.MonthlySummaryItem{
-				Month:    "2024-12",
-				Revenue:  99.99,
-				Expenses: 99.99,
-			},
-			entity.MonthlySummaryItem{
-				Month:    "2025-01",
-				Revenue:  199.99,
-				Expenses: 99.99,
-			},
-			entity.MonthlySummaryItem{
-				Month:    "2025-04",
-				Revenue:  2199.99,
-				Expenses: 199.99,
-			},
-			entity.MonthlySummaryItem{
-				Month:    "2025-05",
-				Revenue:  1299.99,
-				Expenses: 2199.99,
-			},
-		},
+		MonthlyCashFlow: s.CalculateMonthlyCashFlow(ctx),
 		ExpenseByCategory: []entity.CategoryExpenseItem{
 			entity.CategoryExpenseItem{
 				Name:  "Moradia",
@@ -256,6 +236,8 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
+	log.Println("################ CalculateMonthlyCashFlow ###############")
+	log.Println(s.CalculateMonthlyCashFlow(ctx, incomeReportYear, expenseReportYear))
 	log.Println(">>>>> <<<<<")
 	log.Println(incomeReportMonth, incomeReportYear, expenseReportMonth, expenseReportYear, incomeAmountYear, expenseAmountYear, incomeAmountMonth, incomeAmountLastMonth, incomeReportLastMonth, expenseReportLastMonth, expenseAmountLastMonth)
 	log.Println(">>>>> <<<<<")
@@ -382,6 +364,66 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 	}
 
 	return report, amount, nil
+}
+
+func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Context) []entity.MonthlySummaryItem {
+
+	dataPoints := make(map[string]*entity.MonthlySummaryItem)
+
+	// Get records for the last 12 months
+	now := time.Now()
+	for i := 0; i < 12; i++ {
+		month := now.AddDate(0, -i, 0)
+		firstDayOfMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
+		lastDayOfMonth := time.Date(month.Year(), month.Month()+1, 0, 0, 0, 0, 0, month.Location()).Format("2006-01-02")
+		monthYearFormat := month.Format("2006-01")
+
+		incomeRecords, incomeAmount, err := s.getMonthIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth, fmt.Sprintf("income_report_month_%d_%d", month.Year(), month.Month()))
+		if err != nil {
+			log.Printf("Error getting income records for %s: %v", monthYearFormat, err)
+			continue
+		}
+
+		expenseRecords, expenseAmount, err := s.getExpenseRecords(ctx, firstDayOfMonth, lastDayOfMonth, fmt.Sprintf("expense_report_month_%d_%d", month.Year(), month.Month()))
+		if err != nil {
+			log.Printf("Error getting expense records for %s: %v", monthYearFormat, err)
+			continue
+		}
+
+		dataPoints[monthYearFormat] = &entity.MonthlySummaryItem{
+			Month:    monthYearFormat,
+			Revenue:  incomeAmount,
+			Expenses: expenseAmount,
+		}
+
+		// Although we fetched records, we only need the total amount for this summary item.
+		// The individual records are not stored in the MonthlySummaryItem.
+		_ = incomeRecords  // Avoid unused variable warning
+		_ = expenseRecords // Avoid unused variable warning
+	}
+
+	// Convert map to slice and sort by month
+	var monthlySummary []entity.MonthlySummaryItem
+	keys := make([]string, 0, len(dataPoints))
+	for k := range dataPoints {
+		keys = append(keys, k)
+	}
+
+	// Custom sort function to sort by month/year
+	sort.SliceStable(keys, func(i, j int) bool {
+		t1, err1 := time.Parse("2006-01", keys[i])
+		t2, err2 := time.Parse("2006-01", keys[j])
+		if err1 != nil || err2 != nil {
+			return false // Handle parsing errors if necessary
+		}
+		return t1.Before(t2)
+	})
+
+	for _, k := range keys {
+		monthlySummary = append(monthlySummary, *dataPoints[k])
+	}
+
+	return monthlySummary
 }
 
 func (s *FinancialReportDataService) setCache(ctx context.Context, cacheKey string, planData *entity.SpendingPlan) {
