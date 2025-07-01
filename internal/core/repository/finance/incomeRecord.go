@@ -176,25 +176,13 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			}
 
 			var record entity_finance.IncomeRecord
+			if err := doc.DataTo(&record); err != nil {
+				// Log error and continue if one record fails, or return error immediately
+				return nil, fmt.Errorf("failed to map Firestore document to IncomeRecord: %w", err)
+			}
 
-			data := doc.Data()
 			record.ID = doc.Ref.ID
-
-			records = append(records, entity_finance.IncomeRecord{
-				ID:               doc.Ref.ID,
-				Category:         data["category"].(string),
-				Description:      data["description"].(*string),
-				Amount:           data["amount"].(float64),
-				ReceiptDate:      data["receiptDate"].(string),
-				CreatedAt:        data["createdAt"].(time.Time),
-				UpdatedAt:        data["updatedAt"].(time.Time),
-				UserID:           data["userId"].(string),
-				BankAccountID:    data["bankAccountId"].(string),
-				IsRecurring:      data["isRecurring"].(bool),
-				RecurrenceCount:  data["recurrenceCount"].(*int),
-				RecurrenceNumber: data["recurrenceNumber"].(int),
-				Observations:     data["observations"].(*string),
-			})
+			records = append(records, record)
 		}
 	}
 
