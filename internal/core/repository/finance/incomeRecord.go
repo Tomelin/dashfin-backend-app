@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -104,15 +105,50 @@ func (r *IncomeRecordRepository) GetIncomeRecordByID(ctx context.Context, id str
 }
 
 // // GetIncomeRecords retrieves income records based on query parameters.
+// func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *entity_finance.GetIncomeRecordsQueryParameters) ([]entity_finance.IncomeRecord, error) {
+// 	collection, err := repository.SetCollection(ctx, r.collection)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	result, err := r.DB.Get(ctx, *collection)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	var records []entity_finance.IncomeRecord
+// 	if err := json.Unmarshal(result, &records); err != nil {
+// 		return nil, err
+// 	}
+
+// 	return records, nil
+// }
+
 func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *entity_finance.GetIncomeRecordsQueryParameters) ([]entity_finance.IncomeRecord, error) {
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := r.DB.Get(ctx, *collection)
-	if err != nil {
-		return nil, err
+	var result []byte
+
+	if params == nil {
+		result, err = r.DB.Get(ctx, *collection)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+
+		if err := params.Validate(); err != nil {
+			return nil, fmt.Errorf("invalid query parameters: %w", err)
+		}
+
+		toMap, _ := utils.StructToMap(params)
+
+		result, err = r.DB.GetByFilter(ctx, toMap, *collection)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var records []entity_finance.IncomeRecord
