@@ -230,9 +230,12 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context, start
 		return nil, amount, err
 	}
 
-	log.Printf(">> startDate %s, amount %v", startDate, amount)
+	log.Printf(">> startDate %s, amount %v itens %v", startDate, amount, len(report))
+	count := 0
 	for _, v := range report {
 		amount += v.Amount
+		count += 1
+		log.Printf("[IncomeRecords] > item %v amount %v total %v ", count, v.Amount, amount)
 	}
 	log.Printf(">> total amount  %v", amount)
 	return report, amount, nil
