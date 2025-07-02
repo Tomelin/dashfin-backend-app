@@ -188,8 +188,9 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				dataMap["recurrenceNumber"] = 0
 			}
 
-			if dataMap["recurrenceCount"] == nil {
-				dataMap["recurrenceCount"] = 0
+			recurrenceCount := 0
+			if dataMap["recurrenceCount"] != nil {
+				recurrenceCount = dataMap["recurrenceCount"].(int)
 			}
 			log.Println("dataMap[recurrenceCount]", dataMap["recurrenceCount"])
 			record := entity_finance.IncomeRecord{
@@ -202,7 +203,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				UserID:           dataMap["userId"].(string),
 				BankAccountID:    dataMap["bankAccountId"].(string),
 				IsRecurring:      dataMap["isRecurring"].(bool),
-				RecurrenceCount:  dataMap["recurrenceCount"].(*int),
+				RecurrenceCount:  &recurrenceCount,
 				RecurrenceNumber: dataMap["recurrenceNumber"].(int),
 				Observations:     dataMap["observations"].(*string),
 			}
