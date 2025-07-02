@@ -222,9 +222,15 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context, start
 
 	var report []entity.IncomeRecord
 	var amount float64
+
+	newStartDate := fmt.Sprintf("%s-01", startDate)
+	newEndDate := fmt.Sprintf("%s-31", endDate)
+
+	log.Printf(">> startDate %s, endDate %s")
+
 	report, err := s.income.GetIncomeRecords(ctx, &entity.GetIncomeRecordsQueryParameters{
-		StartDate: &startDate,
-		EndDate:   &endDate,
+		StartDate: &newStartDate,
+		EndDate:   &newEndDate,
 	})
 	if err != nil {
 		return nil, amount, err
