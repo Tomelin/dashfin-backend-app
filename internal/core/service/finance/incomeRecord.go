@@ -199,7 +199,6 @@ func (s *IncomeRecordService) GetIncomeRecords(ctx context.Context, params *enti
 		return nil, fmt.Errorf("invalid query parameters for GetIncomeRecords: %w", err)
 	}
 
-	log.Println("GetIncomeRecords query params", *queryParams.EndDate, *queryParams.StartDate)
 	records, err := s.Repo.GetIncomeRecords(ctx, queryParams)
 	if err != nil {
 		return nil, err
