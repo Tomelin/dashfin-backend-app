@@ -172,36 +172,39 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				return nil, fmt.Errorf("failed to iterate income records: %w", err)
 			}
 
-			var description string
-			if doc.Data()["description"].(string) == "" {
-				description = doc.Data()["receiptDate"].(string)
-			}
-
-			var receiptDateQuery time.Time
-			if doc.Data()["receiptDateQuery"] != nil {
-				receiptDateQuery, _ = time.Parse(time.RFC3339, doc.Data()["receiptDateQuery"].(string))
-			}
+			// Use DataTo for robust mapping, including potential nil values or different types.
+			// DataTo will handle type conversions and pointer assignment correctly if the struct tags are set up.
 
 			record := entity_finance.IncomeRecord{
-				ID:               doc.Ref.ID,
-				Description:      &description,
-				ReceiptDateQuery: receiptDateQuery,
-				Category:         doc.Data()["category"].(string),
-				ReceiptDate:      doc.Data()["receiptDate"].(string),
-				Amount:           doc.Data()["amount"].(float64),
-				UserID:           doc.Data()["userId"].(string),
-				BankAccountID:    doc.Data()["bankAccountId"].(string),
-				IsRecurring:      doc.Data()["isRecurring"].(bool),
-				RecurrenceCount:  doc.Data()["recurrenceCount"].(*int),
-				RecurrenceNumber: doc.Data()["recurrenceNumber"].(int),
-				Observations:     doc.Data()["observations"].(*string),
+				ID: doc.Ref.ID, // Manually set ID from doc ref
 			}
+
 			if err := doc.DataTo(&record); err != nil {
-				// Log error and continue if one record fails, or return error immediately
+				// It's generally better to return the error if a single document fails to map.
+				// This indicates a potential schema mismatch or data issue in Firestore.
 				return nil, fmt.Errorf("failed to map Firestore document to IncomeRecord: %w", err)
 			}
 
-			record.ID = doc.Ref.ID
+			// Handle the receiptDateQuery conversion separately if DataTo doesn't handle it
+			// or if you need specific date parsing logic.
+			// Firestore timestamp fields usually come back as `time.Time` objects in the map.
+			// Assuming `receiptDateQuery` in Firestore is a Timestamp:
+			if rawDateQuery, ok := doc.Data()["receiptDateQuery"].(time.Time); ok {
+				record.ReceiptDateQuery = rawDateQuery
+			} else if rawDateQuery, ok := doc.Data()["receiptDateQuery"].(string); ok {
+				// If it's stored as a string, parse it
+				parsedTime, parseErr := time.Parse(time.RFC3339, rawDateQuery)
+				if parseErr == nil {
+					record.ReceiptDateQuery = parsedTime
+				} else {
+					log.Printf("Warning: Failed to parse receiptDateQuery string '%s': %v", rawDateQuery, parseErr)
+					// Decide how to handle unparseable dates: skip the record, set to zero time, etc.
+				}
+			} else if doc.Data()["receiptDateQuery"] != nil {
+				// Log if the type is unexpected and not nil
+				log.Printf("Warning: Unexpected type for receiptDateQuery: %T", doc.Data()["receiptDateQuery"])
+			}
+
 			records = append(records, record)
 		}
 	}
