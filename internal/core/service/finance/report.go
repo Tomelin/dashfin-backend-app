@@ -226,8 +226,6 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context, start
 	newStartDate := fmt.Sprintf("%s", startDate)
 	newEndDate := fmt.Sprintf("%s", endDate)
 
-	log.Printf(">> startDate %s, endDate %s", startDate, endDate)
-
 	report, err := s.income.GetIncomeRecords(ctx, &entity.GetIncomeRecordsQueryParameters{
 		StartDate: &newStartDate,
 		EndDate:   &newEndDate,
@@ -236,14 +234,13 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context, start
 		return nil, amount, err
 	}
 
-	log.Printf(">> startDate %s, amount %v itens %v", startDate, amount, len(report))
 	count := 0
 	for _, v := range report {
 		amount += v.Amount
 		count += 1
 		log.Printf("[IncomeRecords] > month %v item %v amount %v total %v ", v.ReceiptDate, count, v.Amount, amount)
 	}
-	log.Printf(">> total amount  %v", amount)
+
 	return report, amount, nil
 }
 
@@ -271,7 +268,6 @@ func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, star
 
 func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Context) []entity.MonthlySummaryItem {
 
-	dataPoints := make(map[string]*entity.MonthlySummaryItem)
 	// Convert map to slice and sort by month
 	var monthlySummary []entity.MonthlySummaryItem
 
@@ -295,16 +291,10 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 			continue
 		}
 
-		dataPoints[monthYearFormat] = &entity.MonthlySummaryItem{
+		monthlySummary = append(monthlySummary, entity.MonthlySummaryItem{
 			Month:    monthYearFormat,
 			Revenue:  incomeAmount,
 			Expenses: expenseAmount,
-		}
-
-		monthlySummary = append(monthlySummary, entity.MonthlySummaryItem{
-			Month:    monthYearFormat,
-			Revenue:  0,
-			Expenses: 123,
 		})
 		log.Printf("[MONTH] start %v end %v income %v expense %v", firstDayOfMonth, lastDayOfMonth, incomeAmount, expenseAmount)
 

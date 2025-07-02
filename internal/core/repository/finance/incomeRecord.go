@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -198,7 +197,6 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				recurrenceCount = dataMap["recurrenceCount"].(int)
 			}
 
-			log.Println("dataMap[recurrenceCount]", dataMap["recurrenceCount"])
 			record := entity_finance.IncomeRecord{
 				ID:               doc.Ref.ID,
 				Description:      &description,
@@ -218,7 +216,6 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 		}
 	}
 
-	log.Println("[REPOSITORY] total itens", len(records))
 	return records, nil
 }
 
