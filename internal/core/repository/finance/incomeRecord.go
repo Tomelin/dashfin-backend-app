@@ -155,7 +155,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 		}
 		if params.StartDate != nil && *params.StartDate != "" {
 
-			query = query.Where("receiptDateQuery", ">=", *params.StartDate) // This assumes `receiptDate` in Firestore is Timestamp
+			query = query.Where("receiptDateQuery", ">=", *params.StartDate)
 		}
 		if params.EndDate != nil && *params.EndDate != "" {
 			query = query.Where("receiptDateQuery", ">=", *params.EndDate)
@@ -172,7 +172,22 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				return nil, fmt.Errorf("failed to iterate income records: %w", err)
 			}
 
-			var record entity_finance.IncomeRecord
+			record := entity_finance.IncomeRecord{
+				ID:               doc.Ref.ID,
+				Description:      doc.Data()["description"].(*string),
+				ReceiptDateQuery: doc.Data()["receiptDateQuery"].(time.Time),
+				Category:         doc.Data()["category"].(string),
+				ReceiptDate:      doc.Data()["receiptDate"].(string),
+				Amount:           doc.Data()["amount"].(float64),
+				UserID:           doc.Data()["userId"].(string),
+				CreatedAt:        doc.Data()["createdAt"].(time.Time),
+				UpdatedAt:        doc.Data()["updatedAt"].(time.Time),
+				BankAccountID:    doc.Data()["bankAccountId"].(string),
+				IsRecurring:      doc.Data()["isRecurring"].(bool),
+				RecurrenceCount:  doc.Data()["isRecurring"].(*int),
+				RecurrenceNumber: doc.Data()["recurrenceNumber"].(int),
+				Observations:     doc.Data()["observations"].(*string),
+			}
 			if err := doc.DataTo(&record); err != nil {
 				// Log error and continue if one record fails, or return error immediately
 				return nil, fmt.Errorf("failed to map Firestore document to IncomeRecord: %w", err)
