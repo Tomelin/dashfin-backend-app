@@ -3,6 +3,7 @@ package entity_finance
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -165,12 +166,12 @@ type GetIncomeRecordsQueryParameters struct {
 func (p *GetIncomeRecordsQueryParameters) Validate() error {
 	if p.StartDate != nil {
 		if _, err := time.Parse("2006-01-02", *p.StartDate); err != nil {
-			return errors.New("invalid startDate format, expected YYYY-MM-DD")
+			return fmt.Errorf("invalid startDate format, expected YYYY-MM-DD and got %s", *p.StartDate)
 		}
 	}
 	if p.EndDate != nil {
 		if _, err := time.Parse("2006-01-02", *p.EndDate); err != nil {
-			return errors.New("invalid endDate format, expected YYYY-MM-DD")
+			return fmt.Errorf("invalid endDate format, expected YYYY-MM-DD and got %s", *p.EndDate)
 		}
 	}
 	if p.SortKey != nil {
