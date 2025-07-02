@@ -236,7 +236,7 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context, start
 
 	count := 0
 	amount = 0
-	log.Printf("report %v and month is %v", len(report), startDate)
+
 	for _, v := range report {
 		amount += v.Amount
 		count += 1
@@ -303,10 +303,6 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 			Expenses: expenseAmount,
 		})
 		log.Printf("[MONTH] start %v end %v income %v expense %v", firstDayOfMonth, lastDayOfMonth, incomeAmount, expenseAmount)
-
-		// Although we fetched records, we only need the total amount for this summary item.
-		// The individual records are not stored in the MonthlySummaryItem.
-
 	}
 
 	return monthlySummary
