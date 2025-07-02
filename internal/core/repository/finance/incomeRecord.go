@@ -188,6 +188,10 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				dataMap["recurrenceNumber"] = 0
 			}
 
+			if dataMap["recurrenceCount"] == nil {
+				dataMap["recurrenceCount"] = 0
+			}
+
 			record := entity_finance.IncomeRecord{
 				ID:               doc.Ref.ID,
 				Description:      &description,
