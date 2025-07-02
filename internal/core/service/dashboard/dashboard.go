@@ -276,7 +276,7 @@ func (s *DashboardService) calculateMonthlyRevenue(incomes []financeEntity.Incom
 	var totalRevenue float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, income := range incomes {
-		receiptDate, _ := time.Parse("2006-01-02", income.ReceiptDate.Format("2006-01-02"))
+		receiptDate, _ := time.Parse("2006-01-02", income.ReceiptDate)
 		if !receiptDate.IsZero() {
 			if !receiptDate.Before(monthStart) && !receiptDate.After(monthEnd) {
 				totalRevenue += income.Amount
@@ -544,7 +544,7 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 
 	// Process incomes
 	for _, income := range allUserIncomes {
-		receiptDate, _ := time.Parse("2006-01-02", income.ReceiptDate.Format("2006-01-02"))
+		receiptDate, _ := time.Parse("2006-01-02", income.ReceiptDate)
 		if receiptDate.IsZero() {
 			continue // Skip this income record if date is invalid
 		}

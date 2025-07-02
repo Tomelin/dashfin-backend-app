@@ -3,12 +3,10 @@ package entity_finance
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
 	entity_common "github.com/Tomelin/dashfin-backend-app/internal/core/entity/common"
-	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 // IncomeRecordRepositoryInterface defines the repository operations for IncomeRecord.
@@ -36,7 +34,8 @@ type IncomeRecord struct {
 	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
 	BankAccountID    string    `json:"bankAccountId" bson:"bankAccountId"`
 	Amount           float64   `json:"amount" bson:"amount"`
-	ReceiptDate      time.Time `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
+	ReceiptDate      string    `json:"receiptDate" bson:"receiptDate"`                // ISO 8601 (YYYY-MM-DD)
+	ReceiptDateQuery time.Time `json:"receiptDateQuery,omitempty" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
 	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
 	RecurrenceCount  *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`   // Pointer to allow null
 	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
@@ -85,7 +84,7 @@ func isValidIncomeCategory(category string) bool {
 
 // NewIncomeRecord creates a new IncomeRecord with default values.
 // Required fields must be set separately.
-func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate time.Time, userID string) *IncomeRecord {
+func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate string, userID string) *IncomeRecord {
 	return &IncomeRecord{
 		Category:      category,
 		BankAccountID: bankAccountID,
@@ -119,9 +118,13 @@ func (ir *IncomeRecord) Validate() error {
 		return errors.New("amount must be greater than 0")
 	}
 
-	ir.ReceiptDate, _ = utils.StringToTime("2006-01-02", fmt.Sprintf("%v", ir.ReceiptDate))
+	parseReceiptDate, err := time.Parse("2006-01-02", ir.ReceiptDate)
+	if err != nil {
+		return errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
+	}
 
-	if ir.ReceiptDate.IsZero() {
+	ir.ReceiptDateQuery = parseReceiptDate
+	if ir.ReceiptDateQuery.IsZero() {
 		return errors.New("receiptDate is required or invalid")
 	}
 
