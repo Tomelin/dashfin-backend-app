@@ -190,8 +190,6 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				ReceiptDate:      doc.Data()["receiptDate"].(string),
 				Amount:           doc.Data()["amount"].(float64),
 				UserID:           doc.Data()["userId"].(string),
-				CreatedAt:        doc.Data()["createdAt"].(time.Time),
-				UpdatedAt:        doc.Data()["updatedAt"].(time.Time),
 				BankAccountID:    doc.Data()["bankAccountId"].(string),
 				IsRecurring:      doc.Data()["isRecurring"].(bool),
 				RecurrenceCount:  doc.Data()["isRecurring"].(*int),
