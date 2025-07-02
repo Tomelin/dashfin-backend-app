@@ -283,7 +283,7 @@ func (s *FinancialReportDataService) CalculateMonthlyCashFlow(ctx context.Contex
 		var err error
 		incomeAmount := 0.0
 		expenseAmount := 0.0
-
+		log.Printf("[MONTH] start %v end %v income %v expense %v", firstDayOfMonth, lastDayOfMonth, incomeAmount, expenseAmount)
 		_, incomeAmount, err = s.getIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth)
 		if err != nil {
 			log.Printf("Error getting income records for %s: %v", monthYearFormat, err)
