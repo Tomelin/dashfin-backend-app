@@ -154,11 +154,12 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			query = query.Where("description", "==", *params.Description)
 		}
 		if params.StartDate != nil && *params.StartDate != "" {
-
+			log.Println("[REPOSITORY] StartDate params", *params.StartDate)
 			query = query.Where("receiptDateQuery", ">=", *params.StartDate)
 		}
 		if params.EndDate != nil && *params.EndDate != "" {
-			query = query.Where("receiptDateQuery", ">=", *params.EndDate)
+			log.Println("[REPOSITORY] EndDate params", *params.EndDate)
+			query = query.Where("receiptDateQuery", "<=", *params.EndDate) // CORRIGIDO: de ">=" para "<="
 		}
 
 		iter := query.Documents(ctx)
