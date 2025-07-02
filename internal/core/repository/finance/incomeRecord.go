@@ -155,10 +155,10 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 		}
 		if params.StartDate != nil && *params.StartDate != "" {
 
-			query = query.Where("receiptDate", ">=", *params.StartDate) // This assumes `receiptDate` in Firestore is Timestamp
+			query = query.Where("receiptDateQuery", ">=", *params.StartDate) // This assumes `receiptDate` in Firestore is Timestamp
 		}
 		if params.EndDate != nil && *params.EndDate != "" {
-			query = query.Where("receiptDate", ">=", *params.EndDate)
+			query = query.Where("receiptDateQuery", ">=", *params.EndDate)
 		}
 
 		iter := query.Documents(ctx)
