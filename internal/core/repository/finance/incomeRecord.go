@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -212,6 +213,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				Observations:     &observations,
 			}
 
+			log.Println("[REPOSITORY] record", record)
 			records = append(records, record)
 		}
 	}
