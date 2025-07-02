@@ -172,9 +172,9 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				return nil, fmt.Errorf("failed to iterate income records: %w", err)
 			}
 
-			var description *string
+			var description string
 			if doc.Data()["description"].(string) == "" {
-				*description = doc.Data()["receiptDate"].(string)
+				description = doc.Data()["receiptDate"].(string)
 			}
 
 			var receiptDateQuery time.Time
@@ -184,7 +184,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 
 			record := entity_finance.IncomeRecord{
 				ID:               doc.Ref.ID,
-				Description:      description,
+				Description:      &description,
 				ReceiptDateQuery: receiptDateQuery,
 				Category:         doc.Data()["category"].(string),
 				ReceiptDate:      doc.Data()["receiptDate"].(string),
