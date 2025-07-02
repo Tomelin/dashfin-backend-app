@@ -179,7 +179,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 
 			var receiptDateQuery time.Time
 			if doc.Data()["receiptDateQuery"] != nil {
-				receiptDateQuery = doc.Data()["receiptDateQuery"].(time.Time)
+				receiptDateQuery, _ = time.Parse(time.RFC3339, doc.Data()["receiptDateQuery"].(string))
 			}
 
 			record := entity_finance.IncomeRecord{
