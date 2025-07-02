@@ -176,7 +176,12 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 
 			description := ""
 			if dataMap["description"].(string) != "" {
-				description = dataMap["receiptDate"].(string)
+				description = dataMap["description"].(string)
+			}
+
+			observations := ""
+			if dataMap["observations"].(string) != "" {
+				observations = dataMap["observations"].(string)
 			}
 
 			var receiptDateQuery time.Time
@@ -192,6 +197,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 			if dataMap["recurrenceCount"] != nil {
 				recurrenceCount = dataMap["recurrenceCount"].(int)
 			}
+
 			log.Println("dataMap[recurrenceCount]", dataMap["recurrenceCount"])
 			record := entity_finance.IncomeRecord{
 				ID:               doc.Ref.ID,
@@ -205,7 +211,7 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 				IsRecurring:      dataMap["isRecurring"].(bool),
 				RecurrenceCount:  &recurrenceCount,
 				RecurrenceNumber: dataMap["recurrenceNumber"].(int),
-				Observations:     dataMap["observations"].(*string),
+				Observations:     &observations,
 			}
 
 			records = append(records, record)
