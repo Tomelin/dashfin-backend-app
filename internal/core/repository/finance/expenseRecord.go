@@ -86,17 +86,15 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		}
 
 		responseEntity = entity_finance.ExpenseRecord{
-			ID:               responseMap["ID"].(string),
-			Category:         responseMap["Category"].(string),
-			Subcategory:      responseMap["Subcategory"].(string),
-			Amount:           responseMap["Amount"].(float64),
-			BankPaidFrom:     responseMap["BankPaidFrom"].(string),
-			CustomBankName:   responseMap["CustomBankName"].(string),
-			Description:      responseMap["Description"].(string),
-			IsRecurring:      responseMap["IsRecurring"].(bool),
-			RecurrenceNumber: responseMap["RecurrenceNumber"].(int),
-			RecurrenceCount:  responseMap["RecurrenceCount"].(int),
-			UserID:           responseMap["UserID"].(string),
+			ID:             responseMap["ID"].(string),
+			Category:       responseMap["Category"].(string),
+			Subcategory:    responseMap["Subcategory"].(string),
+			Amount:         responseMap["Amount"].(float64),
+			BankPaidFrom:   responseMap["BankPaidFrom"].(string),
+			CustomBankName: responseMap["CustomBankName"].(string),
+			Description:    responseMap["Description"].(string),
+			IsRecurring:    responseMap["IsRecurring"].(bool),
+			UserID:         responseMap["UserID"].(string),
 		}
 	}
 
