@@ -23,6 +23,7 @@ import (
 	web_dashboard "github.com/Tomelin/dashfin-backend-app/internal/handler/web/dashboard"
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
 	web_finance_income "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/income"
+	web_report "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/report"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
 	"github.com/Tomelin/dashfin-backend-app/pkg/authenticatior"
 	"github.com/Tomelin/dashfin-backend-app/pkg/cache" // Added cache import
@@ -126,6 +127,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	svcReport, err := initializeReportServices(svcIncomeRecord, svcExpenseRecord, cacheClient, mq)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Initialize Financial Repository & Service for PlannedVsActual
 	financialRepo, _ := repository_dashboard.NewFirebaseFinancialRepository(db)
 	financialSvc, _ := service_dashboard.NewFinancialService(financialRepo, cacheClient, svcExpenseRecord, svcSpendingRecord)
@@ -141,6 +147,7 @@ func main() {
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance_income.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeSpendingPlanHandler(svcSpendingRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_report.InitializeReportHandler(svcReport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 
 	err = apiResponse.Run(apiResponse.Route.Handler())
 	if err != nil {
@@ -342,6 +349,20 @@ func initializeSpendingPlanServices(db database.FirebaseDBInterface, cache cache
 		return nil, fmt.Errorf("failed to initialize income record service: %w", err)
 	}
 	return svcSpendingRecord, nil
+}
+
+func initializeReportServices(
+	income entity_finance.IncomeRecordServiceInterface,
+	expense entity_finance.ExpenseRecordServiceInterface,
+	cache cache.CacheService,
+	messageQueue message_queue.MessageQueue,
+) (entity_finance.FinancialReportDataServiceInterface, error) {
+
+	svcReport, err := service_finance.InitializeFinancialReportDataService(income, expense, cache, messageQueue)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize report service: %w", err)
+	}
+	return svcReport, nil
 }
 
 func initializeDashboardServices(
