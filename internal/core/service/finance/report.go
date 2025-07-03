@@ -218,7 +218,7 @@ func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error 
 	//	Período: Refere-se sempre ao mês calendário atual (do dia 1 até o último dia do mês corrente).
 	//	Cálculo: É a diferença simples entre suas receitas e despesas do mês:
 	//	    (Total de Receitas do Mês Atual) - (Total de Despesas do Mês Atual)
-	if s.financialReport.SummaryCards.CurrentMonthCashFlow == 0 {
+	if s.financialReport.SummaryCards.CurrentMonthCashFlow == 0.00 {
 		_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, utils.GetFirstDayOfCurrentMonth(), utils.GetLastDayOfCurrentMonth())
 		if err != nil {
 			return err
@@ -237,7 +237,7 @@ func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error 
 	// Cálculo: A variação percentual é calculada da seguinte forma:
 	//	((Saldo do Mês Atual / Saldo do Mês Anterior) - 1) * 100
 	//	Se não houver dados para o mês anterior, o backend deve retornar null para este campo.
-	if s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct == nil {
+	if s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct == 0.00 {
 		_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, utils.GetFirstDayOfLastMonth(), utils.GetLastDayOfLastMonth())
 		if err != nil {
 			return err
@@ -250,22 +250,22 @@ func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error 
 
 		lastMonthCashFlow := incomeAmount - expenseAmount
 		CurrentMonthCashFlowChangePct := ((s.financialReport.SummaryCards.CurrentMonthCashFlow / lastMonthCashFlow) - 1) * 100
-		s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct = &CurrentMonthCashFlowChangePct
+		s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct = CurrentMonthCashFlowChangePct
 	}
 
 	// Patrimonio liquido (NetWorth)
 	// Período: Este é um "snapshot", representando o valor no momento atual da consulta.
 	// Cálculo: É o valor total de tudo que você possui, menos o que você deve:
 	// 		(Soma dos saldos de todas as contas) + (Valor atual de todos os investimentos) - (Total de dívidas)
-	if s.financialReport.SummaryCards.NetWorth == 0 {
-		s.financialReport.SummaryCards.NetWorth = 0
+	if s.financialReport.SummaryCards.NetWorth == 0.00 {
+		s.financialReport.SummaryCards.NetWorth = 5.75
 	}
 
 	// Crescismento do patrimônio líquido (NetWorthChangePct)
 	// 	Período: Compara o seu patrimônio líquido atual com o seu patrimônio líquido de 12 meses atrás.
 	// 	Cálculo: A fórmula para a variação percentual é:
 	// 			((Patrimônio Atual / Patrimônio de 12 Meses Atrás) - 1) * 100
-	if s.financialReport.SummaryCards.NetWorthChangePercent == 0 {
+	if s.financialReport.SummaryCards.NetWorthChangePercent == 0.00 {
 		s.financialReport.SummaryCards.NetWorthChangePercent = 10.87
 	}
 

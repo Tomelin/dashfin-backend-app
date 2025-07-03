@@ -40,10 +40,10 @@ type FinancialReportData struct {
 
 // ReportSummaryCards contém os dados para os cards de destaque.
 type ReportSummaryCards struct {
-	CurrentMonthCashFlow          float64  `json:"currentMonthCashFlow"`                    // Saldo do Mês: (Receitas do Mês) - (Despesas do Mês)
-	CurrentMonthCashFlowChangePct *float64 `json:"currentMonthCashFlowChangePct,omitempty"` // Variação % do saldo do mês em relação ao mês anterior
-	NetWorth                      float64  `json:"netWorth"`                                // Valor ATUAL do Patrimônio Líquido
-	NetWorthChangePercent         float64  `json:"netWorthChangePercent"`                   // Variação % do patrimônio em relação a 12 meses atrás
+	CurrentMonthCashFlow          float64 `json:"currentMonthCashFlow"`                    // Saldo do Mês: (Receitas do Mês) - (Despesas do Mês)
+	CurrentMonthCashFlowChangePct float64 `json:"currentMonthCashFlowChangePct,omitempty"` // Variação % do saldo do mês em relação ao mês anterior
+	NetWorth                      float64 `json:"netWorth"`                                // Valor ATUAL do Patrimônio Líquido
+	NetWorthChangePercent         float64 `json:"netWorthChangePercent"`                   // Variação % do patrimônio em relação a 12 meses atrás
 }
 
 // MonthlySummaryItem representa o resumo de um mês para o gráfico de fluxo de caixa.
