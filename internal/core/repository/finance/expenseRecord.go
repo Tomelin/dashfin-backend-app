@@ -52,13 +52,35 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		return nil, err
 	}
 
-	var response entity_finance.ExpenseRecord
+	var response interface{}
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	var responseEntity entity_finance.ExpenseRecord
+	if responseMap, ok := response.(map[string]interface{}); ok {
+		responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
+		responseEntity.ConvertISO8601ToTime("PaymentDate", responseMap["PaymentDate"].(string))
+		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
+		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
+
+		responseEntity = entity_finance.ExpenseRecord{
+			ID:               responseMap["ID"].(string),
+			Category:         responseMap["Category"].(string),
+			Subcategory:      responseMap["Subcategory"].(string),
+			Amount:           responseMap["Amount"].(float64),
+			BankPaidFrom:     responseMap["BankPaidFrom"].(string),
+			CustomBankName:   responseMap["CustomBankName"].(string),
+			Description:      responseMap["Description"].(string),
+			IsRecurring:      responseMap["IsRecurring"].(bool),
+			RecurrenceNumber: responseMap["RecurrenceNumber"].(int),
+			RecurrenceCount:  responseMap["RecurrenceCount"].(int),
+			UserID:           responseMap["UserID"].(string),
+		}
+	}
+
+	return &responseEntity, nil
 }
 
 // GetExpenseRecordByID retrieves an expense record by its ID.

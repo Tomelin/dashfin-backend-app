@@ -65,7 +65,6 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 	var responseEntity entity_finance.IncomeRecord
 	if responseMap, ok := response.(map[string]interface{}); ok {
 
-		log.Println("[RESPONSE] Income record created successfully:", responseMap)
 		responseEntity.ConvertISO8601ToTime("ReceiptDate", responseMap["ReceiptDate"].(string))
 		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))

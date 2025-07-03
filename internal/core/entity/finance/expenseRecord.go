@@ -120,6 +120,28 @@ func (ex *ExpenseByNfceUrl) Validate() error {
 	return nil
 }
 
+// This is useful for parsing dates from JSON or other sources that use this format.
+func (ir *ExpenseRecord) ConvertISO8601ToTime(field, dateStr string) error {
+	var err error
+	if field != "DueDate" {
+		ir.DueDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "CreatedAt" {
+		ir.CreatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "UpdatedAt" {
+		ir.UpdatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "PaymentDate" {
+		ir.PaymentDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	return err
+}
+
 // Validate checks the ExpenseRecord fields for correctness.
 func (er *ExpenseRecord) Validate() error {
 
