@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -143,13 +144,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 
 // GetExpenseRecords retrieves all expense records for the user in context (or all if no user context).
 func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
-	// Potentially add filtering by UserID from context if available
-	// For now, gets all records.
-	// userID := ctx.Value("UserID").(string)
-	// filters := map[string]interface{}{
-	//  "userId": userID,
-	// }
-	// result, err := r.DB.GetByFilter(ctx, filters, "expenseRecords")
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
@@ -161,6 +155,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	log.Println("Retrieved Expense Records:", string(result))
 	var records []entity_finance.ExpenseRecord
 	if err := json.Unmarshal(result, &records); err != nil {
 		return nil, err
