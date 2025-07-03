@@ -72,7 +72,7 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 		return
 	}
 
-	responseBytes, err := json.Marshal(result)
+	responseBytes, err := json.Marshal(*result)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
 		return
