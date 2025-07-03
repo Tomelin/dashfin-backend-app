@@ -71,9 +71,13 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 	s.getExpenseRecords(ctx)
 
 	s.getSummaryCards(ctx)
+	log.Println("FinancialReportDataService: Summary cards fetched", s.financialReport.SummaryCards)
 	s.getMonthlyCashFlow(ctx)
+	log.Println("FinancialReportDataService: Monthly cash flow fetched", s.financialReport.MonthlyCashFlow)
 	s.getExpenseByCategory(ctx)
+	log.Println("FinancialReportDataService: Expense by category fetched", s.financialReport.ExpenseByCategoryLast12Months)
 	s.getExpenseByCategoryLast12Months(ctx)
+	log.Println("FinancialReportDataService: Expense by category last 12 months fetched", s.financialReport.ExpenseByCategoryLast12Months)
 
 	if s.financialReport != nil {
 		s.cache.Set(ctx, cacheKeyFinancialReport, *s.financialReport, serviceCacheTTL)
