@@ -162,8 +162,10 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
+	log.Println("Decrypting Data...")
 	var expenseData dto.ExpenseRecordDTO
 	if err := json.Unmarshal(decryptedData, &expenseData); err != nil {
+		log.Println("Error unmarshalling data:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
 		return
 	}
