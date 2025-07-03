@@ -104,6 +104,7 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	}
 
 	income.UserID = userID // Ensure the user ID is set for the new record
+	log.Println("Income record to be created:", income)
 	result, err := h.service.CreateIncomeRecord(ctx, income)
 	log.Println("Result of income record creation:", result, err)
 	if err != nil {
