@@ -65,6 +65,7 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 	var responseEntity entity_finance.IncomeRecord
 	if responseMap, ok := response.(map[string]interface{}); ok {
 
+		log.Println("[RESPONSE] Income record created successfully:", responseMap)
 		responseEntity = entity_finance.IncomeRecord{
 			ID:          responseMap["id"].(string),
 			UserID:      responseMap["userId"].(string),
