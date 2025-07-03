@@ -22,7 +22,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	web_dashboard "github.com/Tomelin/dashfin-backend-app/internal/handler/web/dashboard"
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
-	web_finance_expense "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/finance/expense"
+	web_finance_expense "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/expense"
 	web_finance_income "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/income"
 	web_report "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/report"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
