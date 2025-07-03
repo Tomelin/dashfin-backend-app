@@ -276,11 +276,8 @@ func (s *DashboardService) calculateMonthlyRevenue(incomes []financeEntity.Incom
 	var totalRevenue float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, income := range incomes {
-		receiptDate, err := time.Parse("2006-01-02", income.ReceiptDate)
-		if err == nil {
-			if !receiptDate.Before(monthStart) && !receiptDate.After(monthEnd) {
-				totalRevenue += income.Amount
-			}
+		if !income.ReceiptDate.Before(monthStart) && !income.ReceiptDate.After(monthEnd) {
+			totalRevenue += income.Amount
 		}
 	}
 	return totalRevenue
@@ -544,17 +541,13 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 
 	// Process incomes
 	for _, income := range allUserIncomes {
-		receiptDate, err := time.Parse("2006-01-02", income.ReceiptDate)
-		if err != nil {
-			fmt.Printf("Warning: Could not parse Income ReceiptDate '%s' for income ID %s: %v\n", income.ReceiptDate, income.ID, err)
-			continue // Skip this income record if date is invalid
-		}
+
 		// Ensure date is within the desired range (should be covered by the initial fetch, but good practice)
-		if receiptDate.Before(startDate) || receiptDate.After(endDate) {
+		if income.ReceiptDate.Before(startDate) || income.ReceiptDate.After(endDate) {
 			continue
 		}
 
-		monthLabel := receiptDate.Format("2006-01")
+		monthLabel := income.ReceiptDate.Format("2006-01")
 		if item, exists := monthlySummaryMap[monthLabel]; exists {
 			item.TotalIncome += income.Amount
 		} else {

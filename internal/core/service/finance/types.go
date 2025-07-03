@@ -22,12 +22,15 @@ const (
 const (
 	serviceCacheTTL = 1 * time.Minute
 
+	cacheKeyIncomeReport             = "income_report"
 	cacheKeyIncomeReportByMonth      = "income_report_by_month"
 	cacheKeyIncomeReportByLastMonth  = "income_report_by_last_month"
 	cacheKeyIncomeReportByYear       = "income_report_by_year"
+	cacheKeyExpenseReport            = "expense_report"
 	cacheKeyExpenseReportByMonth     = "expense_report_by_month"
 	cacheKeyExpenseReportByLastMonth = "expense_report_by_last_month"
 	cacheKeyExpenseReportByYear      = "expense_report_by_year"
+	cacheKeyFinancialReport				 = "financial_report"
 )
 
 // Date and time

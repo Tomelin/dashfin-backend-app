@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"time"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/pkg/cache"
@@ -14,10 +14,13 @@ import (
 
 type FinancialReportDataService struct {
 	// repo         entity.FinancialReportDataRepositoryInterface
-	income       entity.IncomeRecordServiceInterface
-	expense      entity.ExpenseRecordServiceInterface
-	cache        cache.CacheService
-	messageQueue message_queue.MessageQueue
+	income          entity.IncomeRecordServiceInterface
+	expense         entity.ExpenseRecordServiceInterface
+	cache           cache.CacheService
+	messageQueue    message_queue.MessageQueue
+	incomeRecords   []entity.IncomeRecord
+	expenseRecords  []entity.ExpenseRecord
+	financialReport *entity.FinancialReportData
 }
 
 func InitializeFinancialReportDataService(
@@ -62,165 +65,310 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
-	report := entity.FinancialReportData{}
+	// Initialize the date variables for the report
+	s.getIncomeRecords(ctx)
+	s.getExpenseRecords(ctx)
 
-	incomeReportMonth, incomeAmountMonth, err := s.getMonthIncomeRecords(ctx, firstDayOfMonth, lastDayOfMonth, cacheKeyIncomeReportByMonth)
-	if err != nil {
-		return nil, err
+	s.getSummaryCards(ctx)
+	s.getMonthlyCashFlow(ctx)
+	s.getExpenseByCategory(ctx)
+	s.getExpenseByCategoryLast12Months(ctx)
+
+	if s.financialReport != nil {
+		s.cache.Set(ctx, cacheKeyFinancialReport, *s.financialReport, serviceCacheTTL)
 	}
 
-	incomeReportYear, incomeAmountYear, err := s.getMonthIncomeRecords(ctx, firstDayOfYear, lastDayOfMonth, cacheKeyIncomeReportByYear)
-	if err != nil {
-		return nil, err
-	}
-
-	incomeReportLastMonth, incomeAmountLastMonth, err := s.getMonthIncomeRecords(ctx, firstDayOfLastMonth, lastDayOfLastMonth, cacheKeyIncomeReportByLastMonth)
-	if err != nil {
-		return nil, err
-	}
-
-	expenseReportMonth, expenseAmountMonth, err := s.getExpenseRecords(ctx, firstDayOfMonth, lastDayOfMonth, cacheKeyExpenseReportByMonth)
-	if err != nil {
-		return nil, err
-	}
-
-	expenseReportYear, expenseAmountYear, err := s.getExpenseRecords(ctx, firstDayOfYear, lastDayOfMonth, cacheKeyExpenseReportByYear)
-	if err != nil {
-		return nil, err
-	}
-
-	expenseReportLastMonth, expenseAmountLastMonth, err := s.getExpenseRecords(ctx, firstDayOfLastMonth, lastDayOfLastMonth, cacheKeyExpenseReportByLastMonth)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println(incomeReportMonth, incomeReportYear, expenseReportMonth, expenseReportYear, incomeAmountYear, expenseAmountYear, incomeAmountMonth, incomeAmountLastMonth, incomeReportLastMonth, expenseReportLastMonth, expenseAmountLastMonth)
-
-	// cacheFlowPct represents the percentage change in cash flow for the current month compared to the previous month's cash flow.
-	lastMonthCashFlow := incomeAmountLastMonth - expenseAmountLastMonth
-	currentMonthCashFlow := incomeAmountMonth - expenseAmountMonth
-	last12Months := incomeAmountYear - expenseAmountYear
-	var cacheFlowPct float64
-	if lastMonthCashFlow != 0 {
-		cacheFlowPct = (currentMonthCashFlow - lastMonthCashFlow) / lastMonthCashFlow * 100
-	}
-
-	report.SummaryCards.CurrentMonthCashFlow = currentMonthCashFlow
-	report.SummaryCards.CurrentMonthCashFlowChangePct = &cacheFlowPct
-
-	// Calculate the Net Worth change percentage over the last 12 months.
-	var netWorthChangePct float64
-	if last12Months != 0 { // Avoid division by zero
-		netWorthChangePct = ((currentMonthCashFlow - last12Months) / last12Months) * 100
-	}
-	report.SummaryCards.NetWorth = last12Months
-	report.SummaryCards.NetWorthChangePercent = netWorthChangePct
-
-	return &report, nil
+	return s.financialReport, nil
 }
 
-func (s *FinancialReportDataService) getMonthIncomeRecords(ctx context.Context, startDate, endDate, cacheKey string) ([]entity.IncomeRecord, float64, error) {
+func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context) error {
+
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
-		return nil, 0, err
+		return err
 	}
 
 	if userId == nil || *userId == "" {
-		return nil, 0, fmt.Errorf("userId is nil")
+		return fmt.Errorf("userId is nil")
 	}
 
-	cachedData, err := s.cache.Get(ctx, fmt.Sprintf("%s_%s", cacheKey, *userId))
+	cachedData, err := s.cache.Get(ctx, fmt.Sprintf("%s_%s", cacheKeyIncomeReport, *userId))
 	var report []entity.IncomeRecord
-	var amount float64
 	if err == nil { // Found in cache
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
-			return nil, amount, nil
-		}
-		if len(report) > 0 {
-			for _, v := range report {
-				amount += v.Amount
+			if len(report) > 0 {
+				s.incomeRecords = report
 			}
-			return report, amount, nil
+			return nil
 		}
-	} else if err != cache.ErrNotFound { // Actual cache error
-		// Log cache error and fall through to repository
-		log.Printf("Cache error fetching spending plan for UserID %s: %v", *userId, err)
 	}
 
 	report, err = s.income.GetIncomeRecords(ctx, &entity.GetIncomeRecordsQueryParameters{
-		StartDate: &startDate,
-		EndDate:   &endDate,
+		StartDate: nil,
+		EndDate:   nil,
 	})
 
 	if err != nil {
-		return nil, amount, err
+		return err
 	}
 
 	if len(report) > 0 {
 		cacheData, _ := json.Marshal(report)
-		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKey, *userId), cacheData, serviceCacheTTL)
-		for _, v := range report {
-			amount += v.Amount
+		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKeyIncomeReport, *userId), cacheData, serviceCacheTTL)
+		s.incomeRecords = report
+		return nil
+	}
+
+	return nil
+}
+
+func (s *FinancialReportDataService) getIncomeRecordsByPeriod(ctx context.Context, startDate, endDate time.Time) (report []entity.IncomeRecord, amount float64, err error) {
+
+	if startDate == (time.Time{}) || endDate == (time.Time{}) {
+		return nil, 0, fmt.Errorf("startDate or endDate is empty")
+	}
+
+	if len(s.incomeRecords) == 0 {
+		if err := s.getIncomeRecords(ctx); err != nil {
+			return nil, 0, err
 		}
-		return report, amount, nil
+	}
+
+	for _, record := range s.incomeRecords {
+		if record.ReceiptDate.After(startDate) && record.ReceiptDate.Before(endDate) {
+			report = append(report, record)
+			amount += record.Amount
+		}
 	}
 
 	return report, amount, nil
 }
 
-func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context, startDate, endDate, cacheKey string) ([]entity.ExpenseRecord, float64, error) {
+func (s *FinancialReportDataService) getExpenseRecords(ctx context.Context) error {
 
 	userId, err := utils.GetUserID(ctx)
 	if err != nil {
-		return nil, 0, err
+		return err
 	}
 
 	if userId == nil || *userId == "" {
-		return nil, 0, fmt.Errorf("userId is nil")
+		return fmt.Errorf("userId is nil")
 	}
 
-	cachedData, err := s.cache.Get(ctx, fmt.Sprintf("%s_%s", cacheKey, *userId))
+	cachedData, err := s.cache.Get(ctx, fmt.Sprintf("%s_%s", cacheKeyExpenseReport, *userId))
 	var report []entity.ExpenseRecord
-	var amount float64
 	if err == nil { // Found in cache
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
-			return nil, amount, nil
-		}
-		if len(report) > 0 {
-			for _, v := range report {
-				amount += v.Amount
+			if len(report) > 0 {
+				s.expenseRecords = report
 			}
-			return report, amount, nil
+			return nil
 		}
-	} else if err != cache.ErrNotFound { // Actual cache error
-		// Log cache error and fall through to repository
-		log.Printf("Cache error fetching spending plan for UserID %s: %v", *userId, err)
 	}
 
-	s.expense.GetExpenseRecordsByDate(ctx, &entity.ExpenseRecordQueryByDate{
-		StartDate: startDate,
-		EndDate:   endDate,
-	})
-
+	report, err = s.expense.GetExpenseRecords(ctx)
 	if err != nil {
-		return nil, amount, err
+		return err
 	}
 
 	if len(report) > 0 {
 		cacheData, _ := json.Marshal(report)
-		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKey, *userId), cacheData, serviceCacheTTL)
-		for _, v := range report {
-			amount += v.Amount
+		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKeyExpenseReport, *userId), cacheData, serviceCacheTTL)
+		s.expenseRecords = report
+		return nil
+	}
+
+	return nil
+}
+
+func (s *FinancialReportDataService) getExpenseRecordsByPeriod(ctx context.Context, startDate, endDate time.Time) (report []entity.ExpenseRecord, amount float64, err error) {
+
+	if startDate.IsZero() || endDate.IsZero() {
+		return nil, 0, fmt.Errorf("startDate or endDate is empty")
+	}
+
+	if len(s.expenseRecords) == 0 {
+		if err := s.getExpenseRecords(ctx); err != nil {
+			return nil, 0, err
 		}
-		return report, amount, nil
+	}
+
+	for _, record := range s.expenseRecords {
+		report = append(report, record)
+		amount += record.Amount
 	}
 
 	return report, amount, nil
 }
 
-func (s *FinancialReportDataService) setCache(ctx context.Context, cacheKey string, planData *entity.SpendingPlan) {
+func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error {
 
-	s.cache.Set(ctx, cacheKey, *planData, serviceCacheTTL)
+	// Get primeiro dia do mês atual
+	firstDayOfMonth := utils.GetFirstDayOfCurrentMonth()
+
+	// Get último dia do mês atual
+	lastDayOfMonth := utils.GetLastDayOfCurrentMonth()
+
+	_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, firstDayOfMonth, lastDayOfMonth)
+	if err != nil {
+		return err
+	}
+
+	_, expenseAmount, err := s.getExpenseRecordsByPeriod(ctx, firstDayOfMonth, lastDayOfMonth)
+	if err != nil {
+		return err
+	}
+
+	s.financialReport.SummaryCards.CurrentMonthCashFlow = incomeAmount - expenseAmount
+
+	return nil
+}
+
+func (s *FinancialReportDataService) getMonthlyCashFlow(ctx context.Context) error {
+
+	_, err := utils.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	// generate loop for 12 last months
+	for i := 0; i < 12; i++ {
+		startDate := time.Now().AddDate(0, -i, 0)
+		endDate := startDate.AddDate(0, 1, -1)
+		_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, startDate, endDate)
+		if err != nil {
+			return err
+		}
+		_, expenseAmount, err := s.getExpenseRecordsByPeriod(ctx, startDate, endDate)
+		if err != nil {
+			return err
+		}
+		s.financialReport.MonthlyCashFlow = append(s.financialReport.MonthlyCashFlow, entity.MonthlySummaryItem{
+			Month:    startDate.Format("2006-01"),
+			Revenue:  incomeAmount,
+			Expenses: expenseAmount,
+		})
+	}
+
+	return nil
+
+}
+
+func (s *FinancialReportDataService) getExpenseByCategory(ctx context.Context) error {
+
+	_, err := utils.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Struct para armazenar dados de despesa com valor e mês
+	type ExpenseData struct {
+		Value float64 `json:"value"`
+		Month string  `json:"month"`
+	}
+
+	expense := make(map[string]ExpenseData)
+	currentMonth := time.Now().Format("2006-01")
+
+	for _, record := range s.expenseRecords {
+		category := "desconhecido"
+		if record.Category != "" {
+			category = record.Category
+		}
+
+		start, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
+		end, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
+
+		if start.After(utils.GetFirstDayOfCurrentMonth()) && end.Before(utils.GetLastDayOfCurrentMonth()) {
+			// Se a categoria já existe, soma o valor
+			if existingData, exists := expense[category]; exists {
+				expense[category] = ExpenseData{
+					Value: existingData.Value + record.Amount,
+					Month: currentMonth,
+				}
+			} else {
+				// Se não existe, cria novo registro
+				expense[category] = ExpenseData{
+					Value: record.Amount,
+					Month: currentMonth,
+				}
+			}
+		}
+	}
+
+	if len(expense) > 0 {
+		for category, data := range expense {
+			s.financialReport.ExpenseByCategoryLast12Months = append(s.financialReport.ExpenseByCategoryLast12Months, entity.CategoryExpenseItem{
+				Name:  category,
+				Value: data.Value,
+			})
+		}
+	}
+
+	return nil
+}
+
+func (s *FinancialReportDataService) getExpenseByCategoryLast12Months(ctx context.Context) error {
+
+	_, err := utils.GetUserID(ctx)
+	if err != nil {
+		return err
+	}
+
+	type CategoryExpenseWithMonth struct {
+		Category string  `json:"category"`
+		Value    float64 `json:"value"`
+		Month    string  `json:"month"`
+	}
+	expense := make(map[string]CategoryExpenseWithMonth)
+
+	// generate loop for 12 last months
+	for i := 0; i < 12; i++ {
+		startDate := time.Now().AddDate(0, -i, 0)
+		endDate := startDate.AddDate(0, 1, -1)
+		monthKey := startDate.Format("2006-01")
+
+		for _, record := range s.expenseRecords {
+			category := "desconhecido"
+			if record.Category != "" {
+				category = record.Category
+			}
+
+			start, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
+			end, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
+
+			if startDate.After(start) && endDate.Before(end) {
+				// Criar chave única para categoria + mês
+				key := fmt.Sprintf("%s_%s", category, monthKey)
+
+				// Se a categoria-mês já existe, soma o valor
+				if existingData, exists := expense[key]; exists {
+					expense[key] = CategoryExpenseWithMonth{
+						Category: category,
+						Value:    existingData.Value + record.Amount,
+						Month:    monthKey,
+					}
+				} else {
+					// Se não existe, cria novo registro
+					expense[key] = CategoryExpenseWithMonth{
+						Category: category,
+						Value:    record.Amount,
+						Month:    monthKey,
+					}
+				}
+			}
+		}
+	}
+	if len(expense) > 0 {
+		for _, data := range expense {
+			s.financialReport.ExpenseByCategoryLast12Months = append(s.financialReport.ExpenseByCategoryLast12Months, entity.CategoryExpenseItem{
+				Name:  data.Category,
+				Value: data.Value,
+			})
+		}
+	}
+
+	return nil
 }
 
 func (s *FinancialReportDataService) mqConsumer(ctx context.Context) {
