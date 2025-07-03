@@ -66,6 +66,11 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
+	// Initialize financialReport if it is nil
+	if s.financialReport == nil {
+		s.financialReport = &entity.FinancialReportData{}
+	}
+
 	// Initialize the date variables for the report
 	s.getIncomeRecords(ctx)
 	s.getExpenseRecords(ctx)
