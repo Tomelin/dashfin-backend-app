@@ -226,6 +226,8 @@ func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error 
 		return err
 	}
 
+	log.Println("FinancialReportDataService: Income amount for current month:", incomeAmount)
+	log.Println("FinancialReportDataService: Expense amount for current month:", expenseAmount)
 	s.financialReport.SummaryCards.CurrentMonthCashFlow = incomeAmount - expenseAmount
 
 	return nil
