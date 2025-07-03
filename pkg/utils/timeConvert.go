@@ -53,3 +53,68 @@ func GetLastDayOfCurrentMonth() time.Time {
 
 	return lastDayOfMonth
 }
+
+// ConvertStringToTimeRFC3339 converts a RFC3339 string to time.Time
+// Example: "2025-07-03T11:48:48.060949386Z" → time.Time
+func ConvertStringToTimeRFC3339(dateStr string) (time.Time, error) {
+	// Try RFC3339Nano first (with nanoseconds)
+	t, err := time.Parse(time.RFC3339Nano, dateStr)
+	if err != nil {
+		// Fallback to regular RFC3339 (without nanoseconds)
+		t, err = time.Parse(time.RFC3339, dateStr)
+		if err != nil {
+			return time.Time{}, err
+		}
+	}
+	return t, nil
+}
+
+// ConvertTimeToRFC3339 converts time.Time to RFC3339 string with nanoseconds
+// Example: time.Time → "2025-07-03T11:48:48.060949386Z"
+func ConvertTimeToRFC3339(date time.Time) string {
+	return date.Format(time.RFC3339Nano)
+}
+
+// ConvertTimeToRFC3339Simple converts time.Time to simple RFC3339 string (without nanoseconds)
+// Example: time.Time → "2025-07-03T11:48:48Z"
+func ConvertTimeToRFC3339Simple(date time.Time) string {
+	return date.Format(time.RFC3339)
+}
+
+// ConvertISO8601ToRFC3339 converts ISO 8601 date to RFC3339 timestamp
+// Example: "2025-07-03" → "2025-07-03T00:00:00Z"
+func ConvertISO8601ToRFC3339(dateStr string) (string, error) {
+	t, err := ConvertISO8601ToTime(dateStr)
+	if err != nil {
+		return "", err
+	}
+	// Convert to UTC and format as RFC3339
+	return t.UTC().Format(time.RFC3339), nil
+}
+
+// ConvertRFC3339ToISO8601 converts RFC3339 timestamp to ISO 8601 date
+// Example: "2025-07-03T11:48:48.060949386Z" → "2025-07-03"
+func ConvertRFC3339ToISO8601(rfc3339Str string) (string, error) {
+	t, err := ConvertStringToTimeRFC3339(rfc3339Str)
+	if err != nil {
+		return "", err
+	}
+	return ConvertTimeToISO8601(t), nil
+}
+
+// ConvertRFC3339ToYYYYMMDD converts RFC3339 timestamp to YYYY-MM-DD string format
+// Example: "2025-07-03T11:48:48.060949386Z" → "2025-07-03"
+func ConvertRFC3339ToYYYYMMDD(rfc3339Str string) (string, error) {
+	t, err := ConvertStringToTimeRFC3339(rfc3339Str)
+	if err != nil {
+		return "", err
+	}
+	return t.Format("2006-01-02"), nil
+}
+
+// ConvertRFC3339ToDateFormat converts RFC3339 timestamp directly to YYYY-MM-DD format
+// Example: "2025-07-03T11:48:48.060949386Z" → "2025-07-03"
+func ConvertRFC3339ToDateFormat(rfc3339Str time.Time) (string, error) {
+	// Force YYYY-MM-DD format
+	return rfc3339Str.Format("2006-01-02"), nil
+}
