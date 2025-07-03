@@ -71,7 +71,7 @@ func (er *ExpenseRecordDTO) Validate() error {
 			return errors.New("description must not exceed 200 characters")
 		}
 
-		if strings.TrimSpace(ir.UserID) == "" {
+		if strings.TrimSpace(er.UserID) == "" {
 			return errors.New("userID is required")
 		}
 
