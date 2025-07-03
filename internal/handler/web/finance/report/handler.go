@@ -3,6 +3,7 @@ package report
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -72,6 +73,7 @@ func (h *ReportHandler) GetReport(c *gin.Context) {
 		return
 	}
 
+	log.Println("Financial Report Data:", *result)
 	responseBytes, err := json.Marshal(*result)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})

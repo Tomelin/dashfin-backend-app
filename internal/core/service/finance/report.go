@@ -66,7 +66,6 @@ func (s *FinancialReportDataService) GetFinancialReportData(ctx context.Context)
 		return nil, err
 	}
 
-	return nil, nil
 	// Initialize financialReport if it is nil
 	if s.financialReport == nil {
 		s.financialReport = &entity.FinancialReportData{}
