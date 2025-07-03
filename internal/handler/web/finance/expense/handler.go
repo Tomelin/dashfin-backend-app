@@ -3,6 +3,7 @@ package web_finance_expense
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -179,8 +180,10 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
+	log.Println("Creating Expense Record:", expenseRecord)
 	result, err := h.service.CreateExpenseRecord(ctx, expenseRecord)
 	if err != nil {
+		log.Println("Error creating expense record:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
 		return
 	}
