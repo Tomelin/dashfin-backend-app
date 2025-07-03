@@ -178,6 +178,7 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 
 	expenseRecord, err := expenseData.ToEntity()
 	if err != nil {
+		log.Println("Error converting DTO to entity:", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid expense record data: " + err.Error()})
 		return
 	}
