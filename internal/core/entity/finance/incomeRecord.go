@@ -148,8 +148,7 @@ func (ir *IncomeRecord) Validate() error {
 			return errors.New("recurrenceCount must be at least 1 if isRecurring is true")
 		}
 	} else {
-		// If not recurring, RecurrenceCount should ideally be nil or ignored.
-		// Depending on API design, you might want to enforce ir.RecurrenceCount == nil here.
+		ir.RecurrenceCount = 0 // Reset if not recurring
 	}
 
 	if ir.Observations != "" && len(ir.Observations) > 500 {
