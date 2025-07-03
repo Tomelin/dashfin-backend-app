@@ -67,14 +67,14 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 
 		log.Println("[RESPONSE] Income record created successfully:", responseMap)
 		responseEntity = entity_finance.IncomeRecord{
-			ID:          responseMap["id"].(string),
-			UserID:      responseMap["userId"].(string),
-			Description: responseMap["description"].(string),
-			Category:    responseMap["category"].(string),
-			Amount:      responseMap["amount"].(float64), // Assuming amount is a float64
-			ReceiptDate: responseMap["receiptDate"].(time.Time),
-			CreatedAt:   responseMap["createdAt"].(time.Time),
-			UpdatedAt:   responseMap["updatedAt"].(time.Time),
+			ID:          responseMap["ID"].(string),
+			UserID:      responseMap["UserId"].(string),
+			Description: responseMap["Description"].(string),
+			Category:    responseMap["Category"].(string),
+			Amount:      responseMap["Amount"].(float64), // Assuming amount is a float64
+			ReceiptDate: responseMap["ReceiptDate"].(time.Time),
+			CreatedAt:   responseMap["CreatedAt"].(time.Time),
+			UpdatedAt:   responseMap["UpdatedAt"].(time.Time),
 		}
 	}
 
