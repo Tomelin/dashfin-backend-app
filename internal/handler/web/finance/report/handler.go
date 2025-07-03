@@ -44,7 +44,7 @@ func InitializeReportHandler(
 // setupRoutes sets up the routes for spending plan operations under the given router group.
 func (h *ReportHandler) setupRoutes(routerGroup *gin.RouterGroup, middleware ...gin.HandlerFunc) {
 
-	reportGroup := routerGroup.Group("/finance/report")
+	reportGroup := routerGroup.Group("/finance/reports")
 	for _, mw := range middleware {
 		reportGroup.Use(mw)
 	}
