@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -41,7 +42,8 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 	data.CreatedAt = time.Now()
 	data.UpdatedAt = time.Now()
 
-	toMap, _ := utils.StructToMap(data)
+	toMap, err := utils.StructToMap(data)
+	log.Println("Converted income record to map:", toMap, err)
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
@@ -50,12 +52,14 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 
 	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
+		log.Println("[DB] Error creating income record:", err)
 		return nil, err
 	}
 
 	var response entity_finance.IncomeRecord
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
+		log.Println("[RESPONSE] Error unmarshalling income record:", err)
 		return nil, err
 	}
 
