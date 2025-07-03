@@ -63,11 +63,11 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 	data.UpdatedAt = time.Now()
 
 	// Handle recurring income
-	if data.IsRecurring && data.RecurrenceCount != nil && *data.RecurrenceCount > 0 {
+	if data.IsRecurring && data.RecurrenceCount > 0 {
 		var firstCreatedRecord *entity_finance.IncomeRecord
 		var err error
 
-		for i := 0; i < *data.RecurrenceCount; i++ {
+		for i := 0; i < data.RecurrenceCount; i++ {
 			currentRecord := *data // Create a copy for each recurrence
 			currentRecord.RecurrenceNumber = i + 1
 

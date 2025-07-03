@@ -42,8 +42,7 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 	data.CreatedAt = time.Now()
 	data.UpdatedAt = time.Now()
 
-	toMap, err := utils.StructToMap(data)
-	log.Println("Converted income record to map:", toMap, err)
+	toMap, _ := utils.StructToMap(data)
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
@@ -52,18 +51,33 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 
 	doc, err := r.DB.Create(ctx, toMap, *collection)
 	if err != nil {
-		log.Println("[DB] Error creating income record:", err)
 		return nil, err
 	}
 
-	var response entity_finance.IncomeRecord
+	var response interface{}
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
 		log.Println("[RESPONSE] Error unmarshalling income record:", err)
 		return nil, err
 	}
 
-	return &response, nil
+	// If the response is a map, we can convert it back to IncomeRecord
+	var responseEntity entity_finance.IncomeRecord
+	if responseMap, ok := response.(map[string]interface{}); ok {
+
+		responseEntity = entity_finance.IncomeRecord{
+			ID:          responseMap["id"].(string),
+			UserID:      responseMap["userId"].(string),
+			Description: responseMap["description"].(string),
+			Category:    responseMap["category"].(string),
+			Amount:      responseMap["amount"].(float64), // Assuming amount is a float64
+			ReceiptDate: responseMap["receiptDate"].(time.Time),
+			CreatedAt:   responseMap["createdAt"].(time.Time),
+			UpdatedAt:   responseMap["updatedAt"].(time.Time),
+		}
+	}
+
+	return &responseEntity, nil
 }
 
 // GetIncomeRecordByID retrieves an income record by its ID.

@@ -89,17 +89,32 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 		return nil, err
 	}
 
+	description := ""
+	if ir.Description != nil {
+		description = *ir.Description
+	}
+
+	recurrenceCount := 0
+	if ir.RecurrenceCount != nil {
+		recurrenceCount = *ir.RecurrenceCount
+	}
+
+	observations := ""
+	if ir.Observations != nil {
+		observations = *ir.Observations
+	}
+
 	income := &entity_finance.IncomeRecord{
 		ID:               ir.ID,
 		Category:         ir.Category,
-		Description:      ir.Description,
+		Description:      description,
 		BankAccountID:    ir.BankAccountID,
 		Amount:           ir.Amount,
 		ReceiptDate:      receiptDate,
 		IsRecurring:      ir.IsRecurring,
-		RecurrenceCount:  ir.RecurrenceCount,
+		RecurrenceCount:  recurrenceCount,
 		RecurrenceNumber: ir.RecurrenceNumber,
-		Observations:     ir.Observations,
+		Observations:     observations,
 		UserID:           ir.UserID,
 	}
 
@@ -111,15 +126,16 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 }
 
 func (ir *IncomeRecordDTO) FromEntity(income *entity_finance.IncomeRecord) {
+
 	ir.ID = income.ID
 	ir.Category = income.Category
-	ir.Description = income.Description
+	ir.Description = &income.Description
 	ir.BankAccountID = income.BankAccountID
 	ir.Amount = income.Amount
 	ir.ReceiptDate = utils.ConvertTimeToString("2006-01-02", income.ReceiptDate)
 	ir.IsRecurring = income.IsRecurring
-	ir.RecurrenceCount = income.RecurrenceCount
+	ir.RecurrenceCount = &income.RecurrenceCount
 	ir.RecurrenceNumber = income.RecurrenceNumber
-	ir.Observations = income.Observations
+	ir.Observations = &income.Observations
 	ir.UserID = income.UserID
 }

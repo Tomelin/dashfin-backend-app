@@ -31,14 +31,14 @@ type IncomeRecordServiceInterface interface {
 type IncomeRecord struct {
 	ID               string // Unique identifier for the income record
 	Category         string
-	Description      *string
+	Description      string
 	BankAccountID    string
 	Amount           float64
 	ReceiptDate      time.Time
 	IsRecurring      bool
-	RecurrenceCount  *int
+	RecurrenceCount  int
 	RecurrenceNumber int
-	Observations     *string
+	Observations     string
 	UserID           string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
@@ -104,7 +104,7 @@ func (ir *IncomeRecord) Validate() error {
 		return errors.New("invalid category value")
 	}
 
-	if ir.Description != nil && len(*ir.Description) > 200 {
+	if ir.Description != "" && len(ir.Description) > 200 {
 		return errors.New("description must not exceed 200 characters")
 	}
 
@@ -122,10 +122,10 @@ func (ir *IncomeRecord) Validate() error {
 	}
 
 	if ir.IsRecurring {
-		if ir.RecurrenceCount == nil {
+		if ir.RecurrenceCount == 0 {
 			return errors.New("recurrenceCount is required if isRecurring is true")
 		}
-		if *ir.RecurrenceCount < 1 {
+		if ir.RecurrenceCount < 1 {
 			return errors.New("recurrenceCount must be at least 1 if isRecurring is true")
 		}
 	} else {
@@ -133,7 +133,7 @@ func (ir *IncomeRecord) Validate() error {
 		// Depending on API design, you might want to enforce ir.RecurrenceCount == nil here.
 	}
 
-	if ir.Observations != nil && len(*ir.Observations) > 500 {
+	if ir.Observations != "" && len(ir.Observations) > 500 {
 		return errors.New("observations must not exceed 500 characters")
 	}
 
