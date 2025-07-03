@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"time"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -98,6 +99,7 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context) error
 		if jsonErr := json.Unmarshal([]byte(cachedData), &report); jsonErr == nil {
 			if len(report) > 0 {
 				s.incomeRecords = report
+				log.Println("FinancialReportDataService: Income records found in cache", s.incomeRecords)
 			}
 			return nil
 		}
@@ -116,6 +118,7 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context) error
 		cacheData, _ := json.Marshal(report)
 		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKeyIncomeReport, *userId), cacheData, serviceCacheTTL)
 		s.incomeRecords = report
+		log.Println("FinancialReportDataService: Income records fetched from service", s.incomeRecords)
 		return nil
 	}
 
@@ -124,7 +127,7 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context) error
 
 func (s *FinancialReportDataService) getIncomeRecordsByPeriod(ctx context.Context, startDate, endDate time.Time) (report []entity.IncomeRecord, amount float64, err error) {
 
-	if startDate == (time.Time{}) || endDate == (time.Time{}) {
+	if time.Time.Equal(time.Time{}, startDate) || time.Time.Equal(time.Time{}, endDate) {
 		return nil, 0, fmt.Errorf("startDate or endDate is empty")
 	}
 
