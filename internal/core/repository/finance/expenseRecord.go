@@ -65,6 +65,26 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
 
+		if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
+			if count, ok := recurrenceCount.(int); ok {
+				responseEntity.RecurrenceCount = count
+			} else {
+				responseEntity.RecurrenceCount = 0
+			}
+		} else {
+			responseEntity.RecurrenceCount = 0 // Default to 0 if not present
+		}
+
+		if recurrenceNumber, ok := responseMap["RecurrenceNumber"]; ok {
+			if count, ok := recurrenceNumber.(int); ok {
+				responseEntity.RecurrenceNumber = count
+			} else {
+				responseEntity.RecurrenceNumber = 0
+			}
+		} else {
+			responseEntity.RecurrenceNumber = 0 // Default to 0 if not present
+		}
+
 		responseEntity = entity_finance.ExpenseRecord{
 			ID:               responseMap["ID"].(string),
 			Category:         responseMap["Category"].(string),
