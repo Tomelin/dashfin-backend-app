@@ -179,7 +179,7 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
-	result, err := h.service.CreateExpenseRecord(ctx, &expenseRecord)
+	result, err := h.service.CreateExpenseRecord(ctx, expenseRecord)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
 		return
@@ -420,7 +420,7 @@ func (h *ExpenseRecordHandler) UpdateExpenseRecord(c *gin.Context) {
 
 	// The service's UpdateExpenseRecord should handle verifying ownership and setting UpdatedAt.
 	// Pass the ID from the path and the unmarshalled data.
-	result, err := h.service.UpdateExpenseRecord(ctx, id, &expenseRecord)
+	result, err := h.service.UpdateExpenseRecord(ctx, id, expenseRecord)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "access denied") {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
