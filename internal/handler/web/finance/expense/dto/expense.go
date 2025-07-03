@@ -2,7 +2,6 @@ package dto
 
 import (
 	"errors"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -90,16 +89,17 @@ func (er *ExpenseRecordDTO) ToEntity() (*entity_finance.ExpenseRecord, error) {
 		return nil, er.Validate()
 	}
 
-	log.Println("Converting DueDate...", er.DueDate)
 	dueDate, err := utils.ConvertISO8601ToTime(er.DueDate)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Println("Converting PaymentDate...", er.PaymentDate)
-	paymentDate, err := utils.ConvertISO8601ToTime(er.PaymentDate)
-	if err != nil {
-		return nil, err
+	var paymentDate time.Time
+	if er.PaymentDate != "" {
+		paymentDate, err := utils.ConvertISO8601ToTime(er.PaymentDate)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	expense := &entity_finance.ExpenseRecord{
