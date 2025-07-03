@@ -114,7 +114,22 @@ func ConvertRFC3339ToYYYYMMDD(rfc3339Str string) (string, error) {
 
 // ConvertRFC3339ToDateFormat converts RFC3339 timestamp directly to YYYY-MM-DD format
 // Example: "2025-07-03T11:48:48.060949386Z" → "2025-07-03"
-func ConvertRFC3339ToDateFormat(rfc3339Str time.Time) (string, error) {
+func ConvertRFC3339ToDateFormat(rfc3339Str string) (string, error) {
+	// Try RFC3339Nano first (with nanoseconds)
+	t, err := time.Parse(time.RFC3339Nano, rfc3339Str)
+	if err != nil {
+		// Fallback to regular RFC3339 (without nanoseconds)
+		t, err = time.Parse(time.RFC3339, rfc3339Str)
+		if err != nil {
+			return "", err
+		}
+	}
 	// Force YYYY-MM-DD format
-	return rfc3339Str.Format("2006-01-02"), nil
+	return t.Format("2006-01-02"), nil
+}
+
+// ConvertTimeToDateFormat converts time.Time directly to YYYY-MM-DD format
+// Example: time.Time → "2025-07-03"
+func ConvertTimeToDateFormat(t time.Time) string {
+	return t.Format("2006-01-02")
 }

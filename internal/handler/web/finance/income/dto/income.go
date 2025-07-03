@@ -84,7 +84,7 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 		return nil, err
 	}
 
-	receiptDate, err := utils.ConvertStringToTimeRFC3339(ir.ReceiptDate)
+	receiptDate, err := utils.ConvertISO8601ToTime(ir.ReceiptDate)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (ir *IncomeRecordDTO) FromEntity(income *entity_finance.IncomeRecord) {
 	ir.Description = &income.Description
 	ir.BankAccountID = income.BankAccountID
 	ir.Amount = income.Amount
-	ir.ReceiptDate, _ = utils.ConvertRFC3339ToDateFormat(income.ReceiptDate)
+	ir.ReceiptDate = utils.ConvertTimeToDateFormat(income.ReceiptDate)
 	ir.IsRecurring = income.IsRecurring
 	ir.RecurrenceCount = &income.RecurrenceCount
 	ir.RecurrenceNumber = income.RecurrenceNumber
