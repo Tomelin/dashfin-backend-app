@@ -2,7 +2,6 @@ package dto
 
 import (
 	"errors"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -89,8 +88,6 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("ToEntity userID", ir.UserID)
 
 	income := &entity_finance.IncomeRecord{
 		ID:               ir.ID,

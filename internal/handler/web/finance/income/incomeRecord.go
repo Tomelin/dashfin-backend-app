@@ -67,7 +67,6 @@ func (h *IncomeRecordHandler) setupRoutes(routerGroup *gin.RouterGroup, middlewa
 // CreateIncomeRecord handles the creation of a new income record.
 func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 
-	log.Println("CreateIncomeRecord called")
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -86,7 +85,6 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 		return
 	}
 
-	log.Println("Decrypted data:", string(decryptedData))
 	var incomeRecord dto.IncomeRecordDTO
 	if err := json.Unmarshal(decryptedData, &incomeRecord); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data format: " + err.Error()})
@@ -96,7 +94,8 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
-	incomeRecord.UserID = userID // Ensure the user ID is set in the DTO
+	incomeRecord.UserID = userID
+
 	log.Println("Creating income record for user:", userID)
 	income, err := incomeRecord.ToEntity()
 	if err != nil {
@@ -105,8 +104,8 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	}
 
 	income.UserID = userID // Ensure the user ID is set for the new record
-	log.Println("Income record to create:", income)
 	result, err := h.service.CreateIncomeRecord(ctx, income)
+	log.Println("Result of income record creation:", result, err)
 	if err != nil {
 		// Consider more specific error codes based on err type if possible
 		if strings.Contains(err.Error(), "validation failed") {
@@ -268,6 +267,8 @@ func (h *IncomeRecordHandler) UpdateIncomeRecord(c *gin.Context) {
 
 	ctx := context.WithValue(c.Request.Context(), "", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
+
+	incomeRecord.UserID = userID
 
 	income, err := incomeRecord.ToEntity()
 	if err != nil {
