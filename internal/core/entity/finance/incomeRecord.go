@@ -95,6 +95,25 @@ func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate
 	}
 }
 
+// ConvertISO8601ToTime converts a date string in ISO 8601 format (YYYY-MM-DD) to a time.Time object.
+// This is useful for parsing dates from JSON or other sources that use this format.
+func (ir *IncomeRecord) ConvertISO8601ToTime(field, dateStr string) error {
+	var err error
+	if field != "ReceiptDate" {
+		ir.ReceiptDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "CreatedAt" {
+		ir.CreatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "UpdatedAt" {
+		ir.UpdatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	return err
+}
+
 // Validate checks the IncomeRecord fields for correctness.
 func (ir *IncomeRecord) Validate() error {
 	if strings.TrimSpace(ir.Category) == "" {

@@ -66,16 +66,21 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 	if responseMap, ok := response.(map[string]interface{}); ok {
 
 		log.Println("[RESPONSE] Income record created successfully:", responseMap)
-		receiptDate, _ := utils.ConvertISO8601ToTime(responseMap["ReceiptDate"].(string))
+		responseEntity.ConvertISO8601ToTime("ReceiptDate", responseMap["ReceiptDate"].(string))
+		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
+		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
+
 		responseEntity = entity_finance.IncomeRecord{
-			ID:          responseMap["ID"].(string),
-			UserID:      responseMap["UserID"].(string),
-			Description: responseMap["Description"].(string),
-			Category:    responseMap["Category"].(string),
-			Amount:      responseMap["Amount"].(float64), // Assuming amount is a float64
-			ReceiptDate: receiptDate,
-			CreatedAt:   responseMap["CreatedAt"].(time.Time),
-			UpdatedAt:   responseMap["UpdatedAt"].(time.Time),
+			ID:               responseMap["ID"].(string),
+			UserID:           responseMap["UserID"].(string),
+			Description:      responseMap["Description"].(string),
+			Category:         responseMap["Category"].(string),
+			Amount:           responseMap["Amount"].(float64),
+			BankAccountID:    responseMap["BankAccountID"].(string),
+			IsRecurring:      responseMap["IsRecurring"].(bool),
+			RecurrenceCount:  responseMap["RecurrenceCount"].(int),
+			RecurrenceNumber: responseMap["RecurrenceNumber"].(int),
+			Observations:     responseMap["Observations"].(string),
 		}
 	}
 
