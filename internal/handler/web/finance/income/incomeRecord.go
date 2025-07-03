@@ -96,6 +96,7 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	ctx := context.WithValue(c.Request.Context(), "Authorization", token)
 	ctx = context.WithValue(ctx, "UserID", userID)
 
+	incomeRecord.UserID = userID // Ensure the user ID is set in the DTO
 	log.Println("Creating income record for user:", userID)
 	income, err := incomeRecord.ToEntity()
 	if err != nil {
