@@ -68,7 +68,7 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 		log.Println("[RESPONSE] Income record created successfully:", responseMap)
 		responseEntity = entity_finance.IncomeRecord{
 			ID:          responseMap["ID"].(string),
-			UserID:      responseMap["UserId"].(string),
+			UserID:      responseMap["UserID"].(string),
 			Description: responseMap["Description"].(string),
 			Category:    responseMap["Category"].(string),
 			Amount:      responseMap["Amount"].(float64), // Assuming amount is a float64
