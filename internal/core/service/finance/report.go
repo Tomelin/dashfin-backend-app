@@ -252,7 +252,7 @@ func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error 
 	// Cálculo: É o valor total de tudo que você possui, menos o que você deve:
 	// 		(Soma dos saldos de todas as contas) + (Valor atual de todos os investimentos) - (Total de dívidas)
 	if s.financialReport.SummaryCards.NetWorth == 0.00 {
-		s.financialReport.SummaryCards.NetWorth = 5.75
+		s.financialReport.SummaryCards.NetWorth = 3.75
 	}
 
 	// Crescismento do patrimônio líquido (NetWorthChangePct)
