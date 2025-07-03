@@ -84,7 +84,7 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 		return nil, err
 	}
 
-	receiptDate, err := utils.ConvertStringToTime("2006-01-02", ir.ReceiptDate)
+	receiptDate, err := utils.ConvertISO8601ToTime(ir.ReceiptDate)
 	if err != nil {
 		return nil, err
 	}
