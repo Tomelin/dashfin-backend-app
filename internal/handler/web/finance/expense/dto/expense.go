@@ -95,7 +95,6 @@ func (er *ExpenseRecordDTO) ToEntity() (*entity_finance.ExpenseRecord, error) {
 	}
 
 	var paymentDate time.Time
-	var err error
 	if er.PaymentDate != "" {
 		paymentDate, err = utils.ConvertISO8601ToTime(er.PaymentDate)
 		if err != nil {
