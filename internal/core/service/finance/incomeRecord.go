@@ -87,6 +87,7 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 			}
 
 			created, repoErr := s.Repo.CreateIncomeRecord(ctx, &currentRecord)
+			log.Printf("Created recurring income record instance %d: %+v", i+1, created)
 			if repoErr != nil {
 				// If one fails, should we rollback previous or just return error?
 				// For now, return error. Consider transactional behavior for production.
@@ -102,7 +103,10 @@ func (s *IncomeRecordService) CreateIncomeRecord(ctx context.Context, data *enti
 
 	// For non-recurring income
 	s.publishMessage(ctx, mq_rk_income_create, data, "", entity_common.ActionCreate)
-	return s.Repo.CreateIncomeRecord(ctx, data)
+
+	created, repoErr := s.Repo.CreateIncomeRecord(ctx, data)
+	log.Println("[REPOSITORY] Created income record:", created, repoErr)
+	return created, repoErr
 }
 
 // GetIncomeRecordByID retrieves an income record by its ID, ensuring user authorization.
