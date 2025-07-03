@@ -71,16 +71,15 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
 
 		responseEntity = entity_finance.IncomeRecord{
-			ID:               responseMap["ID"].(string),
-			UserID:           responseMap["UserID"].(string),
-			Description:      responseMap["Description"].(string),
-			Category:         responseMap["Category"].(string),
-			Amount:           responseMap["Amount"].(float64),
-			BankAccountID:    responseMap["BankAccountID"].(string),
-			IsRecurring:      responseMap["IsRecurring"].(bool),
-			RecurrenceCount:  responseMap["RecurrenceCount"].(int),
-			RecurrenceNumber: responseMap["RecurrenceNumber"].(int),
-			Observations:     responseMap["Observations"].(string),
+			ID:              responseMap["ID"].(string),
+			UserID:          responseMap["UserID"].(string),
+			Description:     responseMap["Description"].(string),
+			Category:        responseMap["Category"].(string),
+			Amount:          responseMap["Amount"].(float64),
+			BankAccountID:   responseMap["BankAccountID"].(string),
+			IsRecurring:     responseMap["IsRecurring"].(bool),
+			RecurrenceCount: responseMap["RecurrenceCount"].(int),
+			Observations:    responseMap["Observations"].(string),
 		}
 	}
 
