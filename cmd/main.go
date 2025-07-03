@@ -22,6 +22,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/internal/handler/web"
 	web_dashboard "github.com/Tomelin/dashfin-backend-app/internal/handler/web/dashboard"
 	web_finance "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance"
+	web_finance_expense "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/finance/expense"
 	web_finance_income "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/income"
 	web_report "github.com/Tomelin/dashfin-backend-app/internal/handler/web/finance/report"
 	web_platform "github.com/Tomelin/dashfin-backend-app/internal/handler/web/platform"
@@ -142,7 +143,7 @@ func main() {
 	web.InicializationProfileHandlerHttp(svcProfileAll, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web.InicializationSupportHandlerHttp(svcSupport, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_platform.NewFinancialInstitutionHandler(svcFinancialInstitution, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
-	web_finance.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
+	web_finance_expense.InitializeExpenseRecordHandler(svcExpenseRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeBankAccountHandler(svcBankAccount, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance.InitializeCreditCardHandler(svcCreditCard, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
 	web_finance_income.InitializeIncomeRecordHandler(svcIncomeRecord, crypt, authClient, apiResponse.RouterGroup, apiResponse.CorsMiddleware(), apiResponse.MiddlewareHeader)
