@@ -70,6 +70,16 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
 
+		if recorrenceCount, ok := responseMap["RecurrenceCount"]; ok {
+			if count, ok := recorrenceCount.(int); ok {
+				responseEntity.RecurrenceCount = count
+			} else {
+				responseEntity.RecurrenceCount = 0
+			}
+		} else {
+			responseEntity.RecurrenceCount = 0 // Default to 0 if not present
+		}
+
 		responseEntity = entity_finance.IncomeRecord{
 			ID:              responseMap["ID"].(string),
 			UserID:          responseMap["UserID"].(string),
