@@ -183,9 +183,8 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 
 	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
 	for _, exp := range allUserRawExpenses {
-		if exp.PaymentDate != nil && *exp.PaymentDate != "" {
-			paymentT, parseErr := time.Parse("2006-01-02", *exp.PaymentDate)
-			if parseErr == nil && !paymentT.After(now) {
+		if !exp.PaymentDate.IsZero() {
+			if !exp.PaymentDate.After(now) {
 				allUserPaidExpenses = append(allUserPaidExpenses, exp)
 			}
 		}
@@ -265,8 +264,8 @@ func (s *DashboardService) calculateAllAccountBalances(
 		accountBalances[income.BankAccountID] += income.Amount
 	}
 	for _, expense := range paidExpenses {
-		if expense.BankPaidFrom != nil && *expense.BankPaidFrom != "" {
-			accountBalances[*expense.BankPaidFrom] -= expense.Amount
+		if expense.BankPaidFrom != "" {
+			accountBalances[expense.BankPaidFrom] -= expense.Amount
 		}
 	}
 	return accountBalances
@@ -287,12 +286,9 @@ func (s *DashboardService) calculateMonthlyExpenses(paidExpenses []financeEntity
 	var totalExpenses float64
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	for _, expense := range paidExpenses {
-		if expense.PaymentDate != nil && *expense.PaymentDate != "" {
-			paymentDate, err := time.Parse("2006-01-02", *expense.PaymentDate)
-			if err == nil {
-				if !paymentDate.Before(monthStart) && !paymentDate.After(monthEnd) {
-					totalExpenses += expense.Amount
-				}
+		if !expense.PaymentDate.IsZero() {
+			if !expense.PaymentDate.Before(monthStart) && !expense.PaymentDate.After(monthEnd) {
+				totalExpenses += expense.Amount
 			}
 		}
 	}
@@ -342,22 +338,17 @@ func (s *DashboardService) getUpcomingBills(
 
 	bills := make([]dashboardEntity.UpcomingBill, 0)
 	for _, exp := range allUserRawExpenses {
-		if exp.PaymentDate == nil || *exp.PaymentDate == "" {
-			dueDate, errParse := time.Parse("2006-01-02", exp.DueDate)
-			if errParse != nil {
-				fmt.Printf("Warning: Could not parse DueDate '%s' for expense ID %s: %v\n", exp.DueDate, exp.ID, errParse)
-				continue
-			}
-			if !dueDate.Before(upcomingStartDate) && !dueDate.After(upcomingEndDate) {
-				if exp.PaymentDate == nil || *exp.PaymentDate == "" {
+		if exp.PaymentDate.IsZero() {
+			if !exp.DueDate.Before(upcomingStartDate) && !exp.DueDate.After(upcomingEndDate) {
+				if exp.PaymentDate.IsZero() {
 					billName := exp.Description
-					if billName == nil || *billName == "" {
-						billName = &exp.Category
+					if billName == "" {
+						billName = exp.Category
 					}
 					bills = append(bills, dashboardEntity.UpcomingBill{
-						BillName: *billName,
+						BillName: billName,
 						Amount:   exp.Amount,
-						DueDate:  dueDate.Format("2006-01-02"), // Assign the parsed time.Time value
+						DueDate:  exp.DueDate.Format("2006-01-02"), // Assign the parsed time.Time value
 					})
 				}
 			}
@@ -403,16 +394,15 @@ func (s *DashboardService) getExpenseCategoriesForMonth(
 	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Nanosecond)
 	categories := make(map[string]float64)
 	for _, exp := range paidExpenses {
-		if exp.PaymentDate != nil && *exp.PaymentDate != "" {
-			paymentDate, err := time.Parse("2006-01-02", *exp.PaymentDate)
-			if err == nil {
-				if !paymentDate.Before(monthStart) && !paymentDate.After(monthEnd) {
-					categoryName := exp.Category
-					if categoryName == "" {
-						categoryName = "Outros"
-					}
-					categories[categoryName] += exp.Amount
+		if !exp.PaymentDate.IsZero() {
+
+			if !exp.PaymentDate.Before(monthStart) && !exp.PaymentDate.After(monthEnd) {
+				categoryName := exp.Category
+				if categoryName == "" {
+					categoryName = "Outros"
 				}
+				categories[categoryName] += exp.Amount
+
 			}
 		}
 	}
@@ -561,18 +551,14 @@ func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userI
 	// Process expenses
 	for _, expense := range allUserExpenses {
 		// Only consider paid expenses for the monthly summary
-		if expense.PaymentDate != nil && *expense.PaymentDate != "" {
-			paymentDate, err := time.Parse("2006-01-02", *expense.PaymentDate)
-			if err != nil {
-				fmt.Printf("Warning: Could not parse Expense PaymentDate '%s' for expense ID %s: %v\n", *expense.PaymentDate, expense.ID, err)
-				continue // Skip this expense record if date is invalid
-			}
+		if !expense.PaymentDate.IsZero() {
+
 			// Ensure date is within the desired range
-			if paymentDate.Before(startDate) || paymentDate.After(endDate) {
+			if expense.PaymentDate.Before(startDate) || expense.PaymentDate.After(endDate) {
 				continue
 			}
 
-			monthLabel := paymentDate.Format("2006-01")
+			monthLabel := expense.PaymentDate.Format("2006-01")
 			if item, exists := monthlySummaryMap[monthLabel]; exists {
 				item.TotalExpenses += expense.Amount
 			} else {

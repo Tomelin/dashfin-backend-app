@@ -318,10 +318,7 @@ func (s *FinancialReportDataService) getExpenseByCategory(ctx context.Context) e
 			category = record.Category
 		}
 
-		start, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
-		end, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
-
-		if start.After(utils.GetFirstDayOfCurrentMonth()) && end.Before(utils.GetLastDayOfCurrentMonth()) {
+		if record.DueDate.After(utils.GetFirstDayOfCurrentMonth()) && record.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
 			// Se a categoria já existe, soma o valor
 			if existingData, exists := expense[category]; exists {
 				expense[category] = ExpenseData{
@@ -376,10 +373,7 @@ func (s *FinancialReportDataService) getExpenseByCategoryLast12Months(ctx contex
 				category = record.Category
 			}
 
-			start, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
-			end, _ := utils.ConvertStringToTime("2006-01-02", record.DueDate)
-
-			if startDate.After(start) && endDate.Before(end) {
+			if startDate.After(record.DueDate) && endDate.Before(record.DueDate) {
 				// Criar chave única para categoria + mês
 				key := fmt.Sprintf("%s_%s", category, monthKey)
 

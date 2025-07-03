@@ -3,7 +3,6 @@ package web_finance_income
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strings"
 
@@ -96,7 +95,6 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 
 	incomeRecord.UserID = userID
 
-	log.Println("Creating income record for user:", userID)
 	income, err := incomeRecord.ToEntity()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid income record data: " + err.Error()})
@@ -104,9 +102,7 @@ func (h *IncomeRecordHandler) CreateIncomeRecord(c *gin.Context) {
 	}
 
 	income.UserID = userID // Ensure the user ID is set for the new record
-	log.Println("Income record to be created:", income, income.ReceiptDate)
 	result, err := h.service.CreateIncomeRecord(ctx, income)
-	log.Println("Result of income record creation:", result, err)
 	if err != nil {
 		// Consider more specific error codes based on err type if possible
 		if strings.Contains(err.Error(), "validation failed") {
