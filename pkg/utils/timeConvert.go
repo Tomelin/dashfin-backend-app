@@ -43,6 +43,16 @@ func GetFirstDayOfCurrentMonth() time.Time {
 	return firstDayOfMonth
 }
 
+func GetFirstDayOfLastMonth() time.Time {
+
+	return time.Now().AddDate(0, -1, 0)
+}
+
+func GetLastDayOfLastMonth() time.Time {
+
+	return time.Now().AddDate(0, 0, -1)
+}
+
 // Get último dia do mês atual
 func GetLastDayOfCurrentMonth() time.Time {
 	// Get the current time

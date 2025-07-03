@@ -127,7 +127,6 @@ func (s *FinancialReportDataService) getIncomeRecords(ctx context.Context) error
 		cacheData, _ := json.Marshal(report)
 		s.cache.Set(ctx, fmt.Sprintf("%s_%s", cacheKeyIncomeReport, *userId), cacheData, serviceCacheTTL)
 		s.incomeRecords = report
-		log.Println("FinancialReportDataService: Income records fetched from service", s.incomeRecords)
 		return nil
 	}
 
@@ -215,25 +214,60 @@ func (s *FinancialReportDataService) getExpenseRecordsByPeriod(ctx context.Conte
 
 func (s *FinancialReportDataService) getSummaryCards(ctx context.Context) error {
 
-	// Get primeiro dia do mês atual
-	firstDayOfMonth := utils.GetFirstDayOfCurrentMonth()
+	// saldo do mês corrent (CurrentMonthCashFlow)
+	//	Período: Refere-se sempre ao mês calendário atual (do dia 1 até o último dia do mês corrente).
+	//	Cálculo: É a diferença simples entre suas receitas e despesas do mês:
+	//	    (Total de Receitas do Mês Atual) - (Total de Despesas do Mês Atual)
+	if s.financialReport.SummaryCards.CurrentMonthCashFlow == 0 {
+		_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, utils.GetFirstDayOfCurrentMonth(), utils.GetLastDayOfCurrentMonth())
+		if err != nil {
+			return err
+		}
 
-	// Get último dia do mês atual
-	lastDayOfMonth := utils.GetLastDayOfCurrentMonth()
-
-	_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, firstDayOfMonth, lastDayOfMonth)
-	if err != nil {
-		return err
+		_, expenseAmount, err := s.getExpenseRecordsByPeriod(ctx, utils.GetFirstDayOfCurrentMonth(), utils.GetLastDayOfCurrentMonth())
+		if err != nil {
+			return err
+		}
+		s.financialReport.SummaryCards.CurrentMonthCashFlow = incomeAmount - expenseAmount
 	}
 
-	_, expenseAmount, err := s.getExpenseRecordsByPeriod(ctx, firstDayOfMonth, lastDayOfMonth)
-	if err != nil {
-		return err
+	//	VarVariação do saldo (CurrentMonthCashFlowChangePct)
+	//
+	// Período: Compara o saldo do mês atual com o saldo do mês anterior completo.
+	// Cálculo: A variação percentual é calculada da seguinte forma:
+	//	((Saldo do Mês Atual / Saldo do Mês Anterior) - 1) * 100
+	//	Se não houver dados para o mês anterior, o backend deve retornar null para este campo.
+	if s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct == nil {
+		_, incomeAmount, err := s.getIncomeRecordsByPeriod(ctx, utils.GetFirstDayOfLastMonth(), utils.GetLastDayOfLastMonth())
+		if err != nil {
+			return err
+		}
+
+		_, expenseAmount, err := s.getExpenseRecordsByPeriod(ctx, utils.GetFirstDayOfLastMonth(), utils.GetLastDayOfLastMonth())
+		if err != nil {
+			return err
+		}
+
+		lastMonthCashFlow := incomeAmount - expenseAmount
+		CurrentMonthCashFlowChangePct := ((s.financialReport.SummaryCards.CurrentMonthCashFlow / lastMonthCashFlow) - 1) * 100
+		s.financialReport.SummaryCards.CurrentMonthCashFlowChangePct = &CurrentMonthCashFlowChangePct
 	}
 
-	log.Println("FinancialReportDataService: Income amount for current month:", incomeAmount)
-	log.Println("FinancialReportDataService: Expense amount for current month:", expenseAmount)
-	s.financialReport.SummaryCards.CurrentMonthCashFlow = incomeAmount - expenseAmount
+	// Patrimonio liquido (NetWorth)
+	// Período: Este é um "snapshot", representando o valor no momento atual da consulta.
+	// Cálculo: É o valor total de tudo que você possui, menos o que você deve:
+	// 		(Soma dos saldos de todas as contas) + (Valor atual de todos os investimentos) - (Total de dívidas)
+	if s.financialReport.SummaryCards.NetWorth == 0 {
+		s.financialReport.SummaryCards.NetWorth = 0
+	}
+
+	// Crescismento do patrimônio líquido (NetWorthChangePct)
+	// 	Período: Compara o seu patrimônio líquido atual com o seu patrimônio líquido de 12 meses atrás.
+	// 	Cálculo: A fórmula para a variação percentual é:
+	// 			((Patrimônio Atual / Patrimônio de 12 Meses Atrás) - 1) * 100
+	if s.financialReport.SummaryCards.NetWorthChangePercent == 0 {
+		s.financialReport.SummaryCards.NetWorthChangePercent = 10.87
+	}
 
 	return nil
 }
