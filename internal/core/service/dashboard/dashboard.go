@@ -155,11 +155,23 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 		allUserIncomes = []financeEntity.IncomeRecord{}
 	}
 
+	amount := 0.0
+	for _, income := range allUserIncomes {
+		amount += income.Amount
+	}
+	log.Println("allUserIncomes:", allUserIncomes, "count:", len(allUserIncomes), "total amount:", amount)
+
 	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
 	if err != nil {
 		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
 		allUserRawExpenses = []financeEntity.ExpenseRecord{}
 	}
+
+	amount = 0.0
+	for _, exp := range allUserRawExpenses {
+		amount += exp.Amount
+	}
+	log.Println("allUserRawExpenses:", allUserRawExpenses, "count:", len(allUserRawExpenses), "total amount:", amount)
 
 	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
 	for _, exp := range allUserRawExpenses {
