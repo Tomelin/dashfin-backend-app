@@ -240,20 +240,26 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 
 	query := db.client.Collection(collection).Query
 	for _, cond := range conditional {
+		if cond.Field == "" {
+			return nil, fmt.Errorf("field in conditional cannot be empty")
+		}
+		if cond.Value == nil {
+			return nil, fmt.Errorf("value in conditional cannot be nil")
+		}
+		if cond.Filter == "" {
+			return nil, fmt.Errorf("filter in conditional cannot be empty")
+		}
+		if cond.Filter != FilterEquals && cond.Filter != FilterNotEquals &&
+			cond.Filter != FilterGreaterThan && cond.Filter != FilterLessThan &&
+			cond.Filter != FilterArrayContains {
+			return nil, fmt.Errorf("invalid filter type: %s", cond.Filter)
+		}
+
 		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
+		log.Println("\n GetByConditional query:", query, "field:", cond.Field, "value:", cond.Value, "filter:", cond.Filter)
 	}
 
-	log.Println("\n GetByConditional query:", query)
 	iter := query.Documents(ctx)
-	all, err := iter.GetAll()
-	log.Println("\n GetByConditional all:", all, "err:", err)
-	for _, doc := range all {
-		log.Println("\n GetByConditional doc:", *doc)
-		log.Println("\n GetByConditional doc data:", doc.Data())
-		log.Println("\n GetByConditional doc ref:", doc.Ref)
-		log.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
-		log.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
-	}
 
 	var results []interface{}
 	defer iter.Stop()
