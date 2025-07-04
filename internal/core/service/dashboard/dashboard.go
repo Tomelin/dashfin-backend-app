@@ -221,6 +221,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 
 	for bankID, _ := range balances {
 
+		log.Println("\n Processing bank account ID:", bankID)
 		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
 		if err != nil {
 			log.Println(fmt.Errorf("error fetching bank account name: %w", err))
