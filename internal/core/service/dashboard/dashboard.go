@@ -80,37 +80,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 
 	s.dash = dashboardEntity.Dashboard{}
 
-	// 4. Income fetch and set additional data
-	err := s.getIncomeRecords(ctx)
-	if err != nil {
-		log.Println(fmt.Errorf("error fetching income records: %w", err))
-	}
-	// 5. Expense fetch and set additional data
-	err = s.getExpenseRecords(ctx)
-	if err != nil {
-		log.Println(fmt.Errorf("error fetching expense records: %w", err))
-	}
-
-	// 6. Goals fetch and set additional data
-	s.formatGoalsProgress(ctx, userID)
-
-	// 7. Get summary cards data
-	err = s.getSummaryCards()
-	if err != nil {
-		log.Println(fmt.Errorf("error getting summary cards: %w", err))
-	}
-
-	// 8. Get upcoming bills
-	err = s.getUpcomingBills2()
-	if err != nil {
-		log.Println(fmt.Errorf("error getting upcoming bills: %w", err))
-	}
-
-	s.getBankAccountBalance(ctx, &userID)
-	// 9. Set the income and expense records
-	s.calculateTotalBalance(ctx, userID)
-
-	s.getMonthlyFinancialSummary(&userID)
+	s.generateFreshDashboardData(ctx, userID)
 
 	return &s.dash, nil
 }
@@ -147,7 +117,6 @@ func (s *DashboardService) getSummaryCards() error {
 	}
 
 	for _, expense := range s.expenseRecords {
-		fmt.Println(utils.GetFirstDayOfLastMonth(), expense.DueDate, utils.GetLastDayOfLastMonth())
 		if expense.DueDate.After(utils.GetFirstDayOfLastMonth()) && expense.DueDate.Before(utils.GetLastDayOfLastMonth()) {
 			expenseLastMonth += expense.Amount
 		}
@@ -274,98 +243,44 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
-func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userID string) (*dashboardEntity.Dashboard, error) {
-	now := time.Now()
-	currentMonthStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-
-	allUserBankAccounts, err := s.bankAccountService.GetBankAccounts(ctx)
+func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userID string) {
+	// 4. Income fetch and set additional data
+	err := s.getIncomeRecords(ctx)
 	if err != nil {
-		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
-		allUserBankAccounts = []financeEntity.BankAccountRequest{}
+		log.Println(fmt.Errorf("error fetching income records: %w", err))
 	}
-
-	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{UserID: userID})
+	// 5. Expense fetch and set additional data
+	err = s.getExpenseRecords(ctx)
 	if err != nil {
-		fmt.Printf("Warning: Error fetching income records for user %s: %v\n", userID, err)
-		allUserIncomes = []financeEntity.IncomeRecord{}
+		log.Println(fmt.Errorf("error fetching expense records: %w", err))
 	}
 
-	amount := 0.0
-	for _, income := range allUserIncomes {
-		amount += income.Amount
-	}
-	log.Println("\n total income amount:", amount)
+	// 6. Goals fetch and set additional data
+	s.formatGoalsProgress(ctx, userID)
 
-	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
+	// 7. Get summary cards data
+	err = s.getSummaryCards()
 	if err != nil {
-		fmt.Printf("Warning: Error fetching expense records for user %s: %v\n", userID, err)
-		allUserRawExpenses = []financeEntity.ExpenseRecord{}
+		log.Println(fmt.Errorf("error getting summary cards: %w", err))
 	}
 
-	amount = 0.0
-	for _, exp := range allUserRawExpenses {
-		amount += exp.Amount
-	}
-	log.Println("\n total expense amount:", amount)
-
-	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
-	for _, exp := range allUserRawExpenses {
-		if !exp.PaymentDate.IsZero() {
-			if !exp.PaymentDate.After(now) {
-				allUserPaidExpenses = append(allUserPaidExpenses, exp)
-			}
-		}
-	}
-
-	// totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
-	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
-	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
-
-	goalsProgressStr := "N/A (Data unavailable)"
-	// profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
-
-	// if err != nil {
-	// 	fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
-	// } else {
-	// 	goalsProgressStr = s.formatGoalsProgress(profileGoals)
-	// }
-
-	dashboard := &dashboardEntity.Dashboard{
-		SummaryCards: dashboardEntity.SummaryCards{
-			// TotalBalance:    totalBalance,
-			MonthlyRevenue:  monthlyRevenue,
-			MonthlyExpenses: monthlyExpenses,
-			GoalsProgress:   goalsProgressStr,
-		},
-	}
-
-	dashboard.AccountSummaryData = s.getAccountSummaries(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
-	upcomingBills, err := s.getUpcomingBills(ctx, userID, now, allUserRawExpenses)
+	// 8. Get upcoming bills
+	err = s.getUpcomingBills2()
 	if err != nil {
-		fmt.Printf("Warning: Error fetching upcoming bills: %v\n", err)
-		dashboard.UpcomingBillsData = []dashboardEntity.UpcomingBill{}
-	} else {
-		dashboard.UpcomingBillsData = upcomingBills
+		log.Println(fmt.Errorf("error getting upcoming bills: %w", err))
 	}
 
-	dashboard.RevenueExpenseChartData = s.getRevenueExpenseChartData(allUserIncomes, allUserPaidExpenses, now, 6)
-	expenseCategories, err := s.getExpenseCategoriesForMonth(allUserPaidExpenses, currentMonthStart)
-	if err != nil {
-		fmt.Printf("Warning: Error fetching expense categories: %v\n", err)
-		dashboard.ExpenseCategoryChartData = []dashboardEntity.ExpenseCategoryChartItem{}
-	} else {
-		dashboard.ExpenseCategoryChartData = expenseCategories
-	}
+	s.getBankAccountBalance(ctx, &userID)
+	// 9. Set the income and expense records
+	s.calculateTotalBalance(ctx, userID)
 
-	dashboard.PersonalizedRecommendationsData = []dashboardEntity.PersonalizedRecommendation{}
+	s.getMonthlyFinancialSummary(&userID)
 
-	return dashboard, nil
 }
 
 func (s *DashboardService) calculateTotalBalance(ctx context.Context, userID string) {
 	accounts, err := s.bankAccountService.GetBankAccounts(ctx)
 	if err != nil {
-		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
 		accounts = []financeEntity.BankAccountRequest{}
 	}
 
@@ -445,10 +360,7 @@ func (s *DashboardService) getAccountSummaries(
 
 func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID string) {
 	s.dash.SummaryCards.GoalsProgress = "N/A (Data unavailable)"
-	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
-	if err != nil {
-		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
-	}
+	profileGoals, _ := s.profileGoalsService.GetProfileGoals(ctx, &userID)
 
 	allGoals := append(profileGoals.Goals2Years, profileGoals.Goals5Years...)
 	allGoals = append(allGoals, profileGoals.Goals10Years...) // Typo: allGolas -> allGoals
