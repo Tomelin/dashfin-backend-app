@@ -234,9 +234,10 @@ func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_f
 				IsRecurring:   itemMap["IsRecurring"].(bool),
 				Observations:  itemMap["Observations"].(string),
 			}
-			record.ConvertISO8601ToTime("ReceiptDate", itemMap["ReceiptDate"].(string))
 			record.ConvertISO8601ToTime("CreatedAt", itemMap["CreatedAt"].(string))
 			record.ConvertISO8601ToTime("UpdatedAt", itemMap["UpdatedAt"].(string))
+			t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["ReceiptDate"].(string))
+			record.ReceiptDate = t
 
 			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(int); ok {
