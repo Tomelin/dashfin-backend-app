@@ -264,5 +264,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 		}
 	}
 
+	log.Println("[RESPONSE] Converted to entity count:", len(result), "records found", result[0].ID)
+
 	return result, nil
 }
