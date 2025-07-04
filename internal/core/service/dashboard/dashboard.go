@@ -209,7 +209,7 @@ func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 
 func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *string) {
 
-	balances := make(map[string]float64)
+	balances := make(map[string]float64, 0)
 	for _, income := range s.incomeRecords {
 		balances[income.BankAccountID] += income.Amount
 	}
@@ -219,6 +219,9 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 	}
 
+	log.Println("\n Count income records:", len(s.incomeRecords))
+	log.Println("\n Count expense records:", len(s.expenseRecords))
+	log.Println("\n Bank account balances:", balances)
 	log.Println("\n Count bank account balances:", len(balances))
 	for bankID, _ := range balances {
 		if bankID == "" {
