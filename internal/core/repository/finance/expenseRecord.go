@@ -255,7 +255,6 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			}
 
 			responseEntity = entity_finance.ExpenseRecord{
-				ID:             responseMap["ID"].(string),
 				Category:       responseMap["Category"].(string),
 				Subcategory:    responseMap["Subcategory"].(string),
 				Amount:         responseMap["Amount"].(float64),
