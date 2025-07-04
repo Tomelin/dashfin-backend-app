@@ -19,6 +19,7 @@ import (
 	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
+	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
 )
 
 const defaultDashboardCacheTTL = 30 * time.Second // Example TTL for dashboard cache
@@ -116,16 +117,44 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	log.Println("\n SummaryCards data:", dashboard.SummaryCards)
+
+	// 4. Income fetch and set additional data
 	err = s.getIncomeRecords(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("error fetching income records: %w", err))
 	}
 
 	log.Println("\n IncomeRecords count:", len(s.incomeRecords))
+
+	// 5. Expense fetch and set additional data
+	err = s.getExpenseRecords(ctx)
+	if err != nil {
+		log.Println(fmt.Errorf("error fetching expense records: %w", err))
+	}
+	log.Println("\n ExpenseRecords count:", len(s.expenseRecords))
+
 	return dashboard, nil
 }
 
 func (s *DashboardService) getSummaryCards(ctx context.Context) error {
+
+	var receiveMonth float64
+	var expenseMonth float64
+
+	for _, income := range s.incomeRecords {
+		if income.ReceiptDate.After(utils.GetFirstDayOfCurrentMonth()) && income.ReceiptDate.Before(utils.GetLastDayOfCurrentMonth()) {
+			receiveMonth += income.Amount
+		}
+	}
+
+	for _, expense := range s.expenseRecords {
+		if !expense.PaymentDate.IsZero() && expense.PaymentDate.After(utils.GetFirstDayOfCurrentMonth()) && expense.PaymentDate.Before(utils.GetLastDayOfCurrentMonth()) {
+			expenseMonth += expense.Amount
+		}
+	}
+
+	s.dash.SummaryCards.MonthlyExpenses = expenseMonth
+	s.dash.SummaryCards.MonthlyRevenue = receiveMonth
 
 	return nil
 
@@ -139,6 +168,18 @@ func (s *DashboardService) getIncomeRecords(ctx context.Context) error {
 	}
 
 	s.incomeRecords = records
+
+	return nil
+}
+
+func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
+
+	records, err := s.expenseRecordService.GetExpenseRecords(ctx)
+	if err != nil {
+		return fmt.Errorf("error fetching expense records: %w", err)
+	}
+
+	s.expenseRecords = records
 
 	return nil
 }
