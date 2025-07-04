@@ -224,19 +224,62 @@ func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_f
 	var result []entity_finance.IncomeRecord
 	for _, item := range data {
 		if itemMap, ok := item.(map[string]interface{}); ok {
-			record := entity_finance.IncomeRecord{
-				ID:            itemMap["id"].(string),
-				UserID:        itemMap["UserID"].(string),
-				Description:   itemMap["Description"].(string),
-				Category:      itemMap["Category"].(string),
-				Amount:        itemMap["Amount"].(float64),
-				BankAccountID: itemMap["BankAccountID"].(string),
-				IsRecurring:   itemMap["IsRecurring"].(bool),
-				Observations:  itemMap["Observations"].(string),
+			record := entity_finance.IncomeRecord{}
+
+			if userID, ok := itemMap["UserID"]; ok {
+				record.UserID = userID.(string)
+			} else {
+				record.UserID = itemMap["userID"].(string)
 			}
-			record.ConvertISO8601ToTime("CreatedAt", itemMap["CreatedAt"].(string))
-			record.ConvertISO8601ToTime("UpdatedAt", itemMap["UpdatedAt"].(string))
-			t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["ReceiptDate"].(string))
+
+			if id, ok := itemMap["id"]; ok {
+				record.ID = id.(string)
+			} else {
+				record.ID = itemMap["ID"].(string)
+			}
+			if description, ok := itemMap["Description"]; ok {
+				record.Description = description.(string)
+			} else {
+				record.Description = itemMap["description"].(string)
+			}
+
+			if category, ok := itemMap["Category"]; ok {
+				record.Category = category.(string)
+			} else {
+				record.Category = itemMap["category"].(string)
+			}
+			if amount, ok := itemMap["Amount"]; ok {
+				record.Amount = amount.(float64)
+			} else {
+				record.Amount = itemMap["amount"].(float64)
+			}
+			if bankAccountID, ok := itemMap["BankAccountID"]; ok {
+				record.BankAccountID = bankAccountID.(string)
+			} else {
+				record.BankAccountID = itemMap["bankAccountId"].(string)
+			}
+			if isRecurring, ok := itemMap["IsRecurring"]; ok {
+				record.IsRecurring = isRecurring.(bool)
+			} else {
+				record.IsRecurring = itemMap["isRecurring"].(bool)
+			}
+			if observations, ok := itemMap["Observations"]; ok {
+				record.Observations = observations.(string)
+			} else {
+				record.Observations = itemMap["observations"].(string)
+			}
+
+			// record.ConvertISO8601ToTime("CreatedAt", itemMap["CreatedAt"].(string))
+			// record.ConvertISO8601ToTime("UpdatedAt", itemMap["UpdatedAt"].(string))
+
+			var receiptDate string
+			if receiptDateValue, ok := itemMap["ReceiptDate"]; ok {
+				receiptDate = receiptDateValue.(string)
+			} else {
+				receiptDate = itemMap["receiptDate"].(string)
+			}
+
+			t, _ := time.Parse("2006-01-02T15:04:05Z", receiptDate)
 			record.ReceiptDate = t
 
 			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
