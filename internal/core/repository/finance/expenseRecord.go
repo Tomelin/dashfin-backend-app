@@ -133,6 +133,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	log.Println("[ExpenseRecordRepository] GetExpenseRecords response:", len(response)))
 	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
 		log.Println("[RESPONSE] Error converting response to entity:", err)
