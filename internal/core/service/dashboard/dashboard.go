@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"sort"
 	"strings"
 
@@ -97,28 +98,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		}
 	}
 
-	// monthlyFinancial := []dashboardEntity.MonthlyFinancialSummaryItem{
-	// 	{
-	// 		Month:         "2025-05",
-	// 		TotalIncome:   5123.98,
-	// 		TotalExpenses: 2345.00,
-	// 	},
-	// 	{
-	// 		Month:         "2025-04",
-	// 		TotalIncome:   6789.98,
-	// 		TotalExpenses: 7865.75,
-	// 	},
-	// 	{
-	// 		Month:         "2025-05",
-	// 		TotalIncome:   9856.98,
-	// 		TotalExpenses: 8764.00,
-	// 	},
-	// 	{
-	// 		Month:         "2025-02",
-	// 		TotalIncome:   9876.98,
-	// 		TotalExpenses: 2345.00,
-	// 	}}
-
 	monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
 
 	dashboard.SummaryCards.AccountBalances = balanceCard
@@ -132,6 +111,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
 	}
 
+	log.Println("Dashboard data successfully generated and cached for user:", dashboard.SummaryCards)
 	return dashboard, nil
 }
 
