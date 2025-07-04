@@ -235,13 +235,21 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			if description, ok := itemMap["Description"]; ok {
 				record.Description = description.(string)
 			} else {
-				record.Description = itemMap["description"].(string)
+				if description, ok := itemMap["description"]; ok {
+					record.Description = description.(string)
+				} else {
+					record.Description = ""
+				}
 			}
 
 			if subcategory, ok := itemMap["Subcategory"]; ok {
 				record.Subcategory = subcategory.(string)
 			} else {
-				record.Subcategory = itemMap["subcategory"].(string)
+				if subcategory, ok := itemMap["subcategory"]; ok {
+					record.Subcategory = subcategory.(string)
+				} else {
+					record.Subcategory = ""
+				}
 			}
 
 			if amount, ok := itemMap["Amount"]; ok {
@@ -256,16 +264,20 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				record.UserID = itemMap["userId"].(string)
 			}
 
-			if bankPaidFrom, ok := itemMap["BankPaidFrom"]; ok {
-				record.BankPaidFrom = bankPaidFrom.(string)
-			} else {
-				record.BankPaidFrom = itemMap["bankPaidFrom"].(string)
-			}
-
 			if customBankName, ok := itemMap["CustomBankName"]; ok {
 				record.CustomBankName = customBankName.(string)
 			} else {
-				record.CustomBankName = itemMap["customBankName"].(string)
+				if customBankName, ok := itemMap["customBankName"]; ok {
+					record.CustomBankName = customBankName.(string)
+				}
+			}
+
+			if bankPaidFrom, ok := itemMap["BankPaidFrom"]; ok {
+				record.BankPaidFrom = bankPaidFrom.(string)
+			} else {
+				if bankPaidFrom, ok := itemMap["bankPaidFrom"]; ok {
+					record.BankPaidFrom = bankPaidFrom.(string)
+				}
 			}
 
 			if isRecurring, ok := itemMap["IsRecurring"]; ok {
@@ -277,10 +289,10 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["DueDate"].(string))
 			record.DueDate = t
 
-			t, _ = time.Parse("2006-01-02T15:04:05Z", itemMap["PaymentDate"].(string))
-			record.PaymentDate = t
-
-			record.ID = itemMap["id"].(string)
+			if itemMap["PaymentDate"] != nil {
+				t, _ = time.Parse("2006-01-02T15:04:05Z", itemMap["PaymentDate"].(string))
+				record.PaymentDate = t
+			}
 
 			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(float64); ok {
