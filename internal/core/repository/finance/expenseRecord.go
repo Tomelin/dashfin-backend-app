@@ -216,7 +216,7 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 }
 
 func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity_finance.ExpenseRecord, error) {
-	log.Println("[RESPONSE] Converting data to entity", data)
+
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
@@ -265,9 +265,11 @@ func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity
 				}
 
 				result = append(result, responseEntity)
+				log.Println("[RESPONSE] Converted to entity:", result)
 			}
 		}
 	}
 
+	log.Println("[RESPONSE] Converted to entity:", len(result))
 	return result, nil
 }
