@@ -88,13 +88,13 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		return nil, err
 	}
 
-	var response interface{}
+	var response []interface{}
 	err = json.Unmarshal(docs, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response)
+	responseEntity, err := r.convertToEntity(response...)
 	if err != nil {
 		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
@@ -127,14 +127,11 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 	var response []interface{}
 	err = json.Unmarshal(result, &response)
 	if err != nil {
-		log.Println("[ExpenseRecordRepository] Error unmarshalling response:", err)
 		return nil, err
 	}
 
-	log.Println("[ExpenseRecordRepository] GetExpenseRecords response:", len(response))
 	responseEntity, err := r.convertToEntity(response...)
 	if err != nil {
-		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
 	}
 
@@ -158,13 +155,13 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
-	var response interface{}
+	var response []interface{}
 	err = json.Unmarshal(result, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response)
+	responseEntity, err := r.convertToEntity(response...)
 	if err != nil {
 		log.Println("[ExpenseRecordRepository] Error converting response to entity:", err)
 		return nil, err
@@ -264,7 +261,6 @@ func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity
 				}
 
 				result = append(result, responseEntity)
-				log.Println("[RESPONSE] Converted to entity:", result)
 			}
 		}
 	}
