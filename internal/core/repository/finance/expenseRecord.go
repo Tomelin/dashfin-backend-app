@@ -215,19 +215,17 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 }
 
 func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_finance.ExpenseRecord, error) {
-	log.Println("[RESPONSE] Converted to entity:", len(data))
+
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
 
 	var result []entity_finance.ExpenseRecord
-	log.Println("[RESPONSE]...data", data[0])
 	for _, item := range data {
-		log.Println("[RESPONSE] Item:", item)
+
 		responseEntity := entity_finance.ExpenseRecord{}
 		if responseMap, ok := item.(map[string]interface{}); ok {
-			log.Println("[RESPONSE] ResponseMap:", responseMap)
-			log.Println("[RESPONSE] DueDate:", responseMap["DueDate"].(string))
+
 			responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
 			responseEntity.ConvertISO8601ToTime("PaymentDate", responseMap["PaymentDate"].(string))
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
@@ -263,6 +261,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 					UserID:         responseMap["UserID"].(string),
 				}
 
+				log.Println("[RESPONSE] Converted to entity:", responseEntity)
 				result = append(result, responseEntity)
 			}
 		}
