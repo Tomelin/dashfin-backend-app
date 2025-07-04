@@ -147,6 +147,7 @@ func (s *DashboardService) getSummaryCards() error {
 	}
 
 	for _, expense := range s.expenseRecords {
+		fmt.Println(utils.GetFirstDayOfLastMonth(), expense.DueDate, utils.GetLastDayOfLastMonth())
 		if expense.DueDate.After(utils.GetFirstDayOfLastMonth()) && expense.DueDate.Before(utils.GetLastDayOfLastMonth()) {
 			expenseLastMonth += expense.Amount
 		}
@@ -161,8 +162,8 @@ func (s *DashboardService) getSummaryCards() error {
 	fmt.Println("expenseLastMonth:", expenseLastMonth)
 	fmt.Println("totalBalance:", totalBalance)
 	fmt.Println("totalBalanceLastMonth:", totalBalanceLastMonth)
-	fmt.Println("expenseMonthChangePercent:", ((expenseMonth/expenseLastMonth)-1)*100)
-	fmt.Println("receiveMonthChangePercent:", ((receiveMonth/receiveLastMonth)-1)*100)
+	fmt.Println("expenseMonthChangePercent:", (expenseMonth / expenseLastMonth))
+	fmt.Println("receiveMonthChangePercent:", (receiveMonth / receiveLastMonth))
 	fmt.Println("totalBalanceChangePercent:", ((totalBalance/totalBalanceLastMonth)-1)*100)
 
 	s.dash.SummaryCards.MonthlyExpensesChangePercent = ((expenseMonth / expenseLastMonth) - 1) * 100
