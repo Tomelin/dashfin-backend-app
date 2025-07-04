@@ -185,13 +185,14 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 	for bankID := range balances {
 		fmt.Println("\n Count is:", count)
 		count++
-		fmt.Println("\n Bank account ID:", bankID)
 
 		if bankID == "" {
 			continue
 		}
+		fmt.Println("\n Bank account ID:", bankID)
 
 		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
+		fmt.Println("\n Bank account name:", name, "error:", err)
 		if err != nil {
 			continue
 		}
