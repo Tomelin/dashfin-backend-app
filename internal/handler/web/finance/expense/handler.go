@@ -258,6 +258,7 @@ func (h *ExpenseRecordHandler) GetExpenseRecordByID(c *gin.Context) {
 
 // GetExpenseRecords handles fetching all expense records for the authenticated usexpenseRecord.
 func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
+	log.Println("[ExpenseRecordHandler] GetExpenseRecords called")
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -293,6 +294,7 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 		results, _ = h.service.GetExpenseRecords(ctx)
 	}
 
+	log.Println("[ExpenseRecordHandler] Retrieved records:", len(results))
 	expenseResponse := make([]dto.ExpenseRecordDTO, 0, len(results))
 	for _, record := range results {
 		expenseDTO := dto.ExpenseRecordDTO{}

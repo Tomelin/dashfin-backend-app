@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -110,6 +111,7 @@ func (s *ExpenseRecordService) GetExpenseRecordByID(ctx context.Context, id stri
 
 // GetExpenseRecords retrieves all expense records for the authenticated user.
 func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
+	log.Println("[ExpenseRecordService] GetExpenseRecords called")
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil || userIDFromCtx.(string) == "" {
 		return nil, errors.New("userID not found in context")

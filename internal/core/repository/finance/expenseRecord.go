@@ -114,6 +114,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 // GetExpenseRecords retrieves all expense records for the user in context (or all if no user context).
 func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
 
+	log.Println("[REPOSITORY] GetExpenseRecords called")
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
