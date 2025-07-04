@@ -162,7 +162,6 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
-	log.Println("Decrypting Data...")
 	var expenseData dto.ExpenseRecordDTO
 	if err := json.Unmarshal(decryptedData, &expenseData); err != nil {
 		log.Println("Error unmarshalling data:", err)
@@ -259,7 +258,7 @@ func (h *ExpenseRecordHandler) GetExpenseRecordByID(c *gin.Context) {
 
 // GetExpenseRecords handles fetching all expense records for the authenticated usexpenseRecord.
 func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
-	log.Println("[ExpenseRecordHandler] GetExpenseRecords called")
+
 	userID, token, err := web.GetRequiredHeaders(h.authClient, c.Request)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
