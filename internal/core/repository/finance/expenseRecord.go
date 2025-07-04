@@ -251,20 +251,20 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				} else {
 					responseEntity.RecurrenceNumber = 0 // Default to 0 if not present
 				}
-
-				responseEntity = entity_finance.ExpenseRecord{
-					ID:             responseMap["ID"].(string),
-					Category:       responseMap["Category"].(string),
-					Subcategory:    responseMap["Subcategory"].(string),
-					Amount:         responseMap["Amount"].(float64),
-					BankPaidFrom:   responseMap["BankPaidFrom"].(string),
-					CustomBankName: responseMap["CustomBankName"].(string),
-					Description:    responseMap["Description"].(string),
-					IsRecurring:    responseMap["IsRecurring"].(bool),
-					UserID:         responseMap["UserID"].(string),
-				}
-				log.Println("[RESPONSE] responseMap to Category:", responseMap["Category"].(string))
 			}
+
+			responseEntity = entity_finance.ExpenseRecord{
+				ID:             responseMap["ID"].(string),
+				Category:       responseMap["Category"].(string),
+				Subcategory:    responseMap["Subcategory"].(string),
+				Amount:         responseMap["Amount"].(float64),
+				BankPaidFrom:   responseMap["BankPaidFrom"].(string),
+				CustomBankName: responseMap["CustomBankName"].(string),
+				Description:    responseMap["Description"].(string),
+				IsRecurring:    responseMap["IsRecurring"].(bool),
+				UserID:         responseMap["UserID"].(string),
+			}
+			log.Println("[RESPONSE] responseMap to Category:", responseMap["Category"].(string))
 			log.Println("[RESPONSE] responseEntity to Category:", responseEntity.Category)
 			result = append(result, responseEntity)
 		}
