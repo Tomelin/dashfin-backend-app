@@ -186,7 +186,6 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 	log.Println("Creating Expense Record...:", expenseRecord)
 	result, err := h.service.CreateExpenseRecord(ctx, expenseRecord)
 	if err != nil {
-		log.Println("Error creating expense record:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create expense record: " + err.Error()})
 		return
 	}

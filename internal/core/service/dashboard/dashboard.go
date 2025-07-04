@@ -129,7 +129,6 @@ func (s *DashboardService) getSummaryCards() error {
 
 	for _, expense := range s.expenseRecords {
 		if expense.DueDate.After(utils.GetFirstDayOfCurrentMonth()) && expense.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
-			log.Println("\n Expense record:", expense)
 			expenseMonth += expense.Amount
 		}
 		if expense.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
@@ -183,20 +182,18 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 
 	banks, err := s.bankAccountService.GetBankAccounts(ctx)
 	if err != nil {
-		log.Println("Error fetching bank accounts:", err)
 		return
 	}
 
 	for bankID := range balances {
 
 		if balances[bankID] == 0 {
-			continue // Skip accounts with zero balance
+			continue
 		}
 
 		for _, bank := range banks {
 
 			if bank.ID == bankID {
-				fmt.Println("\n Bank account balance:", bank.CustomBankName, "Balance:", balances[bankID])
 				s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
 					AccountName: bank.CustomBankName,
 					BankName:    bank.Description,
@@ -208,9 +205,6 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 
 	}
-
-	fmt.Println("\n Count bank account balances:", len(s.dash.SummaryCards.AccountBalances))
-	fmt.Println("\n Bank account balances response:", s.dash.SummaryCards.AccountBalances)
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
@@ -302,14 +296,6 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	return dashboard, nil
 }
 
-// --- Helper methods (calculateTotalBalance, etc.) remain the same as before ---
-// func (s *DashboardService) calculateTotalBalance(
-//
-//	accounts []financeEntity.BankAccountRequest,
-//	incomes []financeEntity.IncomeRecord,
-//	paidExpenses []financeEntity.ExpenseRecord,
-//
-// ) float64 {
 func (s *DashboardService) calculateTotalBalance(ctx context.Context, userID string) {
 	accounts, err := s.bankAccountService.GetBankAccounts(ctx)
 	if err != nil {
