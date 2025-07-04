@@ -155,6 +155,7 @@ func (s *DashboardService) getSummaryCards() error {
 
 	for _, expense := range s.expenseRecords {
 		if expense.DueDate.After(utils.GetFirstDayOfCurrentMonth()) && expense.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
+			log.Println("\n Expense record:", expense)
 			expenseMonth += expense.Amount
 		}
 	}
