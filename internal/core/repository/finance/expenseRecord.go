@@ -218,6 +218,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity
 	}
 
 	var result []entity_finance.ExpenseRecord
+	log.Println("[RESPONSE]...data", data)
 	for _, item := range data {
 		log.Println("[RESPONSE] Item:", item)
 		responseEntity := entity_finance.ExpenseRecord{}
