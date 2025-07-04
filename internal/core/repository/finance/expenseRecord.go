@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -240,27 +239,21 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 
 			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(float64); ok {
-					log.Println("RecurrenceCount found:", count)
 					responseEntity.RecurrenceCount = int(count)
 				} else {
-					log.Println("RecurrenceCount is not an int, defaulting to 0")
 					responseEntity.RecurrenceCount = 0
 				}
 			} else {
-				log.Println("RecurrenceCount not found, defaulting to 0")
 				responseEntity.RecurrenceCount = 0 // Default to 0 if not present
 			}
 
 			if recurrenceNumber, ok := responseMap["RecurrenceNumber"]; ok {
 				if count, ok := recurrenceNumber.(float64); ok {
-					log.Println("RecurrenceNumber found:", count)
 					responseEntity.RecurrenceNumber = int(count)
 				} else {
-					log.Println("RecurrenceNumber is not an int, defaulting to 0")
 					responseEntity.RecurrenceNumber = 0
 				}
 			} else {
-				log.Println("RecurrenceNumber not found, defaulting to 0")
 				responseEntity.RecurrenceNumber = 0 // Default to 0 if not present
 
 			}
