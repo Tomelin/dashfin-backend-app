@@ -239,9 +239,9 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			responseEntity.ID = responseMap["id"].(string)
 
 			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
-				if count, ok := recurrenceCount.(int); ok {
+				if count, ok := recurrenceCount.(float64); ok {
 					log.Println("RecurrenceCount found:", count)
-					responseEntity.RecurrenceCount = count
+					responseEntity.RecurrenceCount = int(count)
 				} else {
 					log.Println("RecurrenceCount is not an int, defaulting to 0")
 					responseEntity.RecurrenceCount = 0
@@ -252,9 +252,9 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			}
 
 			if recurrenceNumber, ok := responseMap["RecurrenceNumber"]; ok {
-				if count, ok := recurrenceNumber.(int); ok {
+				if count, ok := recurrenceNumber.(float64); ok {
 					log.Println("RecurrenceNumber found:", count)
-					responseEntity.RecurrenceNumber = count
+					responseEntity.RecurrenceNumber = int(count)
 				} else {
 					log.Println("RecurrenceNumber is not an int, defaulting to 0")
 					responseEntity.RecurrenceNumber = 0
