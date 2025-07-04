@@ -32,21 +32,21 @@ type ExpenseRecordServiceInterface interface {
 
 // ExpenseRecord defines the structure for an expense record.
 type ExpenseRecord struct {
-	ID               string    `json:"id" bson:"_id,omitempty"` // Auto-generated
-	Category         string    `json:"category" bson:"category"`
-	Subcategory      string    `json:"subcategory,omitempty" bson:"subcategory,omitempty"`
-	DueDate          string    `json:"dueDate" bson:"dueDate"`                             // ISO 8601 (YYYY-MM-DD)
-	PaymentDate      *string   `json:"paymentDate,omitempty" bson:"paymentDate,omitempty"` // ISO 8601 (YYYY-MM-DD)
-	Amount           float64   `json:"amount" bson:"amount"`
-	BankPaidFrom     *string   `json:"bankPaidFrom,omitempty" bson:"bankPaidFrom,omitempty"`
-	CustomBankName   *string   `json:"customBankName,omitempty" bson:"customBankName,omitempty"`
-	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
-	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
-	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
-	RecurrenceCount  int       `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`
-	CreatedAt        time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
-	UpdatedAt        time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
-	UserID           string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
+	ID               string
+	Category         string
+	Subcategory      string
+	DueDate          time.Time
+	PaymentDate      time.Time
+	Amount           float64
+	BankPaidFrom     string
+	CustomBankName   string
+	Description      string
+	IsRecurring      bool
+	RecurrenceNumber int
+	RecurrenceCount  int
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	UserID           string
 }
 
 type ExpenseRecordQueryByDate struct {
@@ -56,7 +56,7 @@ type ExpenseRecordQueryByDate struct {
 
 // NewExpenseRecord creates a new ExpenseRecord with default values.
 // Required fields (category, dueDate, amount) must be set separately.
-func NewExpenseRecord(category, dueDate string, amount float64, userID string) *ExpenseRecord {
+func NewExpenseRecord(category string, dueDate time.Time, amount float64, userID string) *ExpenseRecord {
 	return &ExpenseRecord{
 		Category:    category,
 		DueDate:     dueDate,
@@ -120,6 +120,28 @@ func (ex *ExpenseByNfceUrl) Validate() error {
 	return nil
 }
 
+// This is useful for parsing dates from JSON or other sources that use this format.
+func (ir *ExpenseRecord) ConvertISO8601ToTime(field, dateStr string) error {
+	var err error
+	if field != "DueDate" {
+		ir.DueDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "CreatedAt" {
+		ir.CreatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "UpdatedAt" {
+		ir.UpdatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "PaymentDate" {
+		ir.PaymentDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	return err
+}
+
 // Validate checks the ExpenseRecord fields for correctness.
 func (er *ExpenseRecord) Validate() error {
 
@@ -134,41 +156,30 @@ func (er *ExpenseRecord) Validate() error {
 		return errors.New("subcategory must not exceed 100 characters")
 	}
 
-	parsedDueDate, err := time.Parse("2006-01-02", er.DueDate)
-	if err != nil {
-		return errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
+	if er.DueDate.IsZero() {
+		return errors.New("dueDate is required")
 	}
-	er.DueDate = parsedDueDate.Format("2006-01-02") // Ensure YYYY-MM-DD format
 
-	if er.PaymentDate != nil && *er.PaymentDate != "" {
-		parsedPaymentDate, err := time.Parse("2006-01-02", er.DueDate)
-		if err != nil {
-			return errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
+	if er.PaymentDate != (time.Time{}) || er.BankPaidFrom != "" {
+		if er.PaymentDate.IsZero() {
+			return errors.New("paymentDate is required if bankPaidFrom is filled")
 		}
-		pd := parsedPaymentDate.Format("2006-01-02")
-		er.PaymentDate = &pd // Ensure ISO 8601 format without nanoseconds
 	}
 
 	if er.Amount <= 0 {
 		return errors.New("amount must be greater than 0")
 	}
 
-	if er.PaymentDate != nil && *er.PaymentDate != "" {
-		if er.BankPaidFrom == nil || strings.TrimSpace(*er.BankPaidFrom) == "" {
-			return errors.New("bankPaidFrom is required if paymentDate is filled")
-		}
-	}
-
-	if er.BankPaidFrom != nil && *er.BankPaidFrom == "other" {
-		if er.CustomBankName == nil || strings.TrimSpace(*er.CustomBankName) == "" {
+	if er.BankPaidFrom != "" && er.BankPaidFrom == "other" {
+		if er.CustomBankName == "" || strings.TrimSpace(er.CustomBankName) == "" {
 			return errors.New("customBankName is required when bankPaidFrom is 'other'")
 		}
 	}
-	if er.CustomBankName != nil && len(*er.CustomBankName) > 100 {
+	if er.CustomBankName != "" && len(er.CustomBankName) > 100 {
 		return errors.New("customBankName must not exceed 100 characters")
 	}
 
-	if er.Description != nil && len(*er.Description) > 200 {
+	if er.Description != "" && len(er.Description) > 200 {
 		return errors.New("description must not exceed 200 characters")
 	}
 

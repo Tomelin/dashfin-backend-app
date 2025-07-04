@@ -1,6 +1,8 @@
 package utils
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 func StructToMap(data interface{}) (map[string]interface{}, error) {
 	var result map[string]interface{}

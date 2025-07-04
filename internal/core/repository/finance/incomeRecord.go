@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -53,13 +54,23 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 		return nil, err
 	}
 
-	var response entity_finance.IncomeRecord
+	var response interface{}
 	err = json.Unmarshal(doc, &response)
+	if err != nil {
+		log.Println("[RESPONSE] Error unmarshalling income record:", err)
+		return nil, err
+	}
+
+	repo := make([]interface{}, 1)
+	repo[0] = response
+	// If the response is a map, we can convert it back to IncomeRecord
+
+	responseEntity, err := r.convertToEntity(repo)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	return &responseEntity[0], nil
 }
 
 // GetIncomeRecordByID retrieves an income record by its ID.
@@ -83,23 +94,24 @@ func (r *IncomeRecordRepository) GetIncomeRecordByID(ctx context.Context, id str
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(docs, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
 		return nil, err
 	}
 
 	var result *entity_finance.IncomeRecord
-	for _, v := range records {
+	for _, v := range responseEntity {
 		if v.ID == filters["id"] {
 			result = &v
 			break
 		}
 	}
-
-	if result == nil {
-		return nil, errors.New("income record not found")
-	}
-
 	return result, nil
 }
 
@@ -110,115 +122,24 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 		return nil, err
 	}
 
-	result, err := r.DB.Get(ctx, *collection)
+	docs, err := r.DB.Get(ctx, *collection)
 	if err != nil {
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
 		return nil, err
 	}
 
-	return records, nil
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseEntity, nil
 }
-
-// func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *entity_finance.GetIncomeRecordsQueryParameters) ([]entity_finance.IncomeRecord, error) {
-// 	if params == nil {
-// 		return nil, errors.New("query parameters are nil")
-// 	}
-
-// 	if err := params.Validate(); err != nil {
-// 		return nil, fmt.Errorf("invalid query parameters: %w", err)
-// 	}
-// 	// UserID must be present in params for filtering
-// 	if strings.TrimSpace(params.UserID) == "" {
-// 		return nil, errors.New("userID is required in query parameters")
-// 	}
-
-// 	collectionName, err := repository.SetCollection(ctx, r.collection)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to set collection: %w", err)
-// 	}
-
-// 	client, ok := r.DB.GetClient().(*firestore.Client)
-// 	if !ok {
-// 		return nil, errors.New("failed to get Firestore client")
-// 	}
-
-// 	query := client.Collection(*collectionName).Where("userId", "==", params.UserID)
-
-// 	if params.Description != nil && *params.Description != "" {
-// 		// Firestore doesn't support partial string matches (LIKE) directly in a simple query.
-// 		// For a production system, you'd typically use a search service like Algolia, Elasticsearch,
-// 		// or Firestore's own (limited) text search capabilities if enabled and suitable.
-// 		// As a basic workaround, one might fetch and filter in memory, but this is not scalable.
-// 		// For this implementation, we'll assume 'description' is for exact match or not implement if too complex for now.
-// 		// Let's log a warning and proceed without description filtering if it's complex.
-// 		// For now, we will filter by exact match if description is provided.
-// 		query = query.Where("description", "==", *params.Description)
-// 	}
-
-// 	if params.StartDate != nil && *params.StartDate != "" {
-// 		query = query.Where("receiptDate", ">=", *params.StartDate)
-// 	}
-// 	if params.EndDate != nil && *params.EndDate != "" {
-// 		query = query.Where("receiptDate", "<=", *params.EndDate)
-// 	}
-
-// 	if params.SortKey != nil && *params.SortKey != "" {
-// 		direction := firestore.Asc
-// 		if params.SortDirection != nil && strings.ToLower(*params.SortDirection) == "desc" {
-// 			direction = firestore.Desc
-// 		}
-// 		// Ensure the field name matches the Firestore document field name (bson or json tag if not transformed)
-// 		// e.g. "receiptDate", "category", "amount"
-// 		firestoreKey := *params.SortKey
-// 		if firestoreKey == "receiptDate" { // common sort keys
-// 			query = query.OrderBy("receiptDate", direction)
-// 		} else if firestoreKey == "category" {
-// 			query = query.OrderBy("category", direction)
-// 		} else if firestoreKey == "amount" {
-// 			query = query.OrderBy("amount", direction)
-// 		} else {
-// 			// If an unknown sortKey is provided, we might default to a sort or return an error.
-// 			// For now, let's default to sorting by receiptDate if sortKey is invalid or not specified.
-// 			query = query.OrderBy("receiptDate", firestore.Desc) // Default sort
-// 		}
-// 	} else {
-// 		// Default sort if no key is provided
-// 		query = query.OrderBy("receiptDate", firestore.Desc)
-// 	}
-
-// 	iter := query.Documents(ctx)
-// 	defer iter.Stop()
-
-// 	var records []entity_finance.IncomeRecord
-// 	for {
-// 		doc, err := iter.Next()
-// 		if err == iterator.Done {
-// 			break
-// 		}
-// 		if err != nil {
-// 			return nil, fmt.Errorf("failed to iterate income records: %w", err)
-// 		}
-
-// 		var record entity_finance.IncomeRecord
-// 		if err := doc.DataTo(&record); err != nil {
-// 			// Log error and continue if one record fails, or return error immediately
-// 			return nil, fmt.Errorf("failed to map Firestore document to IncomeRecord: %w", err)
-// 		}
-// 		record.ID = doc.Ref.ID
-// 		records = append(records, record)
-// 	}
-
-// 	if len(records) == 0 {
-// 		// Return empty slice, not an error, if no records found matching criteria
-// 		return []entity_finance.IncomeRecord{}, nil
-// 	}
-
-// 	return records, nil
-// }
 
 // GetExpenseRecordsByFilter retrieves expense records based on a filter.
 func (r *IncomeRecordRepository) GetExpenseRecordsByFilter(ctx context.Context, filter map[string]interface{}) ([]entity_finance.IncomeRecord, error) {
@@ -231,16 +152,22 @@ func (r *IncomeRecordRepository) GetExpenseRecordsByFilter(ctx context.Context, 
 		return nil, err
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filter, *collection)
+	docs, err := r.DB.GetByFilter(ctx, filter, *collection)
 	if err != nil {
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
 		return nil, err
 	}
-	return records, nil
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+	return responseEntity, nil
 }
 
 // UpdateIncomeRecord updates an existing income record.
@@ -286,4 +213,54 @@ func (r *IncomeRecordRepository) DeleteIncomeRecord(ctx context.Context, id stri
 	}
 
 	return r.DB.Delete(ctx, id, *collection)
+}
+
+func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_finance.IncomeRecord, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	var result []entity_finance.IncomeRecord
+	for _, item := range data {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			record := entity_finance.IncomeRecord{
+				ID:            itemMap["id"].(string),
+				UserID:        itemMap["UserID"].(string),
+				Description:   itemMap["Description"].(string),
+				Category:      itemMap["Category"].(string),
+				Amount:        itemMap["Amount"].(float64),
+				BankAccountID: itemMap["BankAccountID"].(string),
+				IsRecurring:   itemMap["IsRecurring"].(bool),
+				Observations:  itemMap["Observations"].(string),
+			}
+			record.ConvertISO8601ToTime("CreatedAt", itemMap["CreatedAt"].(string))
+			record.ConvertISO8601ToTime("UpdatedAt", itemMap["UpdatedAt"].(string))
+			t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["ReceiptDate"].(string))
+			record.ReceiptDate = t
+
+			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
+				if count, ok := recurrenceCount.(int); ok {
+					record.RecurrenceCount = count
+				} else {
+					record.RecurrenceCount = 0 // Default to 0 if not present
+				}
+			} else {
+				record.RecurrenceCount = 0 // Default to 0 if not present
+			}
+
+			if recurrenceNumber, ok := itemMap["RecurrenceNumber"]; ok {
+				if number, ok := recurrenceNumber.(int); ok {
+					record.RecurrenceNumber = number
+				} else {
+					record.RecurrenceNumber = 0 // Default to 0 if not present
+				}
+			} else {
+				record.RecurrenceNumber = 0 // Default to 0 if not present
+			}
+			result = append(result, record)
+		}
+	}
+
+	return result, nil
 }

@@ -52,13 +52,21 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		return nil, err
 	}
 
-	var response entity_finance.ExpenseRecord
+	var response interface{}
 	err = json.Unmarshal(doc, &response)
 	if err != nil {
 		return nil, err
 	}
 
-	return &response, nil
+	repo := make([]interface{}, 1)
+	repo[0] = response
+
+	responseEntity, err := r.convertToEntity(repo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &responseEntity[0], nil
 }
 
 // GetExpenseRecordByID retrieves an expense record by its ID.
@@ -81,21 +89,23 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		return nil, err
 	}
 
-	var records []entity_finance.ExpenseRecord
-	if err := json.Unmarshal(docs, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
 		return nil, err
 	}
 
 	var result *entity_finance.ExpenseRecord
-	for _, v := range records {
+	for _, v := range responseEntity {
 		if v.ID == filters["id"] {
 			result = &v
 			break
 		}
-	}
-
-	if result == nil {
-		return nil, errors.New("expense record not found")
 	}
 
 	return result, nil
@@ -103,13 +113,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 
 // GetExpenseRecords retrieves all expense records for the user in context (or all if no user context).
 func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
-	// Potentially add filtering by UserID from context if available
-	// For now, gets all records.
-	// userID := ctx.Value("UserID").(string)
-	// filters := map[string]interface{}{
-	//  "userId": userID,
-	// }
-	// result, err := r.DB.GetByFilter(ctx, filters, "expenseRecords")
 
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
@@ -121,11 +124,18 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
-	var records []entity_finance.ExpenseRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(result, &response)
+	if err != nil {
 		return nil, err
 	}
-	return records, nil
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseEntity, nil
 }
 
 // GetExpenseRecordsByFilter retrieves expense records based on a filter.
@@ -144,11 +154,18 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
-	var records []entity_finance.ExpenseRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(result, &response)
+	if err != nil {
 		return nil, err
 	}
-	return records, nil
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseEntity, nil
 }
 
 // UpdateExpenseRecord updates an existing expense record.
@@ -190,4 +207,62 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 	}
 
 	return r.DB.Delete(ctx, id, *collection)
+}
+
+func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_finance.ExpenseRecord, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	var result []entity_finance.ExpenseRecord
+	for _, item := range data {
+
+		responseEntity := entity_finance.ExpenseRecord{}
+		if responseMap, ok := item.(map[string]interface{}); ok {
+			responseEntity = entity_finance.ExpenseRecord{
+				Category:       responseMap["Category"].(string),
+				Subcategory:    responseMap["Subcategory"].(string),
+				Amount:         responseMap["Amount"].(float64),
+				BankPaidFrom:   responseMap["BankPaidFrom"].(string),
+				CustomBankName: responseMap["CustomBankName"].(string),
+				Description:    responseMap["Description"].(string),
+				IsRecurring:    responseMap["IsRecurring"].(bool),
+				UserID:         responseMap["UserID"].(string),
+			}
+
+			t, _ := time.Parse("2006-01-02T15:04:05Z", responseMap["DueDate"].(string))
+			responseEntity.DueDate = t
+
+			t, _ = time.Parse("2006-01-02T15:04:05Z", responseMap["PaymentDate"].(string))
+			responseEntity.PaymentDate = t
+
+			responseEntity.ID = responseMap["id"].(string)
+
+			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
+				if count, ok := recurrenceCount.(float64); ok {
+					responseEntity.RecurrenceCount = int(count)
+				} else {
+					responseEntity.RecurrenceCount = 0
+				}
+			} else {
+				responseEntity.RecurrenceCount = 0 // Default to 0 if not present
+			}
+
+			if recurrenceNumber, ok := responseMap["RecurrenceNumber"]; ok {
+				if count, ok := recurrenceNumber.(float64); ok {
+					responseEntity.RecurrenceNumber = int(count)
+				} else {
+					responseEntity.RecurrenceNumber = 0
+				}
+			} else {
+				responseEntity.RecurrenceNumber = 0 // Default to 0 if not present
+
+			}
+
+			result = append(result, responseEntity)
+		}
+	}
+
+	return result, nil
 }

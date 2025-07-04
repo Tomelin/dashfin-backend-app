@@ -3,7 +3,6 @@ package entity_finance
 import (
 	"context"
 	"errors"
-	"regexp"
 	"strings"
 	"time"
 
@@ -30,20 +29,19 @@ type IncomeRecordServiceInterface interface {
 
 // IncomeRecord defines the structure for an income record.
 type IncomeRecord struct {
-	ID               string    `json:"id" bson:"_id,omitempty"` // Auto-generated
-	Category         string    `json:"category" bson:"category"`
-	Description      *string   `json:"description,omitempty" bson:"description,omitempty"`
-	BankAccountID    string    `json:"bankAccountId" bson:"bankAccountId"`
-	Amount           float64   `json:"amount" bson:"amount"`
-	ReceiptDate      string    `json:"receiptDate" bson:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
-	IsRecurring      bool      `json:"isRecurring" bson:"isRecurring"`
-	RecurrenceCount  *int      `json:"recurrenceCount,omitempty" bson:"recurrenceCount,omitempty"`   // Pointer to allow null
-	RecurrenceNumber int       `json:"recurrenceNumber,omitempty" bson:"recurrenceNumber,omitempty"` // Pointer to allow null
-	Observations     *string   `json:"observations,omitempty" bson:"observations,omitempty"`
-	UserID           string    `json:"userId,omitempty" bson:"userId,omitempty"` // To associate with a user
-	CreatedAt        time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
-	UpdatedAt        time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
-	// TotalValue might not be needed if it's always equal to Amount for incomes
+	ID               string // Unique identifier for the income record
+	Category         string
+	Description      string
+	BankAccountID    string
+	Amount           float64
+	ReceiptDate      time.Time
+	IsRecurring      bool
+	RecurrenceCount  int
+	RecurrenceNumber int
+	Observations     string
+	UserID           string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 type IncomeRecordEvent struct {
@@ -84,7 +82,7 @@ func isValidIncomeCategory(category string) bool {
 
 // NewIncomeRecord creates a new IncomeRecord with default values.
 // Required fields must be set separately.
-func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate, userID string) *IncomeRecord {
+func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate time.Time, userID string) *IncomeRecord {
 	return &IncomeRecord{
 		Category:      category,
 		BankAccountID: bankAccountID,
@@ -97,6 +95,25 @@ func NewIncomeRecord(category, bankAccountID string, amount float64, receiptDate
 	}
 }
 
+// ConvertISO8601ToTime converts a date string in ISO 8601 format (YYYY-MM-DD) to a time.Time object.
+// This is useful for parsing dates from JSON or other sources that use this format.
+func (ir *IncomeRecord) ConvertISO8601ToTime(field, dateStr string) error {
+	var err error
+	if field != "ReceiptDate" {
+		ir.ReceiptDate, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "CreatedAt" {
+		ir.CreatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	if field != "UpdatedAt" {
+		ir.UpdatedAt, err = time.Parse("2006-01-02", dateStr)
+	}
+
+	return err
+}
+
 // Validate checks the IncomeRecord fields for correctness.
 func (ir *IncomeRecord) Validate() error {
 	if strings.TrimSpace(ir.Category) == "" {
@@ -106,7 +123,7 @@ func (ir *IncomeRecord) Validate() error {
 		return errors.New("invalid category value")
 	}
 
-	if ir.Description != nil && len(*ir.Description) > 200 {
+	if ir.Description != "" && len(ir.Description) > 200 {
 		return errors.New("description must not exceed 200 characters")
 	}
 
@@ -119,28 +136,22 @@ func (ir *IncomeRecord) Validate() error {
 	}
 
 	// Validate ReceiptDate format (YYYY-MM-DD)
-	if matched, _ := regexp.MatchString(`^\d{4}-\d{2}-\d{2}$`, ir.ReceiptDate); !matched {
-		return errors.New("receiptDate must be in YYYY-MM-DD format")
+	if ir.ReceiptDate.IsZero() {
+		return errors.New("receiptDate is required")
 	}
-	parsedReceiptDate, err := time.Parse("2006-01-02", ir.ReceiptDate)
-	if err != nil {
-		return errors.New("invalid receiptDate: " + err.Error())
-	}
-	ir.ReceiptDate = parsedReceiptDate.Format("2006-01-02") // Ensure consistent format
 
 	if ir.IsRecurring {
-		if ir.RecurrenceCount == nil {
+		if ir.RecurrenceCount == 0 {
 			return errors.New("recurrenceCount is required if isRecurring is true")
 		}
-		if *ir.RecurrenceCount < 1 {
+		if ir.RecurrenceCount < 1 {
 			return errors.New("recurrenceCount must be at least 1 if isRecurring is true")
 		}
 	} else {
-		// If not recurring, RecurrenceCount should ideally be nil or ignored.
-		// Depending on API design, you might want to enforce ir.RecurrenceCount == nil here.
+		ir.RecurrenceCount = 0 // Reset if not recurring
 	}
 
-	if ir.Observations != nil && len(*ir.Observations) > 500 {
+	if ir.Observations != "" && len(ir.Observations) > 500 {
 		return errors.New("observations must not exceed 500 characters")
 	}
 

@@ -22,12 +22,15 @@ const (
 const (
 	serviceCacheTTL = 1 * time.Minute
 
+	cacheKeyIncomeReport             = "income_report"
 	cacheKeyIncomeReportByMonth      = "income_report_by_month"
 	cacheKeyIncomeReportByLastMonth  = "income_report_by_last_month"
 	cacheKeyIncomeReportByYear       = "income_report_by_year"
+	cacheKeyExpenseReport            = "expense_report"
 	cacheKeyExpenseReportByMonth     = "expense_report_by_month"
 	cacheKeyExpenseReportByLastMonth = "expense_report_by_last_month"
 	cacheKeyExpenseReportByYear      = "expense_report_by_year"
+	cacheKeyFinancialReport				 = "financial_report"
 )
 
 // Date and time
@@ -44,6 +47,10 @@ var (
 	firstDayOfLastMonth = time.Now().AddDate(0, -1, 0).Format(dateLayout)
 	lastDayOfLastMonth  = time.Now().AddDate(0, 0, -1).Format(dateLayout)
 	firstDayOfYear      = time.Date(time.Now().Year(), time.January, 1, 0, 0, 0, 0, time.UTC).Format(dateLayout)
+
+	firstDayOf12MonthsAgo = time.Date(time.Now().Year(), time.Now().Month()-11, 1, 0, 0, 0, 0, time.UTC).Format(dateLayout)
+
+
 	// lastDayOfYear       = time.Date(time.Now().Year(), time.December, 31, 0, 0, 0, 0, time.UTC).Format(dateLayout)
 	// cuurentMonth        = time.Now().Month()
 	// currentYear         = time.Now().Year()

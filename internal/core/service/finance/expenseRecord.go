@@ -65,9 +65,7 @@ func (s *ExpenseRecordService) CreateExpenseRecord(ctx context.Context, data *en
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 			} else {
-				parsedDueDate, _ := time.Parse("2006-01-02", snapDueDate)
-				newDate := parsedDueDate.AddDate(0, i, 0) // Add i months
-				data.DueDate = newDate.Format("2006-01-02")
+				data.DueDate = snapDueDate.AddDate(0, i, 0) // Add i months
 				result, _ := s.Repo.CreateExpenseRecord(ctx, data)
 				expensesCreated = append(expensesCreated, *result)
 			}
@@ -112,16 +110,13 @@ func (s *ExpenseRecordService) GetExpenseRecordByID(ctx context.Context, id stri
 
 // GetExpenseRecords retrieves all expense records for the authenticated user.
 func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
+
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil || userIDFromCtx.(string) == "" {
 		return nil, errors.New("userID not found in context")
 	}
 
-	filter := map[string]interface{}{
-		"userId": userIDFromCtx.(string),
-	}
-
-	records, err := s.Repo.GetExpenseRecordsByFilter(ctx, filter)
+	records, err := s.Repo.GetExpenseRecords(ctx)
 	if err != nil {
 		// If the error is because no records were found, it might be better to return an empty slice and no error.
 		// This depends on the desired API contract. For now, mirroring BankAccount which returns "not found".
@@ -149,15 +144,19 @@ func (s *ExpenseRecordService) GetExpenseRecordsByDate(ctx context.Context, filt
 	endDate, _ := time.Parse("2006-01-02", filter.EndDate)
 
 	for _, record := range records {
-		parsedDueDate, err := time.Parse("2006-01-02", record.DueDate)
-		if err != nil {
+
+		if record.DueDate.IsZero() {
 			return nil, errors.New("dueDate must be in ISO 8601 format (YYYY-MM-DD)")
 		}
-		if startDate != (time.Time{}) && parsedDueDate.Before(startDate) {
+		if startDate != (time.Time{}) && record.DueDate.Before(startDate) {
 			continue
 		}
 
-		if endDate != (time.Time{}) && parsedDueDate.After(endDate) {
+		if endDate != (time.Time{}) && record.DueDate.After(endDate) {
+			continue
+		}
+
+		if record.DueDate.After(endDate) {
 			continue
 		}
 		filteredRecords = append(filteredRecords, record)

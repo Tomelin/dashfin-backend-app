@@ -248,20 +248,12 @@ func sumExpense(expenses []finance_entity.ExpenseRecord) []sumExpenseItems {
 	return expenseMap
 }
 
-func (s *FinancialService) isInCurrentMonthAndYear(dateString string) (bool, error) {
-	// 1. Parse da string para time.Time
-	// Usamos o layout "2006-01-02", que é a forma padrão do Go para especificar formatos de data.
-	// Isso garante que a string seja interpretada corretamente.
-	inputDate, err := time.Parse("2006-01-02", dateString)
-	if err != nil {
-		// Retornamos um erro claro se o formato for inválido, tornando a função mais robusta.
-		return false, fmt.Errorf("erro ao analisar a data: %w", err)
-	}
+func (s *FinancialService) isInCurrentMonthAndYear(inputDate time.Time) (bool, error) {
 
-	// 2. Obter a data e hora atuais
+	// 1. Obter a data e hora atuais
 	now := time.Now()
 
-	// 3. Comparar ano e mês
+	// 1. Comparar ano e mês
 	// Acessamos e comparamos o ano e o mês de ambas as datas.
 	// Esta é a forma mais clara e performática de fazer essa verificação específica.
 	isSameYear := inputDate.Year() == now.Year()
