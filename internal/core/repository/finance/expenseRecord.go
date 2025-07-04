@@ -43,7 +43,6 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 
 	toMap, _ := utils.StructToMap(data)
 
-	log.Println("[REPOSITORY] Creating expense record:", data.DueDate)
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
@@ -68,7 +67,6 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		return nil, err
 	}
 
-	log.Println("[REPOSITORY] Expense record created successfully:", responseEntity[0].DueDate)
 	return &responseEntity[0], nil
 }
 
@@ -138,6 +136,9 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	for _, v := range responseEntity {
+		log.Println("Number of expense records found:", len(responseEntity), v.Category, v.DueDate)
+	}
 	return responseEntity, nil
 }
 
