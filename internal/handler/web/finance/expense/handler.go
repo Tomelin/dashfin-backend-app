@@ -301,10 +301,6 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 		expenseResponse = append(expenseResponse, expenseDTO)
 	}
 
-	for _, v := range expenseResponse {
-		log.Println("Number of expense records found:", len(expenseResponse), v.Category, v.ID)
-	}
-
 	responseBytes, err := json.Marshal(expenseResponse)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})

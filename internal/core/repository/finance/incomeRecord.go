@@ -61,37 +61,16 @@ func (r *IncomeRecordRepository) CreateIncomeRecord(ctx context.Context, data *e
 		return nil, err
 	}
 
+	repo := make([]interface{}, 1)
+	repo[0] = response
 	// If the response is a map, we can convert it back to IncomeRecord
-	var responseEntity entity_finance.IncomeRecord
-	if responseMap, ok := response.(map[string]interface{}); ok {
 
-		responseEntity.ConvertISO8601ToTime("ReceiptDate", responseMap["ReceiptDate"].(string))
-		responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
-		responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
-
-		if recorrenceCount, ok := responseMap["RecurrenceCount"]; ok {
-			if count, ok := recorrenceCount.(int); ok {
-				responseEntity.RecurrenceCount = count
-			} else {
-				responseEntity.RecurrenceCount = 0
-			}
-		} else {
-			responseEntity.RecurrenceCount = 0 // Default to 0 if not present
-		}
-
-		responseEntity = entity_finance.IncomeRecord{
-			ID:            responseMap["ID"].(string),
-			UserID:        responseMap["UserID"].(string),
-			Description:   responseMap["Description"].(string),
-			Category:      responseMap["Category"].(string),
-			Amount:        responseMap["Amount"].(float64),
-			BankAccountID: responseMap["BankAccountID"].(string),
-			IsRecurring:   responseMap["IsRecurring"].(bool),
-			Observations:  responseMap["Observations"].(string),
-		}
+	responseEntity, err := r.convertToEntity(repo)
+	if err != nil {
+		return nil, err
 	}
 
-	return &responseEntity, nil
+	return &responseEntity[0], nil
 }
 
 // GetIncomeRecordByID retrieves an income record by its ID.
@@ -115,23 +94,24 @@ func (r *IncomeRecordRepository) GetIncomeRecordByID(ctx context.Context, id str
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(docs, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
 		return nil, err
 	}
 
 	var result *entity_finance.IncomeRecord
-	for _, v := range records {
+	for _, v := range responseEntity {
 		if v.ID == filters["id"] {
 			result = &v
 			break
 		}
 	}
-
-	if result == nil {
-		return nil, errors.New("income record not found")
-	}
-
 	return result, nil
 }
 
@@ -142,17 +122,23 @@ func (r *IncomeRecordRepository) GetIncomeRecords(ctx context.Context, params *e
 		return nil, err
 	}
 
-	result, err := r.DB.Get(ctx, *collection)
+	docs, err := r.DB.Get(ctx, *collection)
 	if err != nil {
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
 		return nil, err
 	}
 
-	return records, nil
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+
+	return responseEntity, nil
 }
 
 // GetExpenseRecordsByFilter retrieves expense records based on a filter.
@@ -166,16 +152,22 @@ func (r *IncomeRecordRepository) GetExpenseRecordsByFilter(ctx context.Context, 
 		return nil, err
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filter, *collection)
+	docs, err := r.DB.GetByFilter(ctx, filter, *collection)
 	if err != nil {
 		return nil, err
 	}
 
-	var records []entity_finance.IncomeRecord
-	if err := json.Unmarshal(result, &records); err != nil {
+	var response []interface{}
+	err = json.Unmarshal(docs, &response)
+	if err != nil {
 		return nil, err
 	}
-	return records, nil
+
+	responseEntity, err := r.convertToEntity(response)
+	if err != nil {
+		return nil, err
+	}
+	return responseEntity, nil
 }
 
 // UpdateIncomeRecord updates an existing income record.
@@ -221,4 +213,53 @@ func (r *IncomeRecordRepository) DeleteIncomeRecord(ctx context.Context, id stri
 	}
 
 	return r.DB.Delete(ctx, id, *collection)
+}
+
+func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_finance.IncomeRecord, error) {
+
+	if data == nil {
+		return nil, errors.New("data is nil")
+	}
+
+	var result []entity_finance.IncomeRecord
+	for _, item := range data {
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			record := entity_finance.IncomeRecord{
+				ID:            itemMap["id"].(string),
+				UserID:        itemMap["UserID"].(string),
+				Description:   itemMap["Description"].(string),
+				Category:      itemMap["Category"].(string),
+				Amount:        itemMap["Amount"].(float64),
+				BankAccountID: itemMap["BankAccountID"].(string),
+				IsRecurring:   itemMap["IsRecurring"].(bool),
+				Observations:  itemMap["Observations"].(string),
+			}
+			record.ConvertISO8601ToTime("ReceiptDate", itemMap["ReceiptDate"].(string))
+			record.ConvertISO8601ToTime("CreatedAt", itemMap["CreatedAt"].(string))
+			record.ConvertISO8601ToTime("UpdatedAt", itemMap["UpdatedAt"].(string))
+
+			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
+				if count, ok := recurrenceCount.(int); ok {
+					record.RecurrenceCount = count
+				} else {
+					record.RecurrenceCount = 0 // Default to 0 if not present
+				}
+			} else {
+				record.RecurrenceCount = 0 // Default to 0 if not present
+			}
+
+			if recurrenceNumber, ok := itemMap["RecurrenceNumber"]; ok {
+				if number, ok := recurrenceNumber.(int); ok {
+					record.RecurrenceNumber = number
+				} else {
+					record.RecurrenceNumber = 0 // Default to 0 if not present
+				}
+			} else {
+				record.RecurrenceNumber = 0 // Default to 0 if not present
+			}
+			result = append(result, record)
+		}
+	}
+
+	return result, nil
 }
