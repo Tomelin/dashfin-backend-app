@@ -129,6 +129,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 	var response interface{}
 	err = json.Unmarshal(result, &response)
 	if err != nil {
+		log.Println("[ExpenseRecordRepository] Error unmarshalling response:", err)
 		return nil, err
 	}
 
@@ -215,6 +216,7 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 }
 
 func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity_finance.ExpenseRecord, error) {
+	log.Println("[RESPONSE] Converting data to entity", data)
 	if data == nil {
 		return nil, errors.New("data is nil")
 	}
