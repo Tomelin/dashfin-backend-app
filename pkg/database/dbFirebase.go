@@ -264,6 +264,9 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 	defer iter.Stop()
 	for {
 		doc, err := iter.Next()
+		log.Println("\n GetByConditional doc:", doc)
+		log.Println("Error in GetByConditional:", err)
+
 		if err == iterator.Done {
 			break
 		}
