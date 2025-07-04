@@ -110,7 +110,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 9. Set the income and expense records
 	s.calculateTotalBalance(ctx, userID)
 
-	s.getMonthlyFinancialSummary(ctx, &userID)
+	s.getMonthlyFinancialSummary(&userID)
 
 	return &s.dash, nil
 }
@@ -158,6 +158,28 @@ func (s *DashboardService) getIncomeRecords(ctx context.Context) error {
 	return nil
 }
 
+func (s *DashboardService) getIncomeRecordsFromPeriod(startDate, endDate time.Time) ([]financeEntity.IncomeRecord, float64, error) {
+
+	if s.incomeRecords == nil {
+		return nil, 0, errors.New("income records are not initialized")
+	}
+
+	if startDate.IsZero() || endDate.IsZero() {
+		return nil, 0, fmt.Errorf("startDate and endDate must be provided")
+	}
+
+	var amount float64
+	var records []financeEntity.IncomeRecord
+	for _, income := range s.incomeRecords {
+		if income.ReceiptDate.After(startDate) && income.ReceiptDate.Before(endDate) {
+			records = append(records, income)
+			amount += income.Amount
+		}
+	}
+
+	return records, amount, nil
+}
+
 func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 
 	records, err := s.expenseRecordService.GetExpenseRecords(ctx)
@@ -168,6 +190,28 @@ func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 	s.expenseRecords = records
 
 	return nil
+}
+
+func (s *DashboardService) getExpenseRecordsFromPeriod(startDate, endDate time.Time) ([]financeEntity.ExpenseRecord, float64, error) {
+
+	if s.expenseRecords == nil {
+		return nil, 0, errors.New("expense records are not initialized")
+	}
+
+	if startDate.IsZero() || endDate.IsZero() {
+		return nil, 0, fmt.Errorf("startDate and endDate must be provided")
+	}
+
+	var amount float64
+	var records []financeEntity.ExpenseRecord
+	for _, expense := range s.expenseRecords {
+		if expense.DueDate.After(startDate) && expense.DueDate.Before(endDate) {
+			records = append(records, expense)
+			amount += expense.Amount
+		}
+	}
+
+	return records, amount, nil
 }
 
 func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *string) {
@@ -583,21 +627,35 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	return nil
 }
 
-func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userID *string) error {
+func (s *DashboardService) getMonthlyFinancialSummary(userID *string) error {
 
 	if userID == nil || *userID == "" {
 		return fmt.Errorf("userID is nil or empty")
 	}
 
-	// items := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0)
+	items := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0)
 
 	for i := 0; i < 12; i++ {
 		startDateThisMonth := utils.GetFirstDayOfCurrentMonth().AddDate(0, -i, 0)
 		endDateThisMonth := utils.GetLastDayOfCurrentMonth().AddDate(0, -i, 0)
+		month := startDateThisMonth.Format("2006-01")
 
-		log.Println("startDateThisMonth:", startDateThisMonth)
-		log.Println("endDateThisMonth:", endDateThisMonth)
+		_, incomeAmount, err := s.getIncomeRecordsFromPeriod(startDateThisMonth, endDateThisMonth)
+		if err != nil {
+			return fmt.Errorf("error fetching income records for month %s: %w", month, err)
+		}
 
+		_, expenseAmount, err := s.getExpenseRecordsFromPeriod(startDateThisMonth, endDateThisMonth)
+		if err != nil {
+			return fmt.Errorf("error fetching expense records for month %s: %w", month, err)
+		}
+
+		items = append(items, dashboardEntity.MonthlyFinancialSummaryItem{
+			Month:         month,
+			TotalIncome:   incomeAmount,
+			TotalExpenses: expenseAmount,
+			UserID:        *userID,
+		})
 	}
 
 	return nil
