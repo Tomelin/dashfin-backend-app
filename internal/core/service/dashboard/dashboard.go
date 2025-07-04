@@ -164,11 +164,11 @@ func (s *DashboardService) getSummaryCards() error {
 	fmt.Println("totalBalanceLastMonth:", totalBalanceLastMonth)
 	fmt.Println("expenseMonthChangePercent:", (expenseMonth / expenseLastMonth))
 	fmt.Println("receiveMonthChangePercent:", (receiveMonth / receiveLastMonth))
-	fmt.Println("totalBalanceChangePercent:", ((totalBalance/totalBalanceLastMonth)-1)*100)
+	// fmt.Println("totalBalanceChangePercent:", ((totalBalance/totalBalanceLastMonth)-1)*100)
 
 	s.dash.SummaryCards.MonthlyExpensesChangePercent = ((expenseMonth / expenseLastMonth) - 1) * 100
 	s.dash.SummaryCards.MonthlyRevenueChangePercent = ((receiveMonth / receiveLastMonth) - 1) * 100
-	s.dash.SummaryCards.TotalBalanceChangePercent = ((totalBalance / totalBalanceLastMonth) - 1) * 100
+	// s.dash.SummaryCards.TotalBalanceChangePercent = ((totalBalance / totalBalanceLastMonth) - 1) * 100
 	s.dash.SummaryCards.MonthlyExpenses = expenseMonth
 	s.dash.SummaryCards.MonthlyRevenue = receiveMonth
 	s.dash.SummaryCards.TotalBalance = totalBalance
