@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -135,6 +136,9 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	for _, v := range responseEntity {
+		fmt.Println("\n GetExpenseRecords responseEntity:", v)
+	}
 	return responseEntity, nil
 }
 
