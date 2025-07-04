@@ -110,6 +110,8 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 9. Set the income and expense records
 	s.calculateTotalBalance(ctx, userID)
 
+	s.getMonthlyFinancialSummary(ctx, userID)
+
 	return &s.dash, nil
 }
 
@@ -581,125 +583,25 @@ func (s *DashboardService) processIncomeRecord(body []byte, traceID string) erro
 	return nil
 }
 
-func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userID *string) ([]dashboardEntity.MonthlyFinancialSummaryItem, error) {
+func (s *DashboardService) getMonthlyFinancialSummary(ctx context.Context, userID *string) error {
+
 	if userID == nil || *userID == "" {
-		return nil, fmt.Errorf("userID is nil or empty")
+		return fmt.Errorf("userID is nil or empty")
 	}
 
-	now := time.Now()
-	// Calculate the start date 12 months ago from the beginning of the current month
-	endDate := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location()).AddDate(0, 1, 0).Add(-time.Nanosecond) // End of current month
-	startDate := endDate.AddDate(0, -12, 1)                                                                             // Start of the month 12 months ago
+	// items := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0)
 
-	startDateStr := startDate.Format("2006-01-02")
-	endDateStr := endDate.Format("2006-01-02")
+	for i := 0; i < 12; i++ {
+		startDateThisMonth := utils.GetFirstDayOfCurrentMonth().AddDate(0, -i, 0)
+		endDateThisMonth := utils.GetLastDayOfCurrentMonth().AddDate(0, -i, 0)
 
-	// Fetch all relevant income and expense records in one go
-	allUserIncomes, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
-		StartDate: &startDateStr,
-		EndDate:   &endDateStr,
-		UserID:    *userID,
-	})
-	if err != nil {
-		// Log the error and continue, perhaps with partial data or empty result
-		fmt.Printf("Warning: Error fetching income records for financial summary for user %s: %v\n", *userID, err)
-		allUserIncomes = []financeEntity.IncomeRecord{} // Ensure it's not nil
+		log.Println("startDateThisMonth:", startDateThisMonth)
+		log.Println("endDateThisMonth:", endDateThisMonth)
+
 	}
 
-	// Assuming ExpenseRecordService also has a method to get records by date range and UserID
-	// If not, you might need to fetch all and filter by UserID manually
-	allUserExpenses, err := s.expenseRecordService.GetExpenseRecordsByDate(ctx, &financeEntity.ExpenseRecordQueryByDate{
-		StartDate: startDateStr,
-		EndDate:   endDateStr,
-	})
-	if err != nil {
-		// Log the error and continue
-		fmt.Printf("Warning: Error fetching expense records for financial summary for user %s: %v\n", *userID, err)
-		allUserExpenses = []financeEntity.ExpenseRecord{} // Ensure it's not nil
-	}
+	return nil
 
-	// Aggregate data by month
-	monthlySummaryMap := make(map[string]*dashboardEntity.MonthlyFinancialSummaryItem)
-
-	// Process incomes
-	for _, income := range allUserIncomes {
-
-		// Ensure date is within the desired range (should be covered by the initial fetch, but good practice)
-		if income.ReceiptDate.Before(startDate) || income.ReceiptDate.After(endDate) {
-			continue
-		}
-
-		monthLabel := income.ReceiptDate.Format("2006-01")
-		if item, exists := monthlySummaryMap[monthLabel]; exists {
-			item.TotalIncome += income.Amount
-		} else {
-			monthlySummaryMap[monthLabel] = &dashboardEntity.MonthlyFinancialSummaryItem{
-				Month:       monthLabel,
-				TotalIncome: income.Amount,
-			}
-		}
-	}
-
-	// Process expenses
-	for _, expense := range allUserExpenses {
-		// Only consider paid expenses for the monthly summary
-		if !expense.PaymentDate.IsZero() {
-
-			// Ensure date is within the desired range
-			if expense.PaymentDate.Before(startDate) || expense.PaymentDate.After(endDate) {
-				continue
-			}
-
-			monthLabel := expense.PaymentDate.Format("2006-01")
-			if item, exists := monthlySummaryMap[monthLabel]; exists {
-				item.TotalExpenses += expense.Amount
-			} else {
-				// This case might happen if there are expenses in a month with no income
-				monthlySummaryMap[monthLabel] = &dashboardEntity.MonthlyFinancialSummaryItem{
-					Month:         monthLabel,
-					TotalExpenses: expense.Amount,
-				}
-			}
-		}
-	}
-
-	// Convert map to slice and sort by month
-	monthlySummary := make([]dashboardEntity.MonthlyFinancialSummaryItem, 0, len(monthlySummaryMap))
-	for _, item := range monthlySummaryMap {
-		monthlySummary = append(monthlySummary, *item)
-	}
-
-	// Sort the summary by month (chronologically)
-	sort.Slice(monthlySummary, func(i, j int) bool {
-		// Parse month labels back to time.Time for accurate sorting
-		dateI, errI := time.Parse("2006-01", monthlySummary[i].Month)
-		dateJ, errJ := time.Parse("2006-01", monthlySummary[j].Month)
-
-		// Handle parsing errors - if error, consider that item "later" in the sort
-		if errI != nil && errJ != nil {
-			return false
-		} // Both invalid, order doesn't matter for sorting
-		if errI != nil {
-			return false
-		} // i is invalid, j is valid, j comes first
-		if errJ != nil {
-			return true
-		} // j is invalid, i is valid, i comes first
-
-		return dateI.Before(dateJ)
-	})
-
-	// Optional: Update the repository with the calculated summary
-	// This part depends on whether you need to persist this aggregated summary.
-	// If so, you can iterate through the 'monthlySummary' slice and call a repository update method.
-	// For simplicity and avoiding potential race conditions, do this sequentially here
-	// instead of in separate goroutines as before.
-	for _, summaryItem := range monthlySummary {
-		// Implement a repository method to update/create the monthly summary record
-		s.updateMonthlyFinancialSummary(ctx, userID, &summaryItem)
-	}
-
-	return monthlySummary, nil
 }
 
 func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) []financeEntity.IncomeRecord {
