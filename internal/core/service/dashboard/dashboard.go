@@ -240,6 +240,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		})
 	}
 
+	log.Println("\n Bank account balances:", s.dash.SummaryCards.AccountBalances)
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
