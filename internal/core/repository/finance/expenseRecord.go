@@ -224,14 +224,12 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 
 		responseEntity := entity_finance.ExpenseRecord{}
 		if responseMap, ok := item.(map[string]interface{}); ok {
-			log.Println("[RESPONSE] responseMap:", responseMap)
-			log.Println("[RESPONSE] responseMap:", responseMap["Category"])
-			log.Println("[RESPONSE] responseMap:", responseMap["Category"].(string))
 
 			responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
 			responseEntity.ConvertISO8601ToTime("PaymentDate", responseMap["PaymentDate"].(string))
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 			responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
+			responseEntity.ID = responseMap["id"].(string)
 
 			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(int); ok {
