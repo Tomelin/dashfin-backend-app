@@ -138,7 +138,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
-	log.Println("[REPOSITORY] GetExpenseRecords converted to entity:", len(responseEntity))
 	return responseEntity, nil
 }
 
@@ -166,7 +165,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 
 	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
-		log.Println("[ExpenseRecordRepository] Error converting response to entity:", err)
 		return nil, err
 	}
 
@@ -265,12 +263,9 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				IsRecurring:    responseMap["IsRecurring"].(bool),
 				UserID:         responseMap["UserID"].(string),
 			}
-			log.Println("[RESPONSE] responseMap to Category:", responseMap["Category"].(string))
-			log.Println("[RESPONSE] responseEntity to Category:", responseEntity.Category)
 			result = append(result, responseEntity)
 		}
 	}
 
-	log.Println("[RESPONSE] Converted to entity:", len(result))
 	return result, nil
 }
