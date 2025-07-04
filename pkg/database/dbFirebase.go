@@ -18,7 +18,25 @@ type FirebaseDBInterface interface {
 	Create(ctx context.Context, data interface{}, collection string) ([]byte, error)
 	Update(ctx context.Context, id string, data interface{}, collection string) error
 	Delete(ctx context.Context, id, collection string) error
+	GetByQuery(ctx context.Context, collection string) firestore.Query
+	GetByConditional(ctx context.Context, conditional []Conditional, collection string) ([]byte, error)
 	GetByFilter(ctx context.Context, filters map[string]interface{}, collection string) ([]byte, error)
+}
+
+type Filter string
+
+const (
+	FilterEquals        Filter = "=="
+	FilterNotEquals     Filter = "!="
+	FilterGreaterThan   Filter = ">"
+	FilterLessThan      Filter = "<"
+	FilterArrayContains Filter = "array-contains"
+)
+
+type Conditional struct {
+	Field  string
+	Value  interface{}
+	Filter Filter
 }
 
 // FirebaseDB implements the DatabaseService interface for Firebase Firestore.
@@ -201,6 +219,60 @@ func (db *FirebaseDB) Delete(ctx context.Context, id, collection string) error {
 	_, err := db.client.Collection(collection).Doc(id).Delete(ctx)
 
 	return err
+}
+
+func (db *FirebaseDB) GetByQuery(ctx context.Context, collection string) firestore.Query {
+
+	query := db.client.Collection(collection).Query
+
+	return query
+
+}
+
+// GetByConditional retrieves multiple documents based on a set of conditionals from a default collection.
+// Placeholder: Collection name needed.
+// This function allows for more complex queries using conditionals.
+func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Conditional, collection string) ([]byte, error) {
+
+	if err := db.validateWithData(ctx, conditional, collection); err != nil {
+		return nil, err
+	}
+
+	query := db.client.Collection(collection).Query
+	for _, cond := range conditional {
+		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
+	}
+
+	iter := query.Documents(ctx)
+	var results []interface{}
+	defer iter.Stop()
+	for {
+		doc, err := iter.Next()
+		log.Println("\n GetByConditional doc:", doc, "err:", err)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		log.Println("\n GetByConditional doc data:", doc.Data())
+		log.Println("\n GetByConditional doc ref:", doc.Ref)
+		log.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
+		log.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
+		log.Println("\n GetByConditional doc ref parent:", doc.Ref.Parent)
+		log.Println("\n GetByConditional doc exists:", doc.Exists())
+
+		data := doc.Data()
+		data["id"] = doc.Ref.ID // Importante para updates
+		results = append(results, data)
+	}
+
+	b, err := json.Marshal(results)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // GetByFilter retrieves multiple documents based on a set of filters from a default collection.

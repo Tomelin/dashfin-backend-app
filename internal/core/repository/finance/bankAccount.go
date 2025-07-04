@@ -64,11 +64,18 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, errors.New("id is empty")
 	}
 
-	filters := map[string]interface{}{
-		"id": *id,
+	conditional := []database.Conditional{
+		{
+			Field:  "id",
+			Value:  *id,
+			Filter: database.FilterEquals,
+		},
 	}
 
-	log.Println("\n GetBankAccountByID filters:", filters)
+	if len(conditional) == 0 {
+		return nil, errors.New("no conditions provided")
+	}
+
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
@@ -78,7 +85,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, fmt.Errorf("%s collection is empty", r.collection)
 	}
 
-	result, err := r.DB.GetByFilter(ctx, filters, *collection)
+	result, err := r.DB.GetByConditional(ctx, conditional, *collection)
 	if err != nil {
 		return nil, err
 	}
