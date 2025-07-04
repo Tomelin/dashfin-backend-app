@@ -121,6 +121,8 @@ func (s *DashboardService) getSummaryCards() error {
 	var expenseMonth float64
 	var receiveBalance float64
 	var expenseBalance float64
+	var receiveLastMonth float64
+	var expenseLastMonth float64
 
 	for _, income := range s.incomeRecords {
 		if income.ReceiptDate.After(utils.GetFirstDayOfCurrentMonth()) && income.ReceiptDate.Before(utils.GetLastDayOfCurrentMonth()) {
@@ -138,9 +140,27 @@ func (s *DashboardService) getSummaryCards() error {
 		}
 	}
 
+	for _, income := range s.incomeRecords {
+		if income.ReceiptDate.After(utils.GetFirstDayOfLastMonth()) && income.ReceiptDate.Before(utils.GetLastDayOfLastMonth()) {
+			receiveLastMonth += income.Amount
+		}
+	}
+
+	for _, expense := range s.expenseRecords {
+		if expense.DueDate.After(utils.GetFirstDayOfLastMonth()) && expense.DueDate.Before(utils.GetLastDayOfLastMonth()) {
+			expenseLastMonth += expense.Amount
+		}
+	}
+
+	totalBalance := receiveBalance - expenseBalance
+	totalBalanceLastMonth := receiveLastMonth - expenseLastMonth
+
+	s.dash.SummaryCards.MonthlyExpensesChangePercent = ((expenseMonth / expenseLastMonth) - 1) * 100
+	s.dash.SummaryCards.MonthlyRevenueChangePercent = ((receiveMonth / receiveLastMonth) - 1) * 100
+	s.dash.SummaryCards.TotalBalanceChangePercent = ((totalBalance / totalBalanceLastMonth) - 1) * 100
 	s.dash.SummaryCards.MonthlyExpenses = expenseMonth
 	s.dash.SummaryCards.MonthlyRevenue = receiveMonth
-	s.dash.SummaryCards.TotalBalance = receiveBalance - expenseBalance
+	s.dash.SummaryCards.TotalBalance = totalBalance
 
 	return nil
 
@@ -660,66 +680,5 @@ func (s *DashboardService) getMonthlyFinancialSummary(userID *string) error {
 
 	s.dash.SummaryCards.MonthlyFinancialSummary = items
 	return nil
-
-}
-
-func (s *DashboardService) monthlyFinancialSummaryIncome(ctx context.Context, startDate, endDate, userID *string) []financeEntity.IncomeRecord {
-
-	allUserIncomes, _ := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{
-		StartDate: startDate,
-		EndDate:   endDate,
-		UserID:    *userID,
-	})
-
-	return allUserIncomes
-}
-
-func (s *DashboardService) monthlyFinancialSummaryExpense(ctx context.Context, startDate, endDate, userID *string) []financeEntity.ExpenseRecord {
-	allUserExpenses, _ := s.expenseRecordService.GetExpenseRecordsByDate(ctx, &financeEntity.ExpenseRecordQueryByDate{
-		StartDate: *startDate,
-		EndDate:   *endDate,
-	})
-
-	return allUserExpenses
-}
-
-func (s *DashboardService) updateMonthlyFinancialSummary(ctx context.Context, userID *string, data *dashboardEntity.MonthlyFinancialSummaryItem) {
-
-	if userID == nil {
-		return
-	}
-
-	result, err := s.dashboardRepository.GetFinancialSummary(ctx, userID)
-	if err != nil {
-		return
-	}
-
-	needUpdate := false
-	exists := false
-	for _, v := range result {
-
-		if v.Month == data.Month {
-			exists = true
-			data.ID = v.ID
-			if v.TotalIncome != data.TotalIncome {
-				v.TotalIncome = data.TotalIncome
-				needUpdate = true
-			}
-			if v.TotalExpenses != data.TotalExpenses {
-				v.TotalExpenses = data.TotalExpenses
-				needUpdate = true
-			}
-			break
-		}
-	}
-
-	if needUpdate || !exists {
-		if !exists {
-			data.CreatedAt = time.Now()
-		}
-		data.UpdatedAt = time.Now()
-		data.UserID = *userID
-		s.dashboardRepository.UpdateFinancialSummary(ctx, userID, data)
-	}
 
 }
