@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -226,7 +225,6 @@ func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_f
 	for _, item := range data {
 		if itemMap, ok := item.(map[string]interface{}); ok {
 			record := entity_finance.IncomeRecord{}
-			fmt.Println("[RESPONSE] itemMap:", itemMap)
 
 			if userID, ok := itemMap["UserID"]; ok {
 				record.UserID = userID.(string)
