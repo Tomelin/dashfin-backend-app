@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -42,6 +43,7 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 
 	toMap, _ := utils.StructToMap(data)
 
+	log.Println("[REPOSITORY] Creating expense record:", data.DueDate)
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
