@@ -222,9 +222,13 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 	var result []entity_finance.ExpenseRecord
 	for _, item := range data {
 
+		log.Println("[RESPONSE] item response to entity:", item)
+
 		responseEntity := entity_finance.ExpenseRecord{}
 		if responseMap, ok := item.(map[string]interface{}); ok {
 
+			log.Println("[RESPONSE] id response to entity:", responseMap["id"])
+			log.Println("[RESPONSE] ID response to entity:", responseMap["ID"])
 			responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
 			responseEntity.ConvertISO8601ToTime("PaymentDate", responseMap["PaymentDate"].(string))
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
