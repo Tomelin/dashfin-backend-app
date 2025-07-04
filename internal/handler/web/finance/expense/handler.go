@@ -301,7 +301,9 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 		expenseResponse = append(expenseResponse, expenseDTO)
 	}
 
-	log.Println("Number of expense records found:", len(expenseResponse), expenseResponse)
+	for _, v := range expenseResponse {
+		log.Println("Number of expense records found:", len(expenseResponse), v.Category, v.ID)
+	}
 
 	responseBytes, err := json.Marshal(expenseResponse)
 	if err != nil {
