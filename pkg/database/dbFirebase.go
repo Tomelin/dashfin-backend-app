@@ -238,6 +238,24 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		return nil, err
 	}
 
+	data, err := db.Get(ctx, collection) // Ensure the connection is established
+	if err == nil {
+		return nil, errors.New("firestore client not initialized. Call Connect first")
+	}
+
+	var dataInterface interface{}
+	if err := json.Unmarshal(data, &dataInterface); err != nil {
+		return nil, fmt.Errorf("error unmarshalling data: %w", err)
+	}
+
+	var dataInterface2 []interface{}
+	if err := json.Unmarshal(data, &dataInterface2); err != nil {
+		return nil, fmt.Errorf("error unmarshalling data: %w", err)
+	}
+
+	log.Println("\n GetByConditional dataInterface:", dataInterface)
+	log.Println("\n GetByConditional dataInterface2:", dataInterface2)
+
 	query := db.client.Collection(collection).Query
 	for _, cond := range conditional {
 		if cond.Field == "" {
