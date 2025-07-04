@@ -154,7 +154,7 @@ func (s *DashboardService) getSummaryCards() error {
 	}
 
 	for _, expense := range s.expenseRecords {
-		if !expense.PaymentDate.IsZero() && expense.PaymentDate.After(utils.GetFirstDayOfCurrentMonth()) && expense.PaymentDate.Before(utils.GetLastDayOfCurrentMonth()) {
+		if expense.DueDate.After(utils.GetFirstDayOfCurrentMonth()) && expense.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
 			expenseMonth += expense.Amount
 		}
 	}
