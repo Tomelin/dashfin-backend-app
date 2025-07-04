@@ -131,11 +131,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	log.Println("\n ExpenseRecords count:", len(s.expenseRecords))
 
 	// 6. Goals fetch and set additional data
-	err = s.formatGoalsProgress(ctx, userID)
-	if err != nil {
-		log.Println(fmt.Errorf("error formatting goals progress: %w", err))
-	}
-	log.Println("\n GoalsProgress:", s.dash.SummaryCards.GoalsProgress)
+	s.formatGoalsProgress(ctx, userID)
 
 	// 6. Get summary cards data
 	err = s.getSummaryCards()
@@ -396,7 +392,7 @@ func (s *DashboardService) getAccountSummaries(
 	return summaries
 }
 
-func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID string) error {
+func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID string) {
 	s.dash.SummaryCards.GoalsProgress = "N/A (Data unavailable)"
 	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
 	if err != nil {
