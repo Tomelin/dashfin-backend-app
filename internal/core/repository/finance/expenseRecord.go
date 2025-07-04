@@ -114,7 +114,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 // GetExpenseRecords retrieves all expense records for the user in context (or all if no user context).
 func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
 
-	log.Println("[ExpenseRecordRepository] GetExpenseRecords called")
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
@@ -125,7 +124,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
-	log.Println("[ExpenseRecordRepository] GetExpenseRecords result:", string(result))
 	var response []interface{}
 	err = json.Unmarshal(result, &response)
 	if err != nil {
@@ -134,7 +132,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 	}
 
 	log.Println("[ExpenseRecordRepository] GetExpenseRecords response:", len(response))
-	responseEntity, err := r.convertToEntity(response)
+	responseEntity, err := r.convertToEntity(response...)
 	if err != nil {
 		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
