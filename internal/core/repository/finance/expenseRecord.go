@@ -59,7 +59,10 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response)
+	repo := make([]interface{}, 1)
+	repo[0] = response
+
+	responseEntity, err := r.convertToEntity(repo)
 	if err != nil {
 		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
@@ -94,7 +97,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response...)
+	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
 		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
@@ -161,7 +164,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecordsByFilter(ctx context.Context,
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response...)
+	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
 		log.Println("[ExpenseRecordRepository] Error converting response to entity:", err)
 		return nil, err
@@ -211,7 +214,7 @@ func (r *ExpenseRecordRepository) DeleteExpenseRecord(ctx context.Context, id st
 	return r.DB.Delete(ctx, id, *collection)
 }
 
-func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity_finance.ExpenseRecord, error) {
+func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_finance.ExpenseRecord, error) {
 	log.Println("[RESPONSE] Converted to entity:", len(data))
 	if data == nil {
 		return nil, errors.New("data is nil")
