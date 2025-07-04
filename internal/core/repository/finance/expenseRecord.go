@@ -136,9 +136,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
-	for _, v := range responseEntity {
-		log.Println("Number of expense records found:", len(responseEntity), v.Category, v.DueDate)
-	}
 	return responseEntity, nil
 }
 
