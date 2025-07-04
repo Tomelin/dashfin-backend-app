@@ -1,0 +1,31 @@
+name: Check PR Source Branch
+run-name: check-pull-request-source-branch
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, review_requested]
+    branches:
+      - main
+
+jobs:
+  check_source_branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get source branch name
+        id: get_branch_name
+        run: |
+          SOURCE_BRANCH=${{ github.head_ref }}
+          echo "Source branch for this PR is: $SOURCE_BRANCH"
+          echo "SOURCE_BRANCH=$SOURCE_BRANCH" >> $GITHUB_ENV
+
+      - name: Validate source branch
+        if: ${{ github.head_ref != 'develop' }}
+        run: |
+          echo "This Pull Request originated from an unauthorized branch: ${{ github.head_ref }}"
+          echo "Only pull requests from 'develop' (or your designated source branch) are allowed into 'main'."
+          exit 1 
+          
+      - name: Source branch is valid
+        if: ${{ github.head_ref == 'develop' }}
+        run: |
+          echo "Pull Request originated from the authorized branch: ${{ github.head_ref }}. All good!"
