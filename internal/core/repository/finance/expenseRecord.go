@@ -222,6 +222,17 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 
 		responseEntity := entity_finance.ExpenseRecord{}
 		if responseMap, ok := item.(map[string]interface{}); ok {
+			responseEntity = entity_finance.ExpenseRecord{
+				Category:       responseMap["Category"].(string),
+				Subcategory:    responseMap["Subcategory"].(string),
+				Amount:         responseMap["Amount"].(float64),
+				BankPaidFrom:   responseMap["BankPaidFrom"].(string),
+				CustomBankName: responseMap["CustomBankName"].(string),
+				Description:    responseMap["Description"].(string),
+				IsRecurring:    responseMap["IsRecurring"].(bool),
+				UserID:         responseMap["UserID"].(string),
+			}
+
 			responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
 			responseEntity.ConvertISO8601ToTime("PaymentDate", responseMap["PaymentDate"].(string))
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
@@ -248,16 +259,6 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				}
 			}
 
-			responseEntity = entity_finance.ExpenseRecord{
-				Category:       responseMap["Category"].(string),
-				Subcategory:    responseMap["Subcategory"].(string),
-				Amount:         responseMap["Amount"].(float64),
-				BankPaidFrom:   responseMap["BankPaidFrom"].(string),
-				CustomBankName: responseMap["CustomBankName"].(string),
-				Description:    responseMap["Description"].(string),
-				IsRecurring:    responseMap["IsRecurring"].(bool),
-				UserID:         responseMap["UserID"].(string),
-			}
 			result = append(result, responseEntity)
 			log.Println("[RESPONSE] Converted to entity:", "Category: ", responseEntity.Category, "ID: ", responseEntity.ID, "id: ", responseMap["id"].(string))
 		}
