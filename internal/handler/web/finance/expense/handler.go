@@ -299,7 +299,6 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 		expenseDTO := dto.ExpenseRecordDTO{}
 		expenseDTO.FromEntity(&record)
 		expenseResponse = append(expenseResponse, expenseDTO)
-		log.Println(expenseDTO.Category, expenseDTO.IsRecurring, expenseDTO.RecurrenceCount, expenseDTO.RecurrenceNumber)
 	}
 
 	responseBytes, err := json.Marshal(expenseResponse)
