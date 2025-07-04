@@ -127,6 +127,7 @@ func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_
 		// This depends on the desired API contract. For now, mirroring BankAccount which returns "not found".
 		return nil, err
 	}
+	log.Println("[ExpenseRecordService] Retrieved records:", len(records))
 	// if len(records) == 0 { // This check might be redundant if repo returns specific "not found" error
 	// 	return nil, errors.New("no expense records found for the user")
 	// }

@@ -125,6 +125,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	log.Println("[REPOSITORY] GetExpenseRecords result:", string(result))
 	var response interface{}
 	err = json.Unmarshal(result, &response)
 	if err != nil {
@@ -137,6 +138,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	log.Println("[REPOSITORY] GetExpenseRecords converted to entity:", len(responseEntity))
 	return responseEntity, nil
 }
 
