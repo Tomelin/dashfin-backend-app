@@ -131,10 +131,16 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 6. Goals fetch and set additional data
 	s.formatGoalsProgress(ctx, userID)
 
-	// 6. Get summary cards data
+	// 7. Get summary cards data
 	err = s.getSummaryCards()
 	if err != nil {
 		log.Println(fmt.Errorf("error getting summary cards: %w", err))
+	}
+
+	// 8. Get upcoming bills
+	err = s.getUpcomingBills2()
+	if err != nil {
+		log.Println(fmt.Errorf("error getting upcoming bills: %w", err))
 	}
 
 	return &s.dash, nil
@@ -406,7 +412,7 @@ func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID strin
 	s.dash.SummaryCards.GoalsProgress = fmt.Sprintf("%.0f%% (%d de %d metas)", percentage, completedGoals, totalGoals)
 }
 
-func (s *DashboardService) getUpcomingBills2(ctx context.Context) error {
+func (s *DashboardService) getUpcomingBills2() error {
 
 	bills := make([]dashboardEntity.UpcomingBill, 0)
 	for _, expense := range s.expenseRecords {
