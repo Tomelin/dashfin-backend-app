@@ -102,8 +102,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 	}
 	// }
 
-	s.getBankAccountBalance(ctx, &userID)
-
 	// s.dash.SummaryCards.AccountBalances = balanceCard
 
 	// monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
@@ -145,6 +143,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		log.Println(fmt.Errorf("error getting upcoming bills: %w", err))
 	}
 
+	s.getBankAccountBalance(ctx, &userID)
 	// 9. Set the income and expense records
 	s.calculateTotalBalance(ctx, userID)
 
