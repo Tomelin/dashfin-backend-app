@@ -171,7 +171,7 @@ func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 
 func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *string) {
 
-	balances := make(map[string]float64, 0)
+	balances := make(map[string]float64)
 	for _, income := range s.incomeRecords {
 		balances[income.BankAccountID] += income.Amount
 	}
@@ -185,23 +185,22 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 	fmt.Println("\n Count expense records:", len(s.expenseRecords))
 	fmt.Println("\n Bank account balances:", balances)
 	fmt.Println("\n Count bank account balances:", len(balances))
-	for bankID, _ := range balances {
+	for bankID := range balances {
 		if bankID == "" {
-			fmt.Println("Skipping empty bank account ID")
 			continue
 		}
 
-		fmt.Println("\n Processing bank account ID:", bankID)
 		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
 		if err != nil {
-			fmt.Println(fmt.Errorf("error fetching bank account name: %w", err))
 			continue
 		}
 
+		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
 		if name == nil {
 			continue
 		}
 
+		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
 		s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
 			AccountName: name.Description,
 			BankName:    name.Description,
