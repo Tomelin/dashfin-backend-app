@@ -13,14 +13,14 @@ import (
 type IncomeRecordDTO struct {
 	ID               string  `json:"id" bson:"_id,omitempty"`
 	Category         string  `json:"category"`
-	Description      *string `json:"description,omitempty"`
+	Description      string  `json:"description,omitempty"`
 	BankAccountID    string  `json:"bankAccountId"`
 	Amount           float64 `json:"amount"`
 	ReceiptDate      string  `json:"receiptDate"` // ISO 8601 (YYYY-MM-DD)
 	IsRecurring      bool    `json:"isRecurring"`
-	RecurrenceCount  *int    `json:"recurrenceCount,omitempty" ` // Pointer to allow null
+	RecurrenceCount  int     `json:"recurrenceCount,omitempty" ` // Pointer to allow null
 	RecurrenceNumber int     `json:"recurrenceNumber,omitempty"` // Pointer to allow null
-	Observations     *string `json:"observations,omitempty"`
+	Observations     string  `json:"observations,omitempty"`
 	UserID           string  `json:"userId,omitempty"` // To associate with a user
 }
 
@@ -30,7 +30,7 @@ func (ir *IncomeRecordDTO) Validate() error {
 		return errors.New("category is required")
 	}
 
-	if ir.Description != nil && len(*ir.Description) > 200 {
+	if len(ir.Description) > 200 {
 		return errors.New("description must not exceed 200 characters")
 	}
 
@@ -57,18 +57,16 @@ func (ir *IncomeRecordDTO) Validate() error {
 	ir.ReceiptDate = parsedReceiptDate.Format("2006-01-02") // Ensure consistent format
 
 	if ir.IsRecurring {
-		if ir.RecurrenceCount == nil {
-			return errors.New("recurrenceCount is required if isRecurring is true")
-		}
-		if *ir.RecurrenceCount < 1 {
+		if ir.RecurrenceCount < 1 {
 			return errors.New("recurrenceCount must be at least 1 if isRecurring is true")
 		}
+
 	} else {
 		// If not recurring, RecurrenceCount should ideally be nil or ignored.
 		// Depending on API design, you might want to enforce ir.RecurrenceCount == nil here.
 	}
 
-	if ir.Observations != nil && len(*ir.Observations) > 500 {
+	if len(ir.Observations) > 500 {
 		return errors.New("observations must not exceed 500 characters")
 	}
 
@@ -89,32 +87,17 @@ func (ir *IncomeRecordDTO) ToEntity() (*entity_finance.IncomeRecord, error) {
 		return nil, err
 	}
 
-	description := ""
-	if ir.Description != nil {
-		description = *ir.Description
-	}
-
-	recurrenceCount := 0
-	if ir.RecurrenceCount != nil {
-		recurrenceCount = *ir.RecurrenceCount
-	}
-
-	observations := ""
-	if ir.Observations != nil {
-		observations = *ir.Observations
-	}
-
 	income := &entity_finance.IncomeRecord{
 		ID:               ir.ID,
 		Category:         ir.Category,
-		Description:      description,
+		Description:      ir.Description,
 		BankAccountID:    ir.BankAccountID,
 		Amount:           ir.Amount,
 		ReceiptDate:      receiptDate,
 		IsRecurring:      ir.IsRecurring,
-		RecurrenceCount:  recurrenceCount,
+		RecurrenceCount:  ir.RecurrenceCount,
 		RecurrenceNumber: ir.RecurrenceNumber,
-		Observations:     observations,
+		Observations:     ir.Observations,
 		UserID:           ir.UserID,
 	}
 
@@ -129,13 +112,13 @@ func (ir *IncomeRecordDTO) FromEntity(income *entity_finance.IncomeRecord) {
 
 	ir.ID = income.ID
 	ir.Category = income.Category
-	ir.Description = &income.Description
+	ir.Description = income.Description
 	ir.BankAccountID = income.BankAccountID
 	ir.Amount = income.Amount
 	ir.ReceiptDate = utils.ConvertTimeToDateFormat(income.ReceiptDate)
 	ir.IsRecurring = income.IsRecurring
-	ir.RecurrenceCount = &income.RecurrenceCount
+	ir.RecurrenceCount = income.RecurrenceCount
 	ir.RecurrenceNumber = income.RecurrenceNumber
-	ir.Observations = &income.Observations
+	ir.Observations = income.Observations
 	ir.UserID = income.UserID
 }

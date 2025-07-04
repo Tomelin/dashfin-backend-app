@@ -218,51 +218,117 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 	var result []entity_finance.ExpenseRecord
 	for _, item := range data {
 
-		responseEntity := entity_finance.ExpenseRecord{}
-		if responseMap, ok := item.(map[string]interface{}); ok {
-			responseEntity = entity_finance.ExpenseRecord{
-				Category:       responseMap["Category"].(string),
-				Subcategory:    responseMap["Subcategory"].(string),
-				Amount:         responseMap["Amount"].(float64),
-				BankPaidFrom:   responseMap["BankPaidFrom"].(string),
-				CustomBankName: responseMap["CustomBankName"].(string),
-				Description:    responseMap["Description"].(string),
-				IsRecurring:    responseMap["IsRecurring"].(bool),
-				UserID:         responseMap["UserID"].(string),
+		if itemMap, ok := item.(map[string]interface{}); ok {
+			record := entity_finance.ExpenseRecord{}
+			if id, ok := itemMap["id"]; ok {
+				record.ID = id.(string)
+			} else {
+				record.ID = itemMap["ID"].(string)
 			}
 
-			t, _ := time.Parse("2006-01-02T15:04:05Z", responseMap["DueDate"].(string))
-			responseEntity.DueDate = t
+			if category, ok := itemMap["Category"]; ok {
+				record.Category = category.(string)
+			} else {
+				record.Category = itemMap["category"].(string)
+			}
 
-			t, _ = time.Parse("2006-01-02T15:04:05Z", responseMap["PaymentDate"].(string))
-			responseEntity.PaymentDate = t
+			if description, ok := itemMap["Description"]; ok {
+				record.Description = description.(string)
+			} else {
+				if description, ok := itemMap["description"]; ok {
+					record.Description = description.(string)
+				} else {
+					record.Description = ""
+				}
+			}
 
-			responseEntity.ID = responseMap["id"].(string)
+			if subcategory, ok := itemMap["Subcategory"]; ok {
+				record.Subcategory = subcategory.(string)
+			} else {
+				if subcategory, ok := itemMap["subcategory"]; ok {
+					record.Subcategory = subcategory.(string)
+				} else {
+					record.Subcategory = ""
+				}
+			}
 
-			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
+			if amount, ok := itemMap["Amount"]; ok {
+				record.Amount = amount.(float64)
+			} else {
+				record.Amount = itemMap["amount"].(float64)
+			}
+
+			if userID, ok := itemMap["UserID"]; ok {
+				record.UserID = userID.(string)
+			} else {
+				record.UserID = itemMap["userId"].(string)
+			}
+
+			if customBankName, ok := itemMap["CustomBankName"]; ok {
+				record.CustomBankName = customBankName.(string)
+			} else {
+				if customBankName, ok := itemMap["customBankName"]; ok {
+					record.CustomBankName = customBankName.(string)
+				}
+			}
+
+			if bankPaidFrom, ok := itemMap["BankPaidFrom"]; ok {
+				record.BankPaidFrom = bankPaidFrom.(string)
+			} else {
+				if bankPaidFrom, ok := itemMap["bankPaidFrom"]; ok {
+					record.BankPaidFrom = bankPaidFrom.(string)
+				}
+			}
+
+			if isRecurring, ok := itemMap["IsRecurring"]; ok {
+				record.IsRecurring = isRecurring.(bool)
+			} else {
+				record.IsRecurring = itemMap["isRecurring"].(bool)
+			}
+
+			if dueDate, ok := itemMap["DueDate"]; ok {
+				t, _ := time.Parse("2006-01-02T15:04:05Z", dueDate.(string))
+				record.DueDate = t
+			} else {
+				if itemMap["dueDate"] != nil {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["dueDate"].(string))
+					record.DueDate = t
+				}
+			}
+
+			if paymentDate, ok := itemMap["PaymentDate"]; ok {
+				t, _ := time.Parse("2006-01-02T15:04:05Z", paymentDate.(string))
+				record.PaymentDate = t
+			} else {
+				if itemMap["paymentDate"] != nil {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["paymentDate"].(string))
+					record.PaymentDate = t
+				}
+			}
+
+			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(float64); ok {
-					responseEntity.RecurrenceCount = int(count)
+					record.RecurrenceCount = int(count)
 				} else {
-					responseEntity.RecurrenceCount = 0
+					record.RecurrenceCount = 0
 				}
 			} else {
-				responseEntity.RecurrenceCount = 0 // Default to 0 if not present
+				record.RecurrenceCount = 0 // Default to 0 if not present
 			}
 
-			if recurrenceNumber, ok := responseMap["RecurrenceNumber"]; ok {
+			if recurrenceNumber, ok := itemMap["RecurrenceNumber"]; ok {
 				if count, ok := recurrenceNumber.(float64); ok {
-					responseEntity.RecurrenceNumber = int(count)
+					record.RecurrenceNumber = int(count)
 				} else {
-					responseEntity.RecurrenceNumber = 0
+					record.RecurrenceNumber = 0
 				}
 			} else {
-				responseEntity.RecurrenceNumber = 0 // Default to 0 if not present
+				record.RecurrenceNumber = 0 // Default to 0 if not present
 
 			}
 
-			result = append(result, responseEntity)
+			result = append(result, record)
 		}
 	}
-
 	return result, nil
 }
