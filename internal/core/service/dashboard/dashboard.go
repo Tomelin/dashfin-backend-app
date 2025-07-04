@@ -143,6 +143,9 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		log.Println(fmt.Errorf("error getting upcoming bills: %w", err))
 	}
 
+	// 9. Set the income and expense records
+	s.calculateTotalBalance(ctx, userID)
+
 	return &s.dash, nil
 }
 
@@ -269,7 +272,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 		}
 	}
 
-	totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
+	// totalBalance := s.calculateTotalBalance(allUserBankAccounts, allUserIncomes, allUserPaidExpenses)
 	monthlyRevenue := s.calculateMonthlyRevenue(allUserIncomes, currentMonthStart)
 	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
 
@@ -284,7 +287,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 
 	dashboard := &dashboardEntity.Dashboard{
 		SummaryCards: dashboardEntity.SummaryCards{
-			TotalBalance:    totalBalance,
+			// TotalBalance:    totalBalance,
 			MonthlyRevenue:  monthlyRevenue,
 			MonthlyExpenses: monthlyExpenses,
 			GoalsProgress:   goalsProgressStr,
@@ -315,19 +318,28 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 }
 
 // --- Helper methods (calculateTotalBalance, etc.) remain the same as before ---
-// Ensure they are part of the DashboardService (s *DashboardService)
+// func (s *DashboardService) calculateTotalBalance(
+//
+//	accounts []financeEntity.BankAccountRequest,
+//	incomes []financeEntity.IncomeRecord,
+//	paidExpenses []financeEntity.ExpenseRecord,
+//
+// ) float64 {
+func (s *DashboardService) calculateTotalBalance(ctx context.Context, userID string) {
+	accounts, err := s.bankAccountService.GetBankAccounts(ctx)
+	if err != nil {
+		fmt.Printf("Warning: Error fetching bank accounts for user %s: %v\n", userID, err)
+		accounts = []financeEntity.BankAccountRequest{}
+	}
 
-func (s *DashboardService) calculateTotalBalance(
-	accounts []financeEntity.BankAccountRequest,
-	incomes []financeEntity.IncomeRecord,
-	paidExpenses []financeEntity.ExpenseRecord,
-) float64 {
 	var totalBalance float64
-	accountBalances := s.calculateAllAccountBalances(accounts, incomes, paidExpenses)
+	accountBalances := s.calculateAllAccountBalances(accounts, s.incomeRecords, s.expenseRecords)
 	for _, balance := range accountBalances {
 		totalBalance += balance
 	}
-	return totalBalance
+
+	s.dash.SummaryCards.TotalBalance = totalBalance
+
 }
 
 func (s *DashboardService) calculateAllAccountBalances(
