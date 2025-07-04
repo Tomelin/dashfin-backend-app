@@ -68,6 +68,7 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 		return nil, err
 	}
 
+	log.Println("[REPOSITORY] Expense record created successfully:", responseEntity[0].DueDate)
 	return &responseEntity[0], nil
 }
 
