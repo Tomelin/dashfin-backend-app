@@ -238,24 +238,6 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		return nil, err
 	}
 
-	data, err := db.Get(ctx, collection) // Ensure the connection is established
-	if err == nil {
-		return nil, errors.New("firestore client not initialized. Call Connect first")
-	}
-
-	var dataInterface interface{}
-	if err := json.Unmarshal(data, &dataInterface); err != nil {
-		return nil, fmt.Errorf("error unmarshalling data: %w", err)
-	}
-
-	var dataInterface2 []interface{}
-	if err := json.Unmarshal(data, &dataInterface2); err != nil {
-		return nil, fmt.Errorf("error unmarshalling data: %w", err)
-	}
-
-	log.Println("\n GetByConditional dataInterface:", dataInterface)
-	log.Println("\n GetByConditional dataInterface2:", dataInterface2)
-
 	query := db.client.Collection(collection).Query
 	for _, cond := range conditional {
 		if cond.Field == "" {
@@ -282,21 +264,20 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 	defer iter.Stop()
 	for {
 		doc, err := iter.Next()
-		log.Println("\n GetByConditional doc:", doc, "err:", err)
 		if err == iterator.Done {
 			break
 		}
-		log.Println("\n GetByConditional err:", doc, "err:", err)
+
 		if err != nil {
 			return nil, err
 		}
 
-		log.Println("\n GetByConditional doc data:", doc.Data())
-		log.Println("\n GetByConditional doc ref:", doc.Ref)
-		log.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
-		log.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
-		log.Println("\n GetByConditional doc ref parent:", doc.Ref.Parent)
-		log.Println("\n GetByConditional doc exists:", doc.Exists())
+		fmt.Println("\n GetByConditional doc data:", doc.Data())
+		fmt.Println("\n GetByConditional doc ref:", doc.Ref)
+		fmt.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
+		fmt.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
+		fmt.Println("\n GetByConditional doc ref parent:", doc.Ref.Parent)
+		fmt.Println("\n GetByConditional doc exists:", doc.Exists())
 
 		data := doc.Data()
 		data["id"] = doc.Ref.ID // Importante para updates
