@@ -131,14 +131,15 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
+	for _, v := range response {
+		fmt.Println("\n GetExpenseRecords responseEntity:", v)
+	}
+
 	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, v := range responseEntity {
-		fmt.Println("\n GetExpenseRecords responseEntity:", v)
-	}
 	return responseEntity, nil
 }
 
