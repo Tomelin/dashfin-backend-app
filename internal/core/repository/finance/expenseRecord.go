@@ -286,12 +286,24 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				record.IsRecurring = itemMap["isRecurring"].(bool)
 			}
 
-			t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["DueDate"].(string))
-			record.DueDate = t
+			if dueDate, ok := itemMap["DueDate"]; ok {
+				t, _ := time.Parse("2006-01-02T15:04:05Z", dueDate.(string))
+				record.DueDate = t
+			} else {
+				if itemMap["dueDate"] != nil {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["dueDate"].(string))
+					record.DueDate = t
+				}
+			}
 
-			if itemMap["PaymentDate"] != nil {
-				t, _ = time.Parse("2006-01-02T15:04:05Z", itemMap["PaymentDate"].(string))
+			if paymentDate, ok := itemMap["PaymentDate"]; ok {
+				t, _ := time.Parse("2006-01-02T15:04:05Z", paymentDate.(string))
 				record.PaymentDate = t
+			} else {
+				if itemMap["paymentDate"] != nil {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["paymentDate"].(string))
+					record.PaymentDate = t
+				}
 			}
 
 			if recurrenceCount, ok := itemMap["RecurrenceCount"]; ok {
