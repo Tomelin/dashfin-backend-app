@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -129,6 +130,7 @@ func (er *ExpenseRecordDTO) ToEntity() (*entity_finance.ExpenseRecord, error) {
 
 func (er *ExpenseRecordDTO) FromEntity(expense *entity_finance.ExpenseRecord) {
 
+	log.Println("[ExpenseRecordDTO] FromEntity called with expense:", expense.Category, expense.ID)
 	er.ID = expense.ID
 	er.Category = expense.Category
 	er.Subcategory = expense.Subcategory
