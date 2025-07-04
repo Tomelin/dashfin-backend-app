@@ -79,43 +79,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 
 	s.dash = dashboardEntity.Dashboard{}
-	// 1. Try to fetch from cache first
-	// cachedDashboard, found, err := s.dashboardRepository.GetDashboard(ctx, userID)
-	// if err != nil {
-	// 	// Log error but proceed to generate data, cache error shouldn't break main functionality
-	// 	fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
-	// }
-	// if found && cachedDashboard != nil {
-	// 	return cachedDashboard, nil
-	// }
-
-	// // 2. If not in cache or error during cache fetch, generate fresh data
-	// dashboard, err := s.generateFreshDashboardData(ctx, userID)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
-	// }
-
-	// balanceCard, err := s.getBankAccountBalance(ctx)
-	// if err != nil {
-	// 	if !strings.Contains(err.Error(), "not found") {
-	// 		return nil, fmt.Errorf("getting bank account balance: %w", err)
-	// 	}
-	// }
-
-	// s.dash.SummaryCards.AccountBalances = balanceCard
-
-	// monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
-
-	// dashboard.SummaryCards.AccountBalances = balanceCard
-	// dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
-
-	// // 3. Save the newly generated dashboard to cache
-	// // Use a default TTL, this could be configurable
-	// err = s.dashboardRepository.SaveDashboard(ctx, userID, dashboard, defaultDashboardCacheTTL)
-	// if err != nil {
-	// 	// Log error but don't fail the main operation, dashboard was generated successfully
-	// 	fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
-	// }
 
 	// 4. Income fetch and set additional data
 	err := s.getIncomeRecords(ctx)
@@ -218,20 +181,20 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 	}
 
-	log.Println("\n Count income records:", len(s.incomeRecords))
-	log.Println("\n Count expense records:", len(s.expenseRecords))
-	log.Println("\n Bank account balances:", balances)
-	log.Println("\n Count bank account balances:", len(balances))
+	fmt.Println("\n Count income records:", len(s.incomeRecords))
+	fmt.Println("\n Count expense records:", len(s.expenseRecords))
+	fmt.Println("\n Bank account balances:", balances)
+	fmt.Println("\n Count bank account balances:", len(balances))
 	for bankID, _ := range balances {
 		if bankID == "" {
-			log.Println("Skipping empty bank account ID")
+			fmt.Println("Skipping empty bank account ID")
 			continue
 		}
 
-		log.Println("\n Processing bank account ID:", bankID)
+		fmt.Println("\n Processing bank account ID:", bankID)
 		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
 		if err != nil {
-			log.Println(fmt.Errorf("error fetching bank account name: %w", err))
+			fmt.Println(fmt.Errorf("error fetching bank account name: %w", err))
 			continue
 		}
 
@@ -247,7 +210,8 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		})
 	}
 
-	log.Println("\n Bank account balances:", s.dash.SummaryCards.AccountBalances)
+	fmt.Println("\n Count bank account balances:", len(s.dash.SummaryCards.AccountBalances))
+	fmt.Println("\n Bank account balances response:", s.dash.SummaryCards.AccountBalances)
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
