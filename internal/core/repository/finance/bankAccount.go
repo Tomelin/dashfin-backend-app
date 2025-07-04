@@ -64,6 +64,8 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, errors.New("id is empty")
 	}
 
+	log.Println("\n GetBankAccountByID id:", *id)
+
 	conditional := []database.Conditional{
 		{
 			Field:  "id",

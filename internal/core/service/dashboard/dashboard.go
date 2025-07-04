@@ -229,7 +229,6 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 
 		if name == nil {
-			log.Printf("Warning: Bank account with ID %s not found, skipping balance calculation\n", bankID)
 			continue
 		}
 

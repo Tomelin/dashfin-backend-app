@@ -3,7 +3,6 @@ package web_dashboard
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -104,7 +103,6 @@ func (h *DashboardHandler) GetDashboard(c *gin.Context) {
 		return
 	}
 
-	log.Println("\n Response summary:", results.SummaryCards)
 	encryptedResult, err := h.encryptData.EncryptPayload(responseBytes)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error securing response: " + err.Error()})

@@ -243,7 +243,9 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
 	}
 
+	log.Println("\n GetByConditional query:", query)
 	iter := query.Documents(ctx)
+	log.Println("\n GetByConditional iter:", *iter)
 	var results []interface{}
 	defer iter.Stop()
 	for {
@@ -252,6 +254,7 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		if err == iterator.Done {
 			break
 		}
+		log.Println("\n GetByConditional err:", doc, "err:", err)
 		if err != nil {
 			return nil, err
 		}
