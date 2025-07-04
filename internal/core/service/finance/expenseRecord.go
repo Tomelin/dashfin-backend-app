@@ -121,10 +121,13 @@ func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_
 		"userId": userIDFromCtx.(string),
 	}
 
+	log.Println("[ExpenseRecordService] Filter for GetExpenseRecords:", filter)
+
 	records, err := s.Repo.GetExpenseRecordsByFilter(ctx, filter)
 	if err != nil {
 		// If the error is because no records were found, it might be better to return an empty slice and no error.
 		// This depends on the desired API contract. For now, mirroring BankAccount which returns "not found".
+		log.Println("[ExpenseRecordService] Error retrieving records:", err)
 		return nil, err
 	}
 	log.Println("[ExpenseRecordService] Retrieved records:", len(records))
