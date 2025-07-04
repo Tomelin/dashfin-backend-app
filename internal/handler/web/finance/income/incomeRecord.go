@@ -220,6 +220,20 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 
 	fmt.Println("Converted income records to DTOs:", len(incomeRecords))
 	fmt.Println("incomeRecords:", incomeRecords)
+	for i, record := range incomeRecords {
+		fmt.Printf("Amount for record %d: %+v\n", i, record.Amount)
+		fmt.Printf("ReceiptDate for record %d: %+v\n", i, record.ReceiptDate)
+		fmt.Printf("Description for record %d: %+v\n", i, record.Description)
+		fmt.Printf("Category for record %d: %+v\n", i, record.Category)
+		fmt.Printf("BankAccountID for record %d: %+v\n", i, record.BankAccountID)
+		fmt.Printf("UserID for record %d: %+v\n", i, record.UserID)
+		fmt.Printf("IsRecurring for record %d: %+v\n", i, record.IsRecurring)
+		fmt.Printf("ID for record %d: %+v\n", i, record.ID)
+		fmt.Printf("Observations for record %d: %+v\n", i, record.Observations)
+		fmt.Printf("RecurrenceCount for record %d: %+v\n", i, record.RecurrenceCount)
+		fmt.Printf("RecurrenceNumber for record %d: %+v\n", i, record.RecurrenceNumber)
+
+	}
 
 	responseBytes, err := json.Marshal(incomeRecords)
 	if err != nil {
