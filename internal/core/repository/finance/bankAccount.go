@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
@@ -64,8 +63,6 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, errors.New("id is empty")
 	}
 
-	log.Println("\n GetBankAccountByID id:", *id)
-
 	conditional := []database.Conditional{
 		{
 			Field:  "id",
@@ -96,8 +93,6 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
-
-	log.Println("\n GetBankAccountByID result:", bankAccounts, "collection:", *collection)
 
 	if len(bankAccounts) == 0 {
 		return nil, errors.New("bank account not found")
