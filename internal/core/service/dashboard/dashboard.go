@@ -110,7 +110,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 9. Set the income and expense records
 	s.calculateTotalBalance(ctx, userID)
 
-	s.getMonthlyFinancialSummary(ctx, userID)
+	s.getMonthlyFinancialSummary(ctx, &userID)
 
 	return &s.dash, nil
 }
