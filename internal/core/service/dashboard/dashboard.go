@@ -133,6 +133,12 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	}
 	log.Println("\n ExpenseRecords count:", len(s.expenseRecords))
 
+	// 6. Get summary cards data
+	err = s.getSummaryCards(ctx)
+	if err != nil {
+		log.Println(fmt.Errorf("error getting summary cards: %w", err))
+	}
+
 	return dashboard, nil
 }
 
