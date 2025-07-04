@@ -21,7 +21,7 @@ import (
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 )
 
-const defaultDashboardCacheTTL = 1 * time.Minute // Example TTL for dashboard cache
+const defaultDashboardCacheTTL = 30 * time.Second // Example TTL for dashboard cache
 
 // DashboardService provides the logic for aggregating dashboard data.
 type DashboardService struct {
@@ -32,6 +32,9 @@ type DashboardService struct {
 	dashboardRepository  dashboardEntity.DashboardRepositoryInterface // New dependency
 	messageQueue         message_queue.MessageQueue
 	platformInstitution  platformInstitution.FinancialInstitutionInterface
+	dash                 dashboardEntity.Dashboard
+	incomeRecords        []financeEntity.IncomeRecord
+	expenseRecords       []financeEntity.ExpenseRecord
 }
 
 // NewDashboardService creates a new DashboardService.
@@ -75,6 +78,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		return nil, fmt.Errorf("userID in context is empty")
 	}
 
+	s.dash = dashboardEntity.Dashboard{}
 	// 1. Try to fetch from cache first
 	cachedDashboard, found, err := s.dashboardRepository.GetDashboard(ctx, userID)
 	if err != nil {
@@ -111,8 +115,32 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
 	}
 
-	log.Println("Dashboard data successfully generated and cached for user:", dashboard.SummaryCards)
+	log.Println("\n SummaryCards data:", dashboard.SummaryCards)
+	err = s.getIncomeRecords(ctx)
+	if err != nil {
+		log.Println(fmt.Errorf("error fetching income records: %w", err))
+	}
+
+	log.Println("\n IncomeRecords count:", len(s.incomeRecords))
 	return dashboard, nil
+}
+
+func (s *DashboardService) getSummaryCards(ctx context.Context) error {
+
+	return nil
+
+}
+
+func (s *DashboardService) getIncomeRecords(ctx context.Context) error {
+
+	records, err := s.incomeRecordService.GetIncomeRecords(ctx, &financeEntity.GetIncomeRecordsQueryParameters{})
+	if err != nil {
+		return fmt.Errorf("error fetching income records: %w", err)
+	}
+
+	s.incomeRecords = records
+
+	return nil
 }
 
 func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboardEntity.AccountBalanceItem, error) {
@@ -159,7 +187,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	for _, income := range allUserIncomes {
 		amount += income.Amount
 	}
-	log.Println("allUserIncomes:", allUserIncomes, "count:", len(allUserIncomes), "total amount:", amount)
+	log.Println("\n total income amount:", amount)
 
 	allUserRawExpenses, err := s.expenseRecordService.GetExpenseRecords(ctx)
 	if err != nil {
@@ -171,7 +199,7 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	for _, exp := range allUserRawExpenses {
 		amount += exp.Amount
 	}
-	log.Println("allUserRawExpenses:", allUserRawExpenses, "count:", len(allUserRawExpenses), "total amount:", amount)
+	log.Println("\n total expense amount:", amount)
 
 	allUserPaidExpenses := make([]financeEntity.ExpenseRecord, 0)
 	for _, exp := range allUserRawExpenses {
