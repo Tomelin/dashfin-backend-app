@@ -95,12 +95,14 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 	return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	// }
 
-	// balanceCard, err := s.getBankAccountBalance(ctx)
-	// if err != nil {
-	// 	if !strings.Contains(err.Error(), "not found") {
-	// 		return nil, fmt.Errorf("getting bank account balance: %w", err)
-	// 	}
-	// }
+	balanceCard, err := s.getBankAccountBalance(ctx)
+	if err != nil {
+		if !strings.Contains(err.Error(), "not found") {
+			return nil, fmt.Errorf("getting bank account balance: %w", err)
+		}
+	}
+
+	s.dash.SummaryCards.AccountBalances = balanceCard
 
 	// monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
 
@@ -116,19 +118,15 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// }
 
 	// 4. Income fetch and set additional data
-	err := s.getIncomeRecords(ctx)
+	err = s.getIncomeRecords(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("error fetching income records: %w", err))
 	}
-
-	log.Println("\n IncomeRecords count:", len(s.incomeRecords))
-
 	// 5. Expense fetch and set additional data
 	err = s.getExpenseRecords(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("error fetching expense records: %w", err))
 	}
-	log.Println("\n ExpenseRecords count:", len(s.expenseRecords))
 
 	// 6. Goals fetch and set additional data
 	s.formatGoalsProgress(ctx, userID)
@@ -138,8 +136,6 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	if err != nil {
 		log.Println(fmt.Errorf("error getting summary cards: %w", err))
 	}
-
-	log.Println("\n SummaryCards data:", s.dash.SummaryCards)
 
 	return &s.dash, nil
 }
