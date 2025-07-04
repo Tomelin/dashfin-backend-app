@@ -182,6 +182,7 @@ func (r *ExpenseRecordRepository) UpdateExpenseRecord(ctx context.Context, id st
 		return nil, errors.New("expense record data for update is nil")
 	}
 
+	log.Println("[RESPONSE] Updating expense record:", *data)
 	data.UpdatedAt = time.Now()
 	// Ensure ID is not changed and UserID is consistent if those are rules.
 	// data.ID = id // Not needed if ID is part of the data struct and matches `id` argument.
