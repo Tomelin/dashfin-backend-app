@@ -183,6 +183,7 @@ func (h *ExpenseRecordHandler) CreateExpenseRecord(c *gin.Context) {
 		return
 	}
 
+	log.Println("Creating Expense Record ID...:", expenseRecord.ID)
 	log.Println("Creating Expense Record...:", expenseRecord)
 	result, err := h.service.CreateExpenseRecord(ctx, expenseRecord)
 	if err != nil {
