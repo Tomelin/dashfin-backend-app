@@ -294,7 +294,6 @@ func (h *ExpenseRecordHandler) GetExpenseRecords(c *gin.Context) {
 		results, _ = h.service.GetExpenseRecords(ctx)
 	}
 
-	log.Println("[ExpenseRecordHandler] Retrieved records:", len(results))
 	expenseResponse := make([]dto.ExpenseRecordDTO, 0, len(results))
 	for _, record := range results {
 		expenseDTO := dto.ExpenseRecordDTO{}

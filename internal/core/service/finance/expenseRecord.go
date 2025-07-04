@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -111,26 +110,18 @@ func (s *ExpenseRecordService) GetExpenseRecordByID(ctx context.Context, id stri
 
 // GetExpenseRecords retrieves all expense records for the authenticated user.
 func (s *ExpenseRecordService) GetExpenseRecords(ctx context.Context) ([]entity_finance.ExpenseRecord, error) {
-	log.Println("[ExpenseRecordService] GetExpenseRecords called")
+
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil || userIDFromCtx.(string) == "" {
 		return nil, errors.New("userID not found in context")
 	}
 
-	filter := map[string]interface{}{
-		"userId": userIDFromCtx.(string),
-	}
-
-	log.Println("[ExpenseRecordService] Filter for GetExpenseRecords:", filter)
-
 	records, err := s.Repo.GetExpenseRecords(ctx)
 	if err != nil {
 		// If the error is because no records were found, it might be better to return an empty slice and no error.
 		// This depends on the desired API contract. For now, mirroring BankAccount which returns "not found".
-		log.Println("[ExpenseRecordService] Error retrieving records:", err)
 		return nil, err
 	}
-	log.Println("[ExpenseRecordService] Retrieved records:", len(records))
 	// if len(records) == 0 { // This check might be redundant if repo returns specific "not found" error
 	// 	return nil, errors.New("no expense records found for the user")
 	// }
