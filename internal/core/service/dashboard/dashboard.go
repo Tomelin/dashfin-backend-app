@@ -191,24 +191,24 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 		fmt.Println("\n Bank account ID:", bankID)
 
-		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
-		fmt.Println("\n Bank account name:", name, "error:", err)
+		banks, err := s.bankAccountService.GetBankAccounts(ctx)
+		fmt.Println("\n Bank account name:", banks, "error:", err)
 		if err != nil {
 			continue
 		}
 
-		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
-		if name == nil {
-			continue
-		}
+		// fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
+		// if name == nil {
+		// 	continue
+		// }
 
-		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
-		s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
-			AccountName: name.Description,
-			BankName:    name.Description,
-			Balance:     balances[bankID],
-			UserID:      *userID,
-		})
+		// fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
+		// s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
+		// 	AccountName: name.Description,
+		// 	BankName:    name.Description,
+		// 	Balance:     balances[bankID],
+		// 	UserID:      *userID,
+		// })
 	}
 
 	fmt.Println("\n Count bank account balances:", len(s.dash.SummaryCards.AccountBalances))
