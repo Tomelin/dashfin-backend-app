@@ -95,14 +95,16 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 	return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
 	// }
 
-	balanceCard, err := s.getBankAccountBalance(ctx)
-	if err != nil {
-		if !strings.Contains(err.Error(), "not found") {
-			return nil, fmt.Errorf("getting bank account balance: %w", err)
-		}
-	}
+	// balanceCard, err := s.getBankAccountBalance(ctx)
+	// if err != nil {
+	// 	if !strings.Contains(err.Error(), "not found") {
+	// 		return nil, fmt.Errorf("getting bank account balance: %w", err)
+	// 	}
+	// }
 
-	s.dash.SummaryCards.AccountBalances = balanceCard
+	s.getBankAccountBalance(ctx)
+
+	// s.dash.SummaryCards.AccountBalances = balanceCard
 
 	// monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
 
@@ -118,7 +120,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// }
 
 	// 4. Income fetch and set additional data
-	err = s.getIncomeRecords(ctx)
+	err := s.getIncomeRecords(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("error fetching income records: %w", err))
 	}
@@ -205,7 +207,7 @@ func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 	return nil
 }
 
-func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboardEntity.AccountBalanceItem, error) {
+func (s *DashboardService) getBankAccountBalance(ctx context.Context) {
 
 	userIDFromCtx := ctx.Value("UserID")
 	if userIDFromCtx == nil {
@@ -220,12 +222,37 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context) ([]dashboa
 		return nil, fmt.Errorf("userID in context is empty")
 	}
 
-	result, err := s.dashboardRepository.GetBankAccountBalance(ctx, &userID)
-	if err != nil {
-		return nil, err
+	balances := make(map[string]float64)
+	for _, income := range s.incomeRecords {
+		balances[income.BankAccountID] += income.Amount
+	}
+	for _, expense := range s.expenseRecords {
+		if expense.DueDate.Before(utils.GetFirstDayOfLastMonth()) {
+			balances[expense.BankPaidFrom] -= expense.Amount
+		}
 	}
 
-	return result, nil
+	for bankID, _ := range balances {
+
+		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
+		if err != nil {
+			log.Println(fmt.Errorf("error fetching bank account name: %w", err))
+			continue
+		}
+
+		if name == nil {
+			log.Printf("Warning: Bank account with ID %s not found, skipping balance calculation\n", bankID)
+			continue
+		}
+
+		s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
+			AccountName: name.Description,
+			BankName:    name.Description,
+			Balance:     balances[bankID],
+			UserID:      userID,
+		})
+	}
+
 }
 
 // generateFreshDashboardData contains the original logic to build the dashboard from various services.
