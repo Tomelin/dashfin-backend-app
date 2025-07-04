@@ -260,10 +260,9 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 					IsRecurring:    responseMap["IsRecurring"].(bool),
 					UserID:         responseMap["UserID"].(string),
 				}
-
-				log.Println("[RESPONSE] Converted to entity:", responseEntity)
-				result = append(result, responseEntity)
 			}
+			log.Println("[RESPONSE] Converted to entity:", responseEntity)
+			result = append(result, responseEntity)
 		}
 	}
 
