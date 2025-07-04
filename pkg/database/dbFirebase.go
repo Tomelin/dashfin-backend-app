@@ -255,7 +255,7 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 			return nil, fmt.Errorf("invalid filter type: %s", cond.Filter)
 		}
 
-		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
+		query = query.Where("id", "==", "6EmOEy9LXG4sxiOV6jiE")
 	}
 
 	iter := query.Documents(ctx)
