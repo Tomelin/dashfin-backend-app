@@ -130,7 +130,7 @@ func (r *ExpenseRecordRepository) GetExpenseRecords(ctx context.Context) ([]enti
 		return nil, err
 	}
 
-	responseEntity, err := r.convertToEntity(response...)
+	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity
 	}
 
 	var result []entity_finance.ExpenseRecord
-	log.Println("[RESPONSE]...data", data)
+	log.Println("[RESPONSE]...data", data[0])
 	for _, item := range data {
 		log.Println("[RESPONSE] Item:", item)
 		responseEntity := entity_finance.ExpenseRecord{}
