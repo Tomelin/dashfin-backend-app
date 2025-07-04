@@ -217,12 +217,9 @@ func (r *ExpenseRecordRepository) convertToEntity(data ...interface{}) ([]entity
 		return nil, errors.New("data is nil")
 	}
 
-	if len(data) == 0 {
-		return nil, errors.New("data is empty")
-	}
-
 	var result []entity_finance.ExpenseRecord
 	for _, item := range data {
+		log.Println("[RESPONSE] Item:", item)
 		responseEntity := entity_finance.ExpenseRecord{}
 		if responseMap, ok := item.(map[string]interface{}); ok {
 			responseEntity.ConvertISO8601ToTime("DueDate", responseMap["DueDate"].(string))
