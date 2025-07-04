@@ -3,6 +3,7 @@ package web_finance_income
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 
@@ -213,6 +214,7 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 		var dtoIncome dto.IncomeRecordDTO
 		dtoIncome.FromEntity(&income)
 		incomeRecords = append(incomeRecords, dtoIncome)
+		log.Println("[RESPONSE] Income Record:", dtoIncome.ID, dtoIncome.Category)
 	}
 
 	responseBytes, err := json.Marshal(incomeRecords)
