@@ -81,43 +81,43 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 
 	s.dash = dashboardEntity.Dashboard{}
 	// 1. Try to fetch from cache first
-	cachedDashboard, found, err := s.dashboardRepository.GetDashboard(ctx, userID)
-	if err != nil {
-		// Log error but proceed to generate data, cache error shouldn't break main functionality
-		fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
-	}
-	if found && cachedDashboard != nil {
-		return cachedDashboard, nil
-	}
+	// cachedDashboard, found, err := s.dashboardRepository.GetDashboard(ctx, userID)
+	// if err != nil {
+	// 	// Log error but proceed to generate data, cache error shouldn't break main functionality
+	// 	fmt.Printf("Warning: Error fetching dashboard from cache for user %s: %v\n", userID, err)
+	// }
+	// if found && cachedDashboard != nil {
+	// 	return cachedDashboard, nil
+	// }
 
-	// 2. If not in cache or error during cache fetch, generate fresh data
-	dashboard, err := s.generateFreshDashboardData(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
-	}
+	// // 2. If not in cache or error during cache fetch, generate fresh data
+	// dashboard, err := s.generateFreshDashboardData(ctx, userID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("generating fresh dashboard data: %w", err)
+	// }
 
-	balanceCard, err := s.getBankAccountBalance(ctx)
-	if err != nil {
-		if !strings.Contains(err.Error(), "not found") {
-			return nil, fmt.Errorf("getting bank account balance: %w", err)
-		}
-	}
+	// balanceCard, err := s.getBankAccountBalance(ctx)
+	// if err != nil {
+	// 	if !strings.Contains(err.Error(), "not found") {
+	// 		return nil, fmt.Errorf("getting bank account balance: %w", err)
+	// 	}
+	// }
 
-	monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
+	// monthlyFinancial, _ := s.getMonthlyFinancialSummary(ctx, &userID)
 
-	dashboard.SummaryCards.AccountBalances = balanceCard
-	dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
+	// dashboard.SummaryCards.AccountBalances = balanceCard
+	// dashboard.SummaryCards.MonthlyFinancialSummary = monthlyFinancial
 
-	// 3. Save the newly generated dashboard to cache
-	// Use a default TTL, this could be configurable
-	err = s.dashboardRepository.SaveDashboard(ctx, userID, dashboard, defaultDashboardCacheTTL)
-	if err != nil {
-		// Log error but don't fail the main operation, dashboard was generated successfully
-		fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
-	}
+	// // 3. Save the newly generated dashboard to cache
+	// // Use a default TTL, this could be configurable
+	// err = s.dashboardRepository.SaveDashboard(ctx, userID, dashboard, defaultDashboardCacheTTL)
+	// if err != nil {
+	// 	// Log error but don't fail the main operation, dashboard was generated successfully
+	// 	fmt.Printf("Warning: Error saving dashboard to cache for user %s: %v\n", userID, err)
+	// }
 
 	// 4. Income fetch and set additional data
-	err = s.getIncomeRecords(ctx)
+	err := s.getIncomeRecords(ctx)
 	if err != nil {
 		log.Println(fmt.Errorf("error fetching income records: %w", err))
 	}
