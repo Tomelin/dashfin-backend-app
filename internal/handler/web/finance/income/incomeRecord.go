@@ -218,6 +218,9 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 		incomeRecords = append(incomeRecords, dtoIncome)
 	}
 
+	fmt.Println("Converted income records to DTOs:", len(incomeRecords))
+	fmt.Println("incomeRecords:", incomeRecords)
+
 	responseBytes, err := json.Marshal(incomeRecords)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error preparing response: " + err.Error()})
