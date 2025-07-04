@@ -3,6 +3,7 @@ package web_finance_income
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -207,6 +208,8 @@ func (h *IncomeRecordHandler) GetIncomeRecords(c *gin.Context) {
 		return
 	}
 
+	fmt.Println("Retrieved income records:", len(results))
+	fmt.Println("results:", results)
 	incomeRecords := make([]dto.IncomeRecordDTO, 0, len(results))
 
 	for _, income := range results {
