@@ -219,7 +219,12 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 	}
 
+	log.Println("\n Count bank account balances:", len(balances))
 	for bankID, _ := range balances {
+		if bankID == "" {
+			log.Println("Skipping empty bank account ID")
+			continue
+		}
 
 		log.Println("\n Processing bank account ID:", bankID)
 		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)

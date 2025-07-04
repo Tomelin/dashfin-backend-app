@@ -56,7 +56,7 @@ func (s *BankAccountService) CreateBankAccount(ctx context.Context, bankAccount 
 
 func (s *BankAccountService) GetBankAccountByID(ctx context.Context, id *string) (*entity.BankAccountRequest, error) {
 	if id == nil || *id == "" {
-		return nil, errors.New("id is empty")
+		return nil, errors.New("bank account id is empty")
 	}
 
 	result, err := s.Repo.GetBankAccountByID(ctx, id)
@@ -115,7 +115,7 @@ func (s *BankAccountService) UpdateBankAccount(ctx context.Context, data *entity
 
 func (s *BankAccountService) DeleteBankAccount(ctx context.Context, id *string) error {
 	if id == nil || *id == "" {
-		return errors.New("id is empty")
+		return errors.New("bank account id is empty")
 	}
 
 	// _, err := s.GetBankAccountByID(ctx, id)

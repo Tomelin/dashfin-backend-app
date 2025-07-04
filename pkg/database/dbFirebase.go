@@ -274,7 +274,6 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		}
 
 		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
-		log.Println("\n GetByConditional query:", query, "field:", cond.Field, "value:", cond.Value, "filter:", cond.Filter)
 	}
 
 	iter := query.Documents(ctx)
