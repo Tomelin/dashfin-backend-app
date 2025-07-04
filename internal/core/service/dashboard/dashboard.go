@@ -658,6 +658,7 @@ func (s *DashboardService) getMonthlyFinancialSummary(userID *string) error {
 		})
 	}
 
+	s.dash.SummaryCards.MonthlyFinancialSummary = items
 	return nil
 
 }
