@@ -88,7 +88,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		return nil, err
 	}
 
-	log.Println("\n GetBankAccountByID result:", bankAccounts)
+	log.Println("\n GetBankAccountByID result:", bankAccounts, "collection:", *collection)
 
 	if len(bankAccounts) == 0 {
 		return nil, errors.New("bank account not found")
