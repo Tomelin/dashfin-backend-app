@@ -227,6 +227,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 			responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
 			responseEntity.ID = responseMap["id"].(string)
+			log.Println("[RESPONSE] Validating to entity:", "Category: ", responseMap["Category"].(string), "ID: ", responseEntity.ID, "id: ", responseMap["id"].(string))
 
 			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(int); ok {
