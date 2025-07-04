@@ -185,7 +185,12 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 	fmt.Println("\n Count expense records:", len(s.expenseRecords))
 	fmt.Println("\n Bank account balances:", balances)
 	fmt.Println("\n Count bank account balances:", len(balances))
-	for bankID := range balances {
+	count := 0
+	for bankID, val := range balances {
+		fmt.Println("\n Count is:", count)
+		count++
+		fmt.Println("\n Bank account ID:", bankID)
+		fmt.Println("\n Bank account balance:", val)
 		if bankID == "" {
 			continue
 		}
