@@ -12,20 +12,20 @@ import (
 
 type ExpenseRecordDTO struct {
 	ID               string    `json:"id"`
+	Amount           float64   `json:"amount"`
 	Category         string    `json:"category"`
 	DueDate          string    `json:"dueDate"`
-	Amount           float64   `json:"amount"`
 	IsRecurring      bool      `json:"isRecurring"`
-	Subcategory      string    `json:"subcategory,omitempty"`
-	PaymentDate      string    `json:"paymentDate,omitempty"`
+	UserID           string    `json:"userId,omitempty"`
 	BankPaidFrom     string    `json:"bankPaidFrom,omitempty"`
 	CustomBankName   string    `json:"customBankName,omitempty"`
 	Description      string    `json:"description,omitempty"`
-	RecurrenceNumber int       `json:"recurrenceNumber,omitempty"`
+	PaymentDate      string    `json:"paymentDate,omitempty"`
 	RecurrenceCount  int       `json:"recurrenceCount,omitempty"`
+	RecurrenceNumber int       `json:"recurrenceNumber,omitempty"`
+	Subcategory      string    `json:"subcategory,omitempty"`
 	CreatedAt        time.Time `json:"createdAt,omitempty"`
 	UpdatedAt        time.Time `json:"updatedAt,omitempty"`
-	UserID           string    `json:"userId,omitempty"`
 }
 
 func (er *ExpenseRecordDTO) Validate() error {
