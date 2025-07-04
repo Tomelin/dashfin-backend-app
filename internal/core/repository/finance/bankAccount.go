@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
@@ -67,6 +68,7 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 		"id": *id,
 	}
 
+	log.Println("\n GetBankAccountByID filters:", filters)
 	collection, err := repository.SetCollection(ctx, r.collection)
 	if err != nil {
 		return nil, err
@@ -85,6 +87,8 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 	if err := json.Unmarshal(result, &bankAccounts); err != nil {
 		return nil, err
 	}
+
+	log.Println("\n GetBankAccountByID result:", bankAccounts)
 
 	if len(bankAccounts) == 0 {
 		return nil, errors.New("bank account not found")
