@@ -245,7 +245,16 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 
 	log.Println("\n GetByConditional query:", query)
 	iter := query.Documents(ctx)
-	log.Println("\n GetByConditional iter:", *iter)
+	all, err := iter.GetAll()
+	log.Println("\n GetByConditional all:", all, "err:", err)
+	for _, doc := range all {
+		log.Println("\n GetByConditional doc:", *doc)
+		log.Println("\n GetByConditional doc data:", doc.Data())
+		log.Println("\n GetByConditional doc ref:", doc.Ref)
+		log.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
+		log.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
+	}
+
 	var results []interface{}
 	defer iter.Stop()
 	for {
