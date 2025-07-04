@@ -255,7 +255,7 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 			return nil, fmt.Errorf("invalid filter type: %s", cond.Filter)
 		}
 
-		query = query.Where("id", "==", "6EmOEy9LXG4sxiOV6jiE")
+		query = query.Where(cond.Field, string(cond.Filter), cond.Value)
 	}
 
 	iter := query.Documents(ctx)
@@ -264,8 +264,6 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 	defer iter.Stop()
 	for {
 		doc, err := iter.Next()
-		log.Println("\n GetByConditional doc:", doc)
-		log.Println("Error in GetByConditional:", err)
 
 		if err == iterator.Done {
 			break
@@ -274,13 +272,6 @@ func (db *FirebaseDB) GetByConditional(ctx context.Context, conditional []Condit
 		if err != nil {
 			return nil, err
 		}
-
-		fmt.Println("\n GetByConditional doc data:", doc.Data())
-		fmt.Println("\n GetByConditional doc ref:", doc.Ref)
-		fmt.Println("\n GetByConditional doc ref id:", doc.Ref.ID)
-		fmt.Println("\n GetByConditional doc ref path:", doc.Ref.Path)
-		fmt.Println("\n GetByConditional doc ref parent:", doc.Ref.Parent)
-		fmt.Println("\n GetByConditional doc exists:", doc.Exists())
 
 		data := doc.Data()
 		data["id"] = doc.Ref.ID // Importante para updates

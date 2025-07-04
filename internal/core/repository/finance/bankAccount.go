@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	entity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	"github.com/Tomelin/dashfin-backend-app/internal/core/repository"
@@ -71,8 +70,6 @@ func (r *BankAccountRepository) GetBankAccountByID(ctx context.Context, id *stri
 			Filter: database.FilterEquals,
 		},
 	}
-
-	log.Println("Fetching bank account by ID:", *id, "at conditional:", conditional)
 
 	if len(conditional) == 0 {
 		return nil, errors.New("no conditions provided")

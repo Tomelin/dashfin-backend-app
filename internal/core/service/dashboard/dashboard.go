@@ -181,34 +181,32 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *st
 		}
 	}
 
-	count := 0
+	banks, err := s.bankAccountService.GetBankAccounts(ctx)
+	if err != nil {
+		log.Println("Error fetching bank accounts:", err)
+		return
+	}
+
 	for bankID := range balances {
-		fmt.Println("\n Count is:", count)
-		count++
 
-		if bankID == "" {
-			continue
-		}
-		fmt.Println("\n Bank account ID:", bankID)
-
-		name, err := s.bankAccountService.GetBankAccountByID(ctx, &bankID)
-		fmt.Println("\n Bank account name:", name, "error:", err)
-		if err != nil {
-			continue
+		if balances[bankID] == 0 {
+			continue // Skip accounts with zero balance
 		}
 
-		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
-		if name == nil {
-			continue
+		for _, bank := range banks {
+
+			if bank.ID == bankID {
+				fmt.Println("\n Bank account balance:", bank.CustomBankName, "Balance:", balances[bankID])
+				s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
+					AccountName: bank.CustomBankName,
+					BankName:    bank.Description,
+					Balance:     balances[bankID],
+					UserID:      *userID,
+					ID:          bank.ID,
+				})
+			}
 		}
 
-		fmt.Println("\n Bank account name:", name.ID, name.Description, name.BankCode)
-		s.dash.SummaryCards.AccountBalances = append(s.dash.SummaryCards.AccountBalances, dashboardEntity.AccountBalanceItem{
-			AccountName: name.Description,
-			BankName:    name.Description,
-			Balance:     balances[bankID],
-			UserID:      *userID,
-		})
 	}
 
 	fmt.Println("\n Count bank account balances:", len(s.dash.SummaryCards.AccountBalances))
