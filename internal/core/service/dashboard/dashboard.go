@@ -146,11 +146,14 @@ func (s *DashboardService) getSummaryCards() error {
 
 	var receiveMonth float64
 	var expenseMonth float64
+	var receiveBalance float64
+	var expenseBalance float64
 
 	for _, income := range s.incomeRecords {
 		if income.ReceiptDate.After(utils.GetFirstDayOfCurrentMonth()) && income.ReceiptDate.Before(utils.GetLastDayOfCurrentMonth()) {
 			receiveMonth += income.Amount
 		}
+		receiveBalance += income.Amount
 	}
 
 	for _, expense := range s.expenseRecords {
@@ -158,10 +161,14 @@ func (s *DashboardService) getSummaryCards() error {
 			log.Println("\n Expense record:", expense)
 			expenseMonth += expense.Amount
 		}
+		if expense.DueDate.Before(utils.GetLastDayOfCurrentMonth()) {
+			expenseBalance += expense.Amount
+		}
 	}
 
 	s.dash.SummaryCards.MonthlyExpenses = expenseMonth
 	s.dash.SummaryCards.MonthlyRevenue = receiveMonth
+	s.dash.SummaryCards.TotalBalance = receiveBalance - expenseBalance
 
 	return nil
 
