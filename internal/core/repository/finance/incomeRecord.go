@@ -229,7 +229,7 @@ func (r *IncomeRecordRepository) convertToEntity(data []interface{}) ([]entity_f
 			if userID, ok := itemMap["UserID"]; ok {
 				record.UserID = userID.(string)
 			} else {
-				record.UserID = itemMap["userID"].(string)
+				record.UserID = itemMap["userId"].(string)
 			}
 
 			if id, ok := itemMap["id"]; ok {

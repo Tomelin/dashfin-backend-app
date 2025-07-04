@@ -13,14 +13,14 @@ import (
 type ExpenseRecordDTO struct {
 	ID               string    `json:"id"`
 	Category         string    `json:"category"`
-	Subcategory      string    `json:"subcategory,omitempty"`
 	DueDate          string    `json:"dueDate"`
-	PaymentDate      string    `json:"paymentDate,omitempty"`
 	Amount           float64   `json:"amount"`
+	IsRecurring      bool      `json:"isRecurring"`
+	Subcategory      string    `json:"subcategory,omitempty"`
+	PaymentDate      string    `json:"paymentDate,omitempty"`
 	BankPaidFrom     string    `json:"bankPaidFrom,omitempty"`
 	CustomBankName   string    `json:"customBankName,omitempty"`
 	Description      string    `json:"description,omitempty"`
-	IsRecurring      bool      `json:"isRecurring"`
 	RecurrenceNumber int       `json:"recurrenceNumber,omitempty"`
 	RecurrenceCount  int       `json:"recurrenceCount,omitempty"`
 	CreatedAt        time.Time `json:"createdAt,omitempty"`
