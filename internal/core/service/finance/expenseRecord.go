@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
@@ -214,9 +213,6 @@ func (s *ExpenseRecordService) UpdateExpenseRecord(ctx context.Context, id strin
 	if err != nil {
 		return nil, err // Handles "not found" from repository
 	}
-
-	log.Println("[RESPONSE] data record:", data.UserID)
-	log.Println("[RESPONSE] existingRecord record:", existingRecord.UserID)
 
 	if existingRecord.UserID != data.UserID { // Also check against UserID from context
 		return nil, errors.New("expense record not found or access denied for update")

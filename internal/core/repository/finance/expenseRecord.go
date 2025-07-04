@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	entity_finance "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
@@ -178,7 +177,6 @@ func (r *ExpenseRecordRepository) UpdateExpenseRecord(ctx context.Context, id st
 		return nil, errors.New("expense record data for update is nil")
 	}
 
-	log.Println("[RESPONSE] Updating expense record:", *data)
 	data.UpdatedAt = time.Now()
 	// Ensure ID is not changed and UserID is consistent if those are rules.
 	// data.ID = id // Not needed if ID is part of the data struct and matches `id` argument.
@@ -238,7 +236,6 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			responseEntity.ConvertISO8601ToTime("CreatedAt", responseMap["CreatedAt"].(string))
 			responseEntity.ConvertISO8601ToTime("UpdatedAt", responseMap["UpdatedAt"].(string))
 			responseEntity.ID = responseMap["id"].(string)
-			log.Println("[RESPONSE] Validating to entity:", "Category: ", responseMap["Category"].(string), "ID: ", responseEntity.ID, "id: ", responseMap["id"].(string))
 
 			if recurrenceCount, ok := responseMap["RecurrenceCount"]; ok {
 				if count, ok := recurrenceCount.(int); ok {
@@ -260,11 +257,8 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			}
 
 			result = append(result, responseEntity)
-			log.Println("[RESPONSE] Converted to entity:", "Category: ", responseEntity.Category, "ID: ", responseEntity.ID, "id: ", responseMap["id"].(string))
 		}
 	}
-
-	log.Println("[RESPONSE] Converted to entity count:", len(result), "records found", result[0].ID)
 
 	return result, nil
 }
