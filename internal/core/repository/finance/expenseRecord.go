@@ -64,7 +64,6 @@ func (r *ExpenseRecordRepository) CreateExpenseRecord(ctx context.Context, data 
 
 	responseEntity, err := r.convertToEntity(repo)
 	if err != nil {
-		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
 	}
 
@@ -99,7 +98,6 @@ func (r *ExpenseRecordRepository) GetExpenseRecordByID(ctx context.Context, id s
 
 	responseEntity, err := r.convertToEntity(response)
 	if err != nil {
-		log.Println("[RESPONSE] Error converting response to entity:", err)
 		return nil, err
 	}
 
@@ -260,7 +258,7 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				UserID:         responseMap["UserID"].(string),
 			}
 			result = append(result, responseEntity)
-			log.Println("[RESPONSE] Converted to entity:", responseEntity.Category, responseEntity.ID, responseMap["id"].(string))
+			log.Println("[RESPONSE] Converted to entity:", "Category: ", responseEntity.Category, "ID: ", responseEntity.ID, "id: ", responseMap["id"].(string))
 		}
 	}
 
