@@ -406,6 +406,30 @@ func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID strin
 	s.dash.SummaryCards.GoalsProgress = fmt.Sprintf("%.0f%% (%d de %d metas)", percentage, completedGoals, totalGoals)
 }
 
+func (s *DashboardService) getUpcomingBills2(ctx context.Context) error {
+
+	bills := make([]dashboardEntity.UpcomingBill, 0)
+	for _, expense := range s.expenseRecords {
+		if expense.PaymentDate.IsZero() {
+			bills = append(bills, dashboardEntity.UpcomingBill{
+				BillName: fmt.Sprintf("%s - %s", expense.Category, expense.Subcategory),
+				Amount:   expense.Amount,
+				DueDate:  expense.DueDate.Format("2006-01-02"),
+			})
+
+		}
+	}
+
+	s.dash.UpcomingBillsData = bills
+	sort.Slice(s.dash.UpcomingBillsData, func(i, j int) bool {
+		// Parse DueDate strings back to time.Time for comparison
+		dateI, _ := time.Parse("2006-01-02", s.dash.UpcomingBillsData[i].DueDate)
+		dateJ, _ := time.Parse("2006-01-02", s.dash.UpcomingBillsData[j].DueDate)
+		return dateI.Before(dateJ)
+	})
+
+	return nil
+}
 func (s *DashboardService) getUpcomingBills(
 	ctx context.Context,
 	userID string,
