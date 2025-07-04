@@ -255,13 +255,17 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			if amount, ok := itemMap["Amount"]; ok {
 				record.Amount = amount.(float64)
 			} else {
-				record.Amount = itemMap["amount"].(float64)
+				if amount, ok := itemMap["amount"]; ok {
+					record.Amount = amount.(float64)
+				}
 			}
 
 			if userID, ok := itemMap["UserID"]; ok {
 				record.UserID = userID.(string)
 			} else {
-				record.UserID = itemMap["userId"].(string)
+				if userID, ok := itemMap["userId"]; ok {
+					record.UserID = userID.(string)
+				}
 			}
 
 			if customBankName, ok := itemMap["CustomBankName"]; ok {
@@ -283,15 +287,17 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 			if isRecurring, ok := itemMap["IsRecurring"]; ok {
 				record.IsRecurring = isRecurring.(bool)
 			} else {
-				record.IsRecurring = itemMap["isRecurring"].(bool)
+				if isRecurring, ok := itemMap["isRecurring"]; ok {
+					record.IsRecurring = isRecurring.(bool)
+				}
 			}
 
 			if dueDate, ok := itemMap["DueDate"]; ok {
 				t, _ := time.Parse("2006-01-02T15:04:05Z", dueDate.(string))
 				record.DueDate = t
 			} else {
-				if itemMap["dueDate"] != nil {
-					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["dueDate"].(string))
+				if dueDate, ok := itemMap["dueDate"]; ok {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", dueDate.(string))
 					record.DueDate = t
 				}
 			}
@@ -300,8 +306,8 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 				t, _ := time.Parse("2006-01-02T15:04:05Z", paymentDate.(string))
 				record.PaymentDate = t
 			} else {
-				if itemMap["paymentDate"] != nil {
-					t, _ := time.Parse("2006-01-02T15:04:05Z", itemMap["paymentDate"].(string))
+				if paymentDate, ok := itemMap["paymentDate"]; ok {
+					t, _ := time.Parse("2006-01-02T15:04:05Z", paymentDate.(string))
 					record.PaymentDate = t
 				}
 			}
@@ -313,7 +319,13 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 					record.RecurrenceCount = 0
 				}
 			} else {
-				record.RecurrenceCount = 0 // Default to 0 if not present
+				if recurrenceCount, ok := itemMap["recurrenceCount"]; ok {
+					if count, ok := recurrenceCount.(float64); ok {
+						record.RecurrenceCount = int(count)
+					} else {
+						record.RecurrenceCount = 0
+					}
+				}
 			}
 
 			if recurrenceNumber, ok := itemMap["RecurrenceNumber"]; ok {
@@ -323,8 +335,13 @@ func (r *ExpenseRecordRepository) convertToEntity(data []interface{}) ([]entity_
 					record.RecurrenceNumber = 0
 				}
 			} else {
-				record.RecurrenceNumber = 0 // Default to 0 if not present
-
+				if recurrenceNumber, ok := itemMap["recurrenceNumber"]; ok {
+					if count, ok := recurrenceNumber.(float64); ok {
+						record.RecurrenceNumber = int(count)
+					} else {
+						record.RecurrenceNumber = 0
+					}
+				}
 			}
 
 			result = append(result, record)
