@@ -16,7 +16,6 @@ import (
 	dashboardEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/dashboard"
 	financeEntity "github.com/Tomelin/dashfin-backend-app/internal/core/entity/finance"
 	platformInstitution "github.com/Tomelin/dashfin-backend-app/internal/core/entity/platform"
-	profileGoals "github.com/Tomelin/dashfin-backend-app/internal/core/entity/profile"
 	profileEntity "github.com/Tomelin/dashfin-backend-app/internal/core/service/profile"
 	"github.com/Tomelin/dashfin-backend-app/pkg/message_queue"
 	"github.com/Tomelin/dashfin-backend-app/pkg/utils"
@@ -130,6 +129,13 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 		log.Println(fmt.Errorf("error fetching expense records: %w", err))
 	}
 	log.Println("\n ExpenseRecords count:", len(s.expenseRecords))
+
+	// 6. Goals fetch and set additional data
+	err = s.formatGoalsProgress(ctx, userID)
+	if err != nil {
+		log.Println(fmt.Errorf("error formatting goals progress: %w", err))
+	}
+	log.Println("\n GoalsProgress:", s.dash.SummaryCards.GoalsProgress)
 
 	// 6. Get summary cards data
 	err = s.getSummaryCards()
@@ -270,13 +276,13 @@ func (s *DashboardService) generateFreshDashboardData(ctx context.Context, userI
 	monthlyExpenses := s.calculateMonthlyExpenses(allUserPaidExpenses, currentMonthStart)
 
 	goalsProgressStr := "N/A (Data unavailable)"
-	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
+	// profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
 
-	if err != nil {
-		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
-	} else {
-		goalsProgressStr = s.formatGoalsProgress(profileGoals)
-	}
+	// if err != nil {
+	// 	fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
+	// } else {
+	// 	goalsProgressStr = s.formatGoalsProgress(profileGoals)
+	// }
 
 	dashboard := &dashboardEntity.Dashboard{
 		SummaryCards: dashboardEntity.SummaryCards{
@@ -390,16 +396,22 @@ func (s *DashboardService) getAccountSummaries(
 	return summaries
 }
 
-func (s *DashboardService) formatGoalsProgress(profileGoals profileGoals.ProfileGoals) string {
+func (s *DashboardService) formatGoalsProgress(ctx context.Context, userID string) error {
+	s.dash.SummaryCards.GoalsProgress = "N/A (Data unavailable)"
+	profileGoals, err := s.profileGoalsService.GetProfileGoals(ctx, &userID)
+	if err != nil {
+		fmt.Printf("Warning: Error fetching profile goals for user %s: %v\n", userID, err)
+	}
+
 	allGoals := append(profileGoals.Goals2Years, profileGoals.Goals5Years...)
 	allGoals = append(allGoals, profileGoals.Goals10Years...) // Typo: allGolas -> allGoals
 	totalGoals := len(allGoals)
 	completedGoals := 0 // Limitation: Cannot determine completed goals
 	if totalGoals == 0 {
-		return "Nenhuma meta definida"
+		s.dash.SummaryCards.GoalsProgress = "Nenhuma meta definida"
 	}
 	percentage := 0.0
-	return fmt.Sprintf("%.0f%% (%d de %d metas)", percentage, completedGoals, totalGoals)
+	s.dash.SummaryCards.GoalsProgress = fmt.Sprintf("%.0f%% (%d de %d metas)", percentage, completedGoals, totalGoals)
 }
 
 func (s *DashboardService) getUpcomingBills(
