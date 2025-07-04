@@ -102,7 +102,7 @@ func (s *DashboardService) GetDashboardData(ctx context.Context) (*dashboardEnti
 	// 	}
 	// }
 
-	s.getBankAccountBalance(ctx)
+	s.getBankAccountBalance(ctx, &userID)
 
 	// s.dash.SummaryCards.AccountBalances = balanceCard
 
@@ -207,20 +207,7 @@ func (s *DashboardService) getExpenseRecords(ctx context.Context) error {
 	return nil
 }
 
-func (s *DashboardService) getBankAccountBalance(ctx context.Context) {
-
-	userIDFromCtx := ctx.Value("UserID")
-	if userIDFromCtx == nil {
-		return nil, fmt.Errorf("userID not found in context")
-	}
-	userID, ok := userIDFromCtx.(string)
-	if !ok {
-		return nil, fmt.Errorf("userID in context is not a string")
-	}
-
-	if userID == "" {
-		return nil, fmt.Errorf("userID in context is empty")
-	}
+func (s *DashboardService) getBankAccountBalance(ctx context.Context, userID *string) {
 
 	balances := make(map[string]float64)
 	for _, income := range s.incomeRecords {
@@ -249,7 +236,7 @@ func (s *DashboardService) getBankAccountBalance(ctx context.Context) {
 			AccountName: name.Description,
 			BankName:    name.Description,
 			Balance:     balances[bankID],
-			UserID:      userID,
+			UserID:      *userID,
 		})
 	}
 
