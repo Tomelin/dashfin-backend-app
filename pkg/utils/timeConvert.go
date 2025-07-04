@@ -45,7 +45,11 @@ func GetFirstDayOfCurrentMonth() time.Time {
 
 func GetFirstDayOfLastMonth() time.Time {
 
-	return time.Now().AddDate(0, -1, 0)
+	currentTime := time.Now()
+
+	// Create a new time.Time object for the first day of the current month
+	firstDayOfMonth := time.Date(currentTime.Year(), currentTime.Month(), 1, 0, 0, 0, 0, currentTime.Location())
+	return firstDayOfMonth.AddDate(0, -1, 0)
 }
 
 func GetLastDayOfLastMonth() time.Time {
